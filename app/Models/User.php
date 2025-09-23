@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_admin',
+        'is_moderator',
     ];
 
     /**
@@ -43,6 +45,24 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
+            'is_moderator' => 'boolean',
         ];
+    }
+
+    // Role checking methods
+    public function isAdmin(): bool
+    {
+        return $this->is_admin;
+    }
+
+    public function isModerator(): bool
+    {
+        return $this->is_moderator;
+    }
+
+    public function canValidateReports(): bool
+    {
+        return $this->is_admin || $this->is_moderator;
     }
 }

@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +26,14 @@ Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+});
+
+// Protected Routes
+Route::middleware('auth:sanctum')->group(function () {
+    // Reports CRUD
+    Route::apiResource('reports', ReportController::class);
+    Route::post('reports/{report}/validate', [ReportController::class, 'validate']);
+    Route::get('reports-statistics', [ReportController::class, 'statistics']);
 });
 
 // Mock API endpoints for development

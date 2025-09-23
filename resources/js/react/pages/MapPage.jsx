@@ -1,12 +1,30 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Map, { Marker, Popup, NavigationControl, GeolocateControl } from 'react-map-gl'
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
+import L from 'leaflet'
 import { Plus, MapPin, TreePine, AlertTriangle, CheckCircle, X, Send } from 'lucide-react'
 import { mapMarkers } from '../data/mockData'
-import 'mapbox-gl/dist/mapbox-gl.css'
+import ReportFormModal from '../components/reports/ReportFormModal'
+import 'leaflet/dist/leaflet.css'
 
-// Mock Mapbox token - replace with your actual token
-const MAPBOX_TOKEN = 'pk.eyJ1IjoieW91ci11c2VybmFtZSIsImEiOiJjbXl0b2tlbiJ9.your-token-here'
+// Fix Leaflet default icon URLs for Vite
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+})
+
+// Map click handler component
+const MapEventHandler = ({ onMapClick }) => {
+  useMapEvents({
+    click: onMapClick,
+  })
+  return null
+}
 
 const MapPage = () => {
   const [viewState, setViewState] = useState({
@@ -15,26 +33,27 @@ const MapPage = () => {
     zoom: 12
   })
   
-  const [selectedMarker, setSelectedMarker] = useState(null)
   const [showAddReport, setShowAddReport] = useState(false)
   const [newReportLocation, setNewReportLocation] = useState(null)
-  const [reportForm, setReportForm] = useState({
-    title: '',
-    description: '',
-    urgency: 'low',
-    type: 'suggestion'
-  })
-  
-  const mapRef = useRef()
 
   const handleMapClick = useCallback((event) => {
     if (showAddReport) {
       setNewReportLocation({
-        longitude: event.lngLat.lng,
-        latitude: event.lngLat.lat
+        longitude: event.latlng.lng,
+        latitude: event.latlng.lat
       })
     }
   }, [showAddReport])
+
+  const handleReportSuccess = (newReport) => {
+    // Handle successful report submission
+    console.log('Report submitted successfully:', newReport)
+    setNewReportLocation(null)
+    setShowAddReport(false)
+    
+    // You can add the new report to your local state here if needed
+    // or show a success notification
+  }
 
   const getMarkerColor = (marker) => {
     if (marker.type === 'project') {
@@ -56,71 +75,124 @@ const MapPage = () => {
     }
   }
 
-  const handleSubmitReport = (e) => {
-    e.preventDefault()
-    // Here you would submit the report to your backend
-    console.log('Submitting report:', {
-      ...reportForm,
-      location: newReportLocation
-    })
-    
-    // Reset form and close modal
-    setReportForm({
-      title: '',
-      description: '',
-      urgency: 'low',
-      type: 'suggestion'
-    })
-    setNewReportLocation(null)
-    setShowAddReport(false)
-    
-    // Show success message (you can implement a toast notification here)
-    alert('Report submitted successfully!')
+  const getIconSVG = (marker) => {
+    if (marker.type === 'project') {
+      return '<path d="M12 2L13.09 8.26L22 9L17 14L18.18 22L12 19.24L5.82 22L7 14L2 9L10.91 8.26L12 2Z"/>'
+    } else if (marker.type === 'report') {
+      return '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'
+    } else {
+      return '<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+    }
   }
 
   return (
     <div className="relative h-full w-full">
       {/* Map */}
-      <Map
-        ref={mapRef}
-        {...viewState}
-        onMove={evt => setViewState(evt.viewState)}
-        onClick={handleMapClick}
-        mapboxAccessToken={MAPBOX_TOKEN}
+      <MapContainer
+        center={[viewState.latitude, viewState.longitude]}
+        zoom={viewState.zoom}
         style={{ width: '100%', height: '100%' }}
-        mapStyle="mapbox://styles/mapbox/streets-v12"
-        attributionControl={false}
+        className="z-0"
       >
-        {/* Navigation Controls */}
-        <NavigationControl position="top-right" />
-        <GeolocateControl position="top-right" />
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+        
+        <MapEventHandler onMapClick={handleMapClick} />
 
         {/* Markers */}
         {mapMarkers.map((marker) => {
-          const IconComponent = getMarkerIcon(marker)
           return (
             <Marker
               key={marker.id}
-              longitude={marker.coordinates[0]}
-              latitude={marker.coordinates[1]}
-              anchor="bottom"
+              position={[marker.coordinates[1], marker.coordinates[0]]}
+              icon={L.divIcon({
+                html: `<div class="w-10 h-10 rounded-full shadow-lg flex items-center justify-center cursor-pointer" style="background-color: ${getMarkerColor(marker)}">
+                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    ${getIconSVG(marker)}
+                  </svg>
+                </div>`,
+                className: 'custom-div-icon',
+                iconSize: [40, 40],
+                iconAnchor: [20, 40]
+              })}
             >
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setSelectedMarker(marker)
-                }}
-              >
-                <div
-                  className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center"
-                  style={{ backgroundColor: getMarkerColor(marker) }}
-                >
-                  <IconComponent className="w-5 h-5 text-white" />
+              <Popup closeButton={false} className="custom-popup">
+                <div className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="font-semibold text-gray-900">{marker.title}</h3>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.target.closest('.leaflet-popup').style.display = 'none'
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  
+                  <p className="text-sm text-gray-600 mb-3">{marker.description}</p>
+                  
+                  <div className="space-y-2">
+                    {marker.type === 'project' && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Progress:</span>
+                          <span className="font-medium">{marker.progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-green-500 h-2 rounded-full"
+                            style={{ width: `${marker.progress}%` }}
+                          />
+                        </div>
+                        <button className="w-full bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors mt-3">
+                          View Project Details
+                        </button>
+                      </>
+                    )}
+                    
+                    {marker.type === 'report' && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Urgency:</span>
+                          <span className={`font-medium capitalize ${
+                            marker.urgency === 'high' ? 'text-red-600' : 'text-orange-600'
+                          }`}>
+                            {marker.urgency}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Reported by:</span>
+                          <span className="font-medium">{marker.reporter}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Date:</span>
+                          <span>{marker.reportDate}</span>
+                        </div>
+                        <button className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors mt-3">
+                          Validate Report
+                        </button>
+                      </>
+                    )}
+                    
+                    {marker.type === 'green-space' && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Area:</span>
+                          <span className="font-medium">{marker.area}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Trees:</span>
+                          <span className="font-medium">{marker.treeCount}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </motion.div>
+              </Popup>
             </Marker>
           )
         })}
@@ -128,107 +200,20 @@ const MapPage = () => {
         {/* New Report Location Marker */}
         {newReportLocation && (
           <Marker
-            longitude={newReportLocation.longitude}
-            latitude={newReportLocation.latitude}
-            anchor="bottom"
-          >
-            <div className="w-10 h-10 bg-blue-500 rounded-full shadow-lg flex items-center justify-center animate-pulse">
-              <MapPin className="w-5 h-5 text-white" />
-            </div>
-          </Marker>
+            position={[newReportLocation.latitude, newReportLocation.longitude]}
+            icon={L.divIcon({
+              html: `<div class="w-10 h-10 bg-blue-500 rounded-full shadow-lg flex items-center justify-center animate-pulse">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+              </div>`,
+              className: 'custom-div-icon',
+              iconSize: [40, 40],
+              iconAnchor: [20, 40]
+            })}
+          />
         )}
-
-        {/* Popup */}
-        {selectedMarker && (
-          <Popup
-            longitude={selectedMarker.coordinates[0]}
-            latitude={selectedMarker.coordinates[1]}
-            anchor="top"
-            onClose={() => setSelectedMarker(null)}
-            closeButton={false}
-            className="max-w-xs"
-          >
-            <div className="p-4">
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="font-semibold text-gray-900">{selectedMarker.title}</h3>
-                <button
-                  onClick={() => setSelectedMarker(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <p className="text-sm text-gray-600 mb-3">{selectedMarker.description}</p>
-              
-              <div className="space-y-2">
-                {selectedMarker.type === 'project' && (
-                  <>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Progress:</span>
-                      <span className="font-medium">{selectedMarker.progress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-green-500 h-2 rounded-full"
-                        style={{ width: `${selectedMarker.progress}%` }}
-                      />
-                    </div>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors mt-3"
-                    >
-                      View Project Details
-                    </motion.button>
-                  </>
-                )}
-                
-                {selectedMarker.type === 'report' && (
-                  <>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Urgency:</span>
-                      <span className={`font-medium capitalize ${
-                        selectedMarker.urgency === 'high' ? 'text-red-600' : 'text-orange-600'
-                      }`}>
-                        {selectedMarker.urgency}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Reported by:</span>
-                      <span className="font-medium">{selectedMarker.reporter}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Date:</span>
-                      <span>{selectedMarker.reportDate}</span>
-                    </div>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors mt-3"
-                    >
-                      Validate Report
-                    </motion.button>
-                  </>
-                )}
-                
-                {selectedMarker.type === 'green-space' && (
-                  <>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Area:</span>
-                      <span className="font-medium">{selectedMarker.area}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Trees:</span>
-                      <span className="font-medium">{selectedMarker.treeCount}</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </Popup>
-        )}
-      </Map>
+      </MapContainer>
 
       {/* Floating Action Button */}
       <motion.button
@@ -265,127 +250,16 @@ const MapPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Add Report Form Modal */}
-      <AnimatePresence>
-        {showAddReport && newReportLocation && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-xl p-6 w-full max-w-md"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Submit Report</h3>
-                <button
-                  onClick={() => {
-                    setNewReportLocation(null)
-                    setShowAddReport(false)
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmitReport} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Report Type
-                  </label>
-                  <select
-                    value={reportForm.type}
-                    onChange={(e) => setReportForm({...reportForm, type: e.target.value})}
-                    className="input-field"
-                  >
-                    <option value="suggestion">Greening Suggestion</option>
-                    <option value="issue">Environmental Issue</option>
-                    <option value="maintenance">Maintenance Needed</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    value={reportForm.title}
-                    onChange={(e) => setReportForm({...reportForm, title: e.target.value})}
-                    placeholder="Brief description of the report"
-                    className="input-field"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={reportForm.description}
-                    onChange={(e) => setReportForm({...reportForm, description: e.target.value})}
-                    placeholder="Provide more details about your report..."
-                    rows={3}
-                    className="input-field"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Urgency Level
-                  </label>
-                  <div className="flex space-x-3">
-                    {['low', 'medium', 'high'].map((level) => (
-                      <label key={level} className="flex items-center">
-                        <input
-                          type="radio"
-                          value={level}
-                          checked={reportForm.urgency === level}
-                          onChange={(e) => setReportForm({...reportForm, urgency: e.target.value})}
-                          className="mr-2"
-                        />
-                        <span className={`text-sm capitalize ${
-                          level === 'high' ? 'text-red-600' : 
-                          level === 'medium' ? 'text-orange-600' : 'text-green-600'
-                        }`}>
-                          {level}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNewReportLocation(null)
-                      setShowAddReport(false)
-                    }}
-                    className="flex-1 btn-secondary"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 btn-primary flex items-center justify-center"
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Submit Report
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Modern Report Form Modal */}
+      <ReportFormModal
+        isOpen={showAddReport && newReportLocation}
+        onClose={() => {
+          setNewReportLocation(null)
+          setShowAddReport(false)
+        }}
+        location={newReportLocation}
+        onSuccess={handleReportSuccess}
+      />
 
       {/* Map Legend */}
       <motion.div

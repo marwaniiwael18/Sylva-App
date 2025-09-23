@@ -17,7 +17,7 @@ Sylva is a modern web application that empowers communities to participate in ur
 
 ### ✨ Key Features
 
-- **🗺️ Interactive Map**: Explore greening projects and events in your area using Mapbox integration
+- **🗺️ Interactive Map**: Explore greening projects and events in your area using OpenStreetMap integration
 - **📊 Impact Dashboard**: Track your environmental contributions and community achievements
 - **🌳 Project Management**: Create and manage urban greening initiatives
 - **📅 Event Organization**: Schedule and coordinate tree planting and sustainability events
@@ -39,7 +39,7 @@ Sylva is a modern web application that empowers communities to participate in ur
 - **Vite** - Fast build tool and development server
 - **TailwindCSS 3** - Utility-first CSS framework
 - **Framer Motion** - Smooth animations and transitions
-- **Mapbox GL JS** - Interactive maps and geolocation
+- **React-Leaflet** - Interactive maps with OpenStreetMap
 - **Recharts** - Data visualization components
 - **Lucide React** - Modern icon library
 
@@ -215,7 +215,7 @@ GET  /api/dashboard/stats      # Get user dashboard stats
 ### Event System
 - Schedule tree planting events
 - RSVP and attendance tracking
-- Event location mapping with Mapbox
+- Event location mapping with OpenStreetMap
 
 ### Community Features
 - User profiles and achievements
@@ -279,7 +279,7 @@ This project is open-sourced software licensed under the [MIT license](https://o
 - **Laravel Team** - For the amazing PHP framework
 - **React Team** - For the powerful UI library
 - **TailwindCSS** - For the utility-first CSS framework
-- **Mapbox** - For the interactive mapping platform
+- **OpenStreetMap** - For the free and open mapping platform
 - **Open Source Community** - For the countless libraries and tools
 
 ---

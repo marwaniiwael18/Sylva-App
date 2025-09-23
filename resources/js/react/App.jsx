@@ -17,6 +17,7 @@ import EventsPage from './pages/EventsPage'
 import EventDetailPage from './pages/EventDetailPage'
 import FeedbackPage from './pages/FeedbackPage'
 import ImpactPage from './pages/ImpactPage'
+import ReportsPage from './pages/ReportsPage'
 
 // Layout Components
 import DashboardLayout from './components/layout/DashboardLayout'
@@ -97,6 +98,7 @@ function App() {
                       <Routes>
                         <Route path="/dashboard" element={<DashboardPage />} />
                         <Route path="/map" element={<MapPage />} />
+                        <Route path="/reports" element={<ReportsPage />} />
                         <Route path="/projects" element={<ProjectsPage />} />
                         <Route path="/projects/:id" element={<ProjectDetailPage />} />
                         <Route path="/events" element={<EventsPage />} />
