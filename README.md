@@ -265,9 +265,14 @@ This project is open-sourced software licensed under the [MIT license](https://o
 
 ## 👥 Team
 
-- **Developer**: Marwani Wael
-- **Project**: Advanced Web Applications
-- **Institution**: TWIN 3
+- **Marwani Wael** - Lead Developer
+- **Aymen Jallouli** - Developer
+- **Kenza Ben Slimen** - Developer
+- **Nassim Khaldi** - Developer
+- **Yasyne Manai** - Developer
+
+**Project**: Advanced Web Applications  
+**Institution**: TWIN 3
 
 ## 🙏 Acknowledgments
 
