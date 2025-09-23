@@ -24,9 +24,11 @@ const ReportFormModal = ({
   isOpen, 
   onClose, 
   location, // { latitude, longitude, address? }
+  existingReport, // For editing mode
+  isEditing = false,
   onSuccess 
 }) => {
-  const { createReport, creating, createError } = useReports()
+  const { createReport, updateReport, creating, updating, createError, updateError } = useReports()
   
   const [formData, setFormData] = useState({
     title: '',
@@ -41,21 +43,32 @@ const ReportFormModal = ({
   const [dragActive, setDragActive] = useState(false)
   const [imagePreview, setImagePreview] = useState([])
 
-  // Reset form when modal opens/closes
+  // Reset form when modal opens/closes or populate for editing
   useEffect(() => {
     if (isOpen) {
-      setFormData({
-        title: '',
-        description: '',
-        type: 'green_space_suggestion',
-        urgency: 'low',
-        images: [],
-        address: location?.address || ''
-      })
+      if (isEditing && existingReport) {
+        setFormData({
+          title: existingReport.title || '',
+          description: existingReport.description || '',
+          type: existingReport.type || 'green_space_suggestion',
+          urgency: existingReport.urgency || 'low',
+          images: [],
+          address: existingReport.address || ''
+        })
+      } else {
+        setFormData({
+          title: '',
+          description: '',
+          type: 'green_space_suggestion',
+          urgency: 'low',
+          images: [],
+          address: location?.address || ''
+        })
+      }
       setErrors({})
       setImagePreview([])
     }
-  }, [isOpen, location])
+  }, [isOpen, location, isEditing, existingReport])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -164,11 +177,16 @@ const ReportFormModal = ({
 
     const reportData = {
       ...formData,
-      latitude: location.latitude,
-      longitude: location.longitude
+      latitude: isEditing ? existingReport.latitude : location.latitude,
+      longitude: isEditing ? existingReport.longitude : location.longitude
     }
 
-    const result = await createReport(reportData)
+    let result
+    if (isEditing) {
+      result = await updateReport(existingReport.id, reportData)
+    } else {
+      result = await createReport(reportData)
+    }
     
     if (result.success) {
       onSuccess?.(result.data)
@@ -176,7 +194,7 @@ const ReportFormModal = ({
     } else {
       setErrors(prev => ({
         ...prev,
-        submit: result.message || 'Failed to submit report'
+        submit: result.message || `Failed to ${isEditing ? 'update' : 'submit'} report`
       }))
     }
   }
@@ -224,7 +242,7 @@ const ReportFormModal = ({
                     <MapPin className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold">Submit Report</h2>
+                    <h2 className="text-xl font-semibold">{isEditing ? 'Edit Report' : 'Submit Report'}</h2>
                     <p className="text-sm text-green-100">Help improve your community</p>
                   </div>
                 </div>
@@ -497,7 +515,7 @@ const ReportFormModal = ({
                     whileTap={{ scale: 0.95 }}
                     onClick={onClose}
                     className="btn-secondary"
-                    disabled={creating}
+                    disabled={creating || updating}
                   >
                     Cancel
                   </motion.button>
@@ -506,18 +524,18 @@ const ReportFormModal = ({
                     onClick={handleSubmit}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    disabled={creating || !location}
+                    disabled={creating || updating || (!location && !isEditing)}
                     className="btn-primary flex items-center space-x-2 min-w-[140px] justify-center"
                   >
-                    {creating ? (
+                    {(creating || updating) ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Submitting...</span>
+                        <span>{isEditing ? 'Updating...' : 'Submitting...'}</span>
                       </>
                     ) : (
                       <>
                         <Send className="w-4 h-4" />
-                        <span>Submit Report</span>
+                        <span>{isEditing ? 'Update Report' : 'Submit Report'}</span>
                       </>
                     )}
                   </motion.button>

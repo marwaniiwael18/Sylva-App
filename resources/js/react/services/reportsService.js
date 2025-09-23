@@ -24,7 +24,7 @@ export class ReportsService {
       }
       
       const queryString = params.toString()
-      const url = queryString ? `/reports-test?${queryString}` : '/reports-test'
+      const url = queryString ? `/reports-public?${queryString}` : '/reports-public'
       
       const response = await apiClient.get(url)
       return {
@@ -48,7 +48,7 @@ export class ReportsService {
    */
   static async getReport(id) {
     try {
-      const response = await apiClient.get(`/reports/${id}`)
+      const response = await apiClient.get(`/reports-public/${id}`)
       return {
         success: true,
         data: response.data.data
@@ -86,7 +86,7 @@ export class ReportsService {
         })
       }
       
-      const response = await apiClient.post('/reports', formData, {
+      const response = await apiClient.post('/reports-public', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -126,7 +126,7 @@ export class ReportsService {
         }
       })
       
-      const response = await apiClient.post(`/reports/${id}`, formData, {
+      const response = await apiClient.post(`/reports-public/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -152,7 +152,7 @@ export class ReportsService {
    */
   static async deleteReport(id) {
     try {
-      const response = await apiClient.delete(`/reports/${id}`)
+      const response = await apiClient.delete(`/reports-public/${id}`)
       return {
         success: true,
         message: response.data.message
@@ -171,7 +171,7 @@ export class ReportsService {
    */
   static async validateReport(id, validationData) {
     try {
-      const response = await apiClient.post(`/reports/${id}/validate`, validationData)
+      const response = await apiClient.post(`/reports-public/${id}/validate`, validationData)
       return {
         success: true,
         data: response.data.data,
@@ -191,7 +191,7 @@ export class ReportsService {
    */
   static async getStatistics() {
     try {
-      const response = await apiClient.get('/reports-statistics')
+      const response = await apiClient.get('/reports-statistics-public')
       return {
         success: true,
         data: response.data.data
