@@ -36,6 +36,43 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('reports-statistics', [ReportController::class, 'statistics']);
 });
 
+// Temporary test route for reports (remove in production)
+Route::get('reports-test', function () {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            [
+                'id' => 1,
+                'title' => 'Arbre endommagé au parc',
+                'description' => 'Un arbre semble avoir été endommagé par la tempête',
+                'type' => 'maintenance',
+                'urgency' => 'medium',
+                'status' => 'pending',
+                'latitude' => 48.8566,
+                'longitude' => 2.3522,
+                'address' => 'Paris, France',
+                'user' => ['id' => 1, 'name' => 'John Doe', 'email' => 'john@example.com'],
+                'created_at' => now()->format('Y-m-d H:i:s'),
+                'updated_at' => now()->format('Y-m-d H:i:s')
+            ],
+            [
+                'id' => 2,
+                'title' => 'Suggestion d\'espace vert',
+                'description' => 'Cet espace pourrait bénéficier de plus de végétation',
+                'type' => 'green_space_suggestion',
+                'urgency' => 'low',
+                'status' => 'validated',
+                'latitude' => 48.8606,
+                'longitude' => 2.3376,
+                'address' => 'Louvre, Paris',
+                'user' => ['id' => 2, 'name' => 'Jane Smith', 'email' => 'jane@example.com'],
+                'created_at' => now()->subDays(2)->format('Y-m-d H:i:s'),
+                'updated_at' => now()->subDays(1)->format('Y-m-d H:i:s')
+            ]
+        ]
+    ]);
+});
+
 // Mock API endpoints for development
 Route::middleware('cors')->group(function () {
     // Projects mock data

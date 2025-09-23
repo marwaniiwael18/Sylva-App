@@ -24,7 +24,7 @@ export class ReportsService {
       }
       
       const queryString = params.toString()
-      const url = queryString ? `/reports?${queryString}` : '/reports'
+      const url = queryString ? `/reports-test?${queryString}` : '/reports-test'
       
       const response = await apiClient.get(url)
       return {
