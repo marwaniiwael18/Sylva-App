@@ -219,7 +219,7 @@ const LoginPage = () => {
             <div className="mt-8 p-4 bg-gray-50 rounded-lg border">
               <p className="text-sm text-gray-600 mb-2 font-medium">Demo credentials:</p>
               <div className="text-xs text-gray-500 space-y-1">
-                <p><strong>Citizen:</strong> citizen@demo.com / demo123</p>
+                <p><strong>Citizen:</strong> demo@sylva.com / demo123</p>
                 <p><strong>Association:</strong> org@demo.com / demo123</p>
                 <p><strong>Municipality:</strong> admin@demo.com / demo123</p>
               </div>
