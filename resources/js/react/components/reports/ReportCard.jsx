@@ -214,20 +214,20 @@ const ReportCard = ({
         </p>
 
         {/* Images Preview */}
-        {report.images && report.images.length > 0 && (
+        {report.image_urls && report.image_urls.length > 0 && (
           <div className="mb-3">
             <div className="flex space-x-2 overflow-x-auto">
-              {report.images.slice(0, 3).map((image, index) => (
+              {report.image_urls.slice(0, 3).map((imageUrl, index) => (
                 <img
                   key={index}
-                  src={`/storage/${image}`}
+                  src={imageUrl}
                   alt={`Report image ${index + 1}`}
                   className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
                 />
               ))}
-              {report.images.length > 3 && (
+              {report.image_urls.length > 3 && (
                 <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs text-gray-500">+{report.images.length - 3}</span>
+                  <span className="text-xs text-gray-500">+{report.image_urls.length - 3}</span>
                 </div>
               )}
             </div>
@@ -240,7 +240,7 @@ const ReportCard = ({
             <div className="flex items-center space-x-1">
               <MapPin className="w-3 h-3" />
               <span>
-                {report.address || `${report.latitude?.toFixed(4)}, ${report.longitude?.toFixed(4)}`}
+                {report.address || `${parseFloat(report.latitude)?.toFixed(4)}, ${parseFloat(report.longitude)?.toFixed(4)}`}
               </span>
             </div>
             

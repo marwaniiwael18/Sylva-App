@@ -213,6 +213,27 @@ const MapPage = () => {
                   
                   <p className="text-sm text-gray-600 mb-3">{report.description}</p>
                   
+                  {/* Images Preview */}
+                  {report.image_urls && report.image_urls.length > 0 && (
+                    <div className="mb-3">
+                      <div className="flex space-x-2 overflow-x-auto">
+                        {report.image_urls.slice(0, 2).map((imageUrl, index) => (
+                          <img
+                            key={index}
+                            src={imageUrl}
+                            alt={`Report image ${index + 1}`}
+                            className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                          />
+                        ))}
+                        {report.image_urls.length > 2 && (
+                          <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs text-gray-500">+{report.image_urls.length - 2}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Type:</span>

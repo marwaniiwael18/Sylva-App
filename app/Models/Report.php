@@ -33,6 +33,10 @@ class Report extends Model
         'validated_at' => 'datetime'
     ];
 
+    protected $appends = [
+        'image_urls'
+    ];
+
     protected $attributes = [
         'status' => 'pending'
     ];
@@ -116,5 +120,16 @@ class Report extends Model
             'green_space_suggestion' => '🌱',
             default => '📍'
         };
+    }
+
+    public function getImageUrlsAttribute()
+    {
+        if (!$this->images || !is_array($this->images)) {
+            return [];
+        }
+
+        return array_map(function($imagePath) {
+            return asset('storage/' . $imagePath);
+        }, $this->images);
     }
 }
