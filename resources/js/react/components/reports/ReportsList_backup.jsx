@@ -493,8 +493,6 @@ const ReportsList = ({
                       onEdit={handleEditReport}
                       onDelete={handleDeleteReport}
                       showActions={true}
-                      isOwner={user && (user.id === report.user_id || user.is_admin)}
-                      canValidate={user && user.is_admin}
                     />
                   </motion.div>
                 ))}

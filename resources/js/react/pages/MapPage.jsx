@@ -416,6 +416,11 @@ const MapPage = () => {
           setEditingReport(null)
           setShowEditModal(false)
         }}
+        location={editingReport ? {
+          latitude: parseFloat(editingReport.latitude),
+          longitude: parseFloat(editingReport.longitude),
+          address: editingReport.address
+        } : null}
         existingReport={editingReport}
         onSuccess={handleUpdateSuccess}
         isEditing={true}

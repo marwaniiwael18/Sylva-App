@@ -262,7 +262,7 @@ const ReportDetailModal = ({
                       <div>
                         <p className="text-sm font-medium text-gray-600">Coordinates</p>
                         <p className="text-gray-900">
-                          {report.latitude?.toFixed(6)}, {report.longitude?.toFixed(6)}
+                          {parseFloat(report.latitude)?.toFixed(6)}, {parseFloat(report.longitude)?.toFixed(6)}
                         </p>
                       </div>
 
