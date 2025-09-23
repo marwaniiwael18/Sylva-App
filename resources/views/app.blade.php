@@ -16,9 +16,7 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         
-        <!-- Mapbox CSS -->
-        <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
-        
+        @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/react/main.jsx'])
     </head>
     <body class="antialiased">
