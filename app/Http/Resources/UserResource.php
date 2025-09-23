@@ -19,14 +19,14 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'avatar' => $this->avatar ?? $this->generateAvatar(),
-            'created_at' => $this->created_at?->toISOString(),
-            'updated_at' => $this->updated_at?->toISOString(),
-            'stats' => $this->when($this->relationLoaded('stats'), [
+            'created_at' => isset($this->created_at) ? $this->created_at->toISOString() : null,
+            'updated_at' => isset($this->updated_at) ? $this->updated_at->toISOString() : null,
+            'stats' => isset($this->stats) ? [
                 'treesPlanted' => $this->stats->trees_planted ?? 0,
                 'eventsAttended' => $this->stats->events_attended ?? 0,
                 'projectsJoined' => $this->stats->projects_joined ?? 0,
                 'impactScore' => $this->stats->impact_score ?? 0,
-            ]),
+            ] : null,
         ];
     }
 
