@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { authService } from '../services/authService'
+import { STORAGE_KEYS } from '../constants'
 
 const AuthContext = createContext()
 
@@ -16,8 +18,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is logged in on app start
-    const token = localStorage.getItem('auth_token')
-    const userData = localStorage.getItem('user_data')
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
+    const userData = localStorage.getItem(STORAGE_KEYS.USER_DATA)
     
     if (token && userData) {
       setUser(JSON.parse(userData))
@@ -29,88 +31,85 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await window.axios.post('/auth/login', {
-        email,
-        password
-      })
+      const response = await authService.login(email, password)
 
-      if (response.data.success) {
-        const { user, token } = response.data
+      if (response.success) {
+        const { user, token } = response
         setUser(user)
-        localStorage.setItem('auth_token', token)
-        localStorage.setItem('user_data', JSON.stringify(user))
+        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token)
+        localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user))
         
         // Set axios default header for future requests
         window.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
         
         return { success: true }
       } else {
-        return { success: false, message: response.data.message }
+        return { success: false, message: response.message }
       }
     } catch (error) {
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Login failed. Please try again.' 
+        message: error.message || 'Login failed. Please try again.' 
       }
     }
   }
 
   const signup = async (name, email, password, passwordConfirmation) => {
     try {
-      const response = await window.axios.post('/auth/register', {
+      const response = await authService.register({
         name,
         email,
         password,
         password_confirmation: passwordConfirmation
       })
 
-      if (response.data.success) {
-        const { user, token } = response.data
+      if (response.success) {
+        const { user, token } = response
         setUser(user)
-        localStorage.setItem('auth_token', token)
-        localStorage.setItem('user_data', JSON.stringify(user))
+        localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token)
+        localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user))
         
         // Set axios default header for future requests
         window.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
         
         return { success: true }
       } else {
-        return { success: false, message: response.data.message }
+        return { success: false, message: response.message }
       }
     } catch (error) {
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Registration failed. Please try again.' 
+        message: error.message || 'Registration failed. Please try again.' 
       }
     }
   }
 
   const logout = async () => {
     try {
-      await window.axios.post('/auth/logout')
+      await authService.logout()
     } catch (error) {
       console.error('Logout error:', error)
     }
     
     // Clear local storage and state regardless of API response
     setUser(null)
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('user_data')
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
+    localStorage.removeItem(STORAGE_KEYS.USER_DATA)
     localStorage.removeItem('sylva_user') // Remove old key for compatibility
     delete window.axios.defaults.headers.common['Authorization']
   }
 
   const forgotPassword = async (email) => {
     try {
-      const response = await window.axios.post('/auth/forgot-password', { email })
+      const response = await authService.forgotPassword(email)
       return { 
-        success: response.data.success, 
-        message: response.data.message 
+        success: response.success, 
+        message: response.message 
       }
     } catch (error) {
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Failed to send reset email.' 
+        message: error.message || 'Failed to send reset email.' 
       }
     }
   }

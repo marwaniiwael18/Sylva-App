@@ -3,90 +3,72 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
+use App\Services\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function login(Request $request): JsonResponse
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string|min:6',
-        ]);
+    public function __construct(
+        private AuthService $authService
+    ) {}
 
-        // For demo purposes, accept demo credentials
-        if ($request->email === 'demo@sylva.com' && $request->password === 'demo123') {
+    /**
+     * Login user
+     */
+    public function login(LoginRequest $request): JsonResponse
+    {
+        try {
+            $result = $this->authService->login($request->validated());
+            return response()->json($result);
+        } catch (ValidationException $e) {
             return response()->json([
-                'success' => true,
-                'message' => 'Login successful',
-                'user' => [
-                    'id' => 1,
-                    'name' => 'Sarah Johnson',
-                    'email' => 'demo@sylva.com',
-                    'avatar' => 'https://images.unsplash.com/photo-1494790108755-2616b612b5bb?ixlib=rb-4.0.3',
-                    'stats' => [
-                        'treesPlanted' => 127,
-                        'eventsAttended' => 23,
-                        'projectsJoined' => 8,
-                        'impactScore' => 847
-                    ]
-                ],
-                'token' => 'demo_token_' . time()
-            ]);
+                'success' => false,
+                'message' => 'Invalid credentials',
+                'errors' => $e->errors()
+            ], 401);
         }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Invalid credentials'
-        ], 401);
     }
 
-    public function register(Request $request): JsonResponse
+    /**
+     * Register new user
+     */
+    public function register(RegisterRequest $request): JsonResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
-
-        // Demo registration - just return success
-        return response()->json([
-            'success' => true,
-            'message' => 'Registration successful',
-            'user' => [
-                'id' => rand(2, 1000),
-                'name' => $request->name,
-                'email' => $request->email,
-                'avatar' => 'https://ui-avatars.com/api/?name=' . urlencode($request->name),
-                'stats' => [
-                    'treesPlanted' => 0,
-                    'eventsAttended' => 0,
-                    'projectsJoined' => 0,
-                    'impactScore' => 0
-                ]
-            ],
-            'token' => 'new_user_token_' . time()
-        ]);
+        try {
+            $result = $this->authService->register($request->validated());
+            return response()->json($result, 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Registration failed',
+                'error' => $e->getMessage()
+            ], 400);
+        }
     }
 
+    /**
+     * Logout user
+     */
     public function logout(): JsonResponse
     {
-        return response()->json([
-            'success' => true,
-            'message' => 'Logout successful'
-        ]);
+        $result = $this->authService->logout();
+        return response()->json($result);
     }
 
+    /**
+     * Send password reset email
+     */
     public function forgotPassword(Request $request): JsonResponse
     {
         $request->validate([
             'email' => 'required|email',
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Password reset email sent successfully'
-        ]);
+        $result = $this->authService->sendPasswordResetEmail($request->email);
+        return response()->json($result);
     }
 }
