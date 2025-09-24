@@ -11,7 +11,8 @@ import {
   Menu,
   Leaf,
   Settings,
-  HelpCircle
+  HelpCircle,
+  FileText
 } from 'lucide-react'
 
 const Sidebar = ({ collapsed, onToggle }) => {
@@ -20,6 +21,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Map', href: '/map', icon: Map },
+    { name: 'Reports', href: '/reports', icon: FileText },
     { name: 'Projects', href: '/projects', icon: TreePine },
     { name: 'Events', href: '/events', icon: Calendar },
     { name: 'Feedback', href: '/feedback', icon: MessageSquare },

@@ -172,15 +172,27 @@
   @apply outline-none ring-2 ring-primary-500 ring-opacity-50;
 }
 
-/* Mapbox custom styles */
-.mapboxgl-popup-content {
-  @apply rounded-lg shadow-xl border-0 !important;
-  padding: 0 !important;
+/* Leaflet custom styles */
+.custom-div-icon {
+  background: none !important;
+  border: none !important;
 }
 
-.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-left .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
-  @apply border-primary-500 !important;
+.custom-popup .leaflet-popup-content-wrapper {
+  @apply rounded-lg shadow-xl border-0 !important;
+  padding: 0 !important;
+  background: white !important;
+}
+
+.custom-popup .leaflet-popup-tip {
+  @apply bg-white !important;
+}
+
+/* Override default leaflet popup styles */
+.leaflet-popup-content-wrapper {
+  @apply rounded-lg shadow-xl !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
 }

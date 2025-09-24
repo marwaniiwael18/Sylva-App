@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,6 +27,23 @@ Route::prefix('auth')->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
 });
+
+// Protected Routes
+Route::middleware('auth:sanctum')->group(function () {
+    // Reports CRUD
+    Route::apiResource('reports', ReportController::class);
+    Route::post('reports/{report}/validate', [ReportController::class, 'validate']);
+    Route::get('reports-statistics', [ReportController::class, 'statistics']);
+});
+
+// Temporary public routes for testing (remove in production)
+Route::get('reports-public', [ReportController::class, 'index']);
+Route::post('reports-public', [ReportController::class, 'store']);
+Route::get('reports-public/{report}', [ReportController::class, 'show']);
+Route::put('reports-public/{report}', [ReportController::class, 'update']);
+Route::delete('reports-public/{report}', [ReportController::class, 'destroy']);
+Route::post('reports-public/{report}/validate', [ReportController::class, 'validate']);
+Route::get('reports-statistics-public', [ReportController::class, 'statistics']);
 
 // Mock API endpoints for development
 Route::middleware('cors')->group(function () {
