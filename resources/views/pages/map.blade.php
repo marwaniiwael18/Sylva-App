@@ -3,9 +3,10 @@
 @section('page-title', 'Map')
 
 @section('page-content')
-<div class="relative h-full w-full" x-data="mapComponent()">
-    <!-- Map Container -->
-    <div id="map" class="w-full h-full rounded-xl shadow-lg"></div>
+<div class="h-full p-6">
+    <div class="relative h-full w-full bg-white rounded-xl shadow-lg overflow-hidden" x-data="mapComponent()">
+        <!-- Map Container -->
+        <div id="map" class="w-full h-full"></div>
 
     <!-- Map Legend -->
     <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-gray-200 z-[1000] max-w-48">
@@ -51,172 +52,26 @@
         </div>
     </div>
 
-    <!-- Simple Working Floating Buttons -->
-    <div class="absolute bottom-6 right-6 z-[1000] flex flex-col space-y-3">
-        <!-- Add Report Button -->
-        <button
-            onclick="startAddReport()"
-            class="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 shadow-2xl flex items-center justify-center text-white transition-all duration-300 border-4 border-white hover:scale-110 transform focus:outline-none focus:ring-4 focus:ring-green-300 focus:ring-offset-2"
-            id="addReportBtn"
-        >
-            <i data-lucide="plus" class="w-6 h-6"></i>
-        </button>
-
-        <!-- Search Button -->
-        <button
-            onclick="toggleSearch()"
-            class="w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white transition-all duration-300 border-3 border-white hover:scale-110 transform bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-offset-2"
-        >
-            <i data-lucide="search" class="w-5 h-5"></i>
-        </button>
-    </div>
-
-    <!-- Add Report Message -->
-    <div id="addReportMessage" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white px-8 py-4 rounded-lg shadow-2xl text-lg font-bold z-[10001] hidden">
-        Click where you want to add your report on the map
-        <button onclick="cancelAddReport()" class="ml-4 bg-red-500 px-3 py-1 rounded text-sm">Cancel</button>
-    </div>
-
-    <!-- Search Bar -->
-    <div id="searchBar" class="absolute top-4 right-4 bg-white rounded-lg shadow-xl p-4 w-80 z-[1001] hidden">
-        <div class="flex items-center space-x-2">
-            <input type="text" id="searchInput" placeholder="Search places..." class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="toggleSearch()" class="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600">
-                <i data-lucide="x" class="w-4 h-4"></i>
+        <!-- Simple Working Floating Buttons -->
+        <div class="absolute bottom-6 right-6 z-[1000] flex flex-col space-y-3">
+            <!-- Add Report Button -->
+            <button
+                x-on:click="toggleAddReportMode()"
+                class="w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-white transition-all duration-300 border-4 border-white hover:scale-110 transform focus:outline-none focus:ring-4 focus:ring-offset-2"
+                :class="addReportMode ? 'bg-red-500 hover:bg-red-600 focus:ring-red-300' : 'bg-green-500 hover:bg-green-600 focus:ring-green-300'"
+                id="addReportBtn"
+            >
+                <i :data-lucide="addReportMode ? 'x' : 'plus'" class="w-6 h-6"></i>
             </button>
-        </div>
-        <div id="searchResults" class="mt-2 max-h-40 overflow-y-auto"></div>
-    </div>
 
-    <!-- Simple Report Form Popup -->
-    <div id="reportFormPopup" class="fixed inset-0 bg-black bg-opacity-50 z-[10002] hidden" style="display: flex; align-items: center; justify-content: center;">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md mx-4">
-            <h3 class="text-xl font-bold mb-4">Add New Report</h3>
-            <form id="reportForm" onsubmit="submitReport(event)">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                        <input type="text" id="reportTitle" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                        <select id="reportType" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                            <option value="">Select type...</option>
-                            <option value="tree_planting">Tree Planting</option>
-                            <option value="maintenance">Maintenance</option>
-                            <option value="pollution">Pollution</option>
-                            <option value="green_space_suggestion">Green Space</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Urgency</label>
-                        <select id="reportUrgency" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                            <option value="">Select urgency...</option>
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <textarea id="reportDescription" rows="3" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
-                    </div>
-                    <div class="flex space-x-3 pt-4">
-                        <button type="submit" class="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
-                            Save Report
-                        </button>
-                        <button type="button" onclick="closeReportForm()" class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Search Bar Overlay -->
-    <div x-show="showSearchDialog" 
-         x-transition:enter="ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="ease-in duration-200"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1001] w-full max-w-md"
-         x-cloak>
-        <div class="bg-white rounded-lg shadow-2xl border border-gray-200 p-4">
-            <div class="flex items-center space-x-3 mb-4">
-                <i data-lucide="search" class="w-5 h-5 text-blue-500"></i>
-                <h3 class="text-lg font-semibold text-gray-900">Search Reports</h3>
-                <button x-on:click="closeSearchDialog()" class="ml-auto p-1 hover:bg-gray-100 rounded">
-                    <i data-lucide="x" class="w-4 h-4 text-gray-500"></i>
-                </button>
-            </div>
-            
-            <div class="space-y-3">
-                <!-- Location Search with Autocomplete -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Search by location</label>
-                    <div class="relative">
-                        <input type="text" 
-                               x-model="searchQuery"
-                               x-on:input="searchPlaces()"
-                               placeholder="Search for places in Paris..."
-                               class="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <i data-lucide="map-pin" class="absolute left-3 top-3 w-4 h-4 text-gray-400"></i>
-                    </div>
-                    <!-- Autocomplete suggestions -->
-                    <div x-show="searchSuggestions.length > 0" 
-                         class="absolute bg-white border border-gray-200 rounded-lg mt-1 w-full shadow-lg z-[1002]"
-                         x-cloak>
-                        <template x-for="suggestion in searchSuggestions" :key="suggestion.place_id">
-                            <div x-on:click="selectPlace(suggestion)" 
-                                 class="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                <div class="font-medium text-sm" x-text="suggestion.display_name"></div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-                
-                <!-- Filter by Type -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Filter by type</label>
-                    <select x-model="searchType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">All Types</option>
-                        <option value="tree_planting">Tree Planting</option>
-                        <option value="maintenance">Maintenance</option>
-                        <option value="pollution">Pollution</option>
-                        <option value="green_space_suggestion">Green Space</option>
-                    </select>
-                </div>
-                
-                <!-- Filter by Urgency -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Filter by urgency</label>
-                    <select x-model="searchUrgency" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">All Priorities</option>
-                        <option value="low">Low Priority</option>
-                        <option value="medium">Medium Priority</option>
-                        <option value="high">High Priority</option>
-                    </select>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="flex space-x-2 pt-2">
-                    <button x-on:click="applySearch()" 
-                            class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium">
-                        Apply Filters
-                    </button>
-                    <button x-on:click="clearFilters()" 
-                            class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm font-medium">
-                        Clear All
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Report Mode Instructions -->
+            <!-- Search Button -->
+            <button
+                x-on:click="showSearchDialog = true"
+                class="w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white transition-all duration-300 border-3 border-white hover:scale-110 transform bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-offset-2"
+            >
+                <i data-lucide="search" class="w-5 h-5"></i>
+            </button>
+        </div>    <!-- Add Report Mode Instructions -->
     <div x-show="addReportMode" 
          x-transition:enter="ease-out duration-300"
          x-transition:enter-start="opacity-0 scale-95"
@@ -292,47 +147,102 @@
                         <div class="sm:flex sm:items-start">
                             <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
                                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                                    <i data-lucide="plus-circle" class="w-5 h-5 inline mr-2 text-green-600"></i>
                                     Add New Report
                                 </h3>
                                 
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Title *</label>
                                         <input type="text" x-model="reportForm.title" required
-                                               class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none transition-colors duration-200"
-                                               placeholder="Enter report title">
+                                               placeholder="Enter report title"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
                                     </div>
                                     
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
                                         <textarea x-model="reportForm.description" required rows="3"
-                                                class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none transition-colors duration-200"
-                                                placeholder="Describe the issue or suggestion"></textarea>
+                                                placeholder="Describe the environmental issue or suggestion"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
                                     </div>
                                     
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Type *</label>
                                             <select x-model="reportForm.type" required
-                                                    class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none transition-colors duration-200">
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
                                                 <option value="">Select type</option>
-                                                <option value="tree_planting">Tree Planting</option>
-                                                <option value="maintenance">Maintenance</option>
-                                                <option value="pollution">Pollution</option>
-                                                <option value="green_space_suggestion">Green Space</option>
+                                                <option value="tree_planting">🌳 Tree Planting</option>
+                                                <option value="maintenance">🔧 Maintenance</option>
+                                                <option value="pollution">⚠️ Pollution</option>
+                                                <option value="green_space_suggestion">🌱 Green Space Suggestion</option>
                                             </select>
                                         </div>
                                         
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Urgency</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Urgency *</label>
                                             <select x-model="reportForm.urgency" required
-                                                    class="form-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none transition-colors duration-200">
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
                                                 <option value="">Select urgency</option>
-                                                <option value="low">Low</option>
-                                                <option value="medium">Medium</option>
-                                                <option value="high">High</option>
+                                                <option value="low">🟢 Low</option>
+                                                <option value="medium">🟡 Medium</option>
+                                                <option value="high">🔴 High</option>
                                             </select>
                                         </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                                        <input type="text" x-model="reportForm.address"
+                                               placeholder="Optional: Enter full address"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Images 
+                                            <span class="text-xs text-gray-500">(Optional, max 5 images, 2MB each)</span>
+                                        </label>
+                                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
+                                            <input type="file" x-ref="imageInput" multiple accept="image/*" 
+                                                   class="hidden" x-on:change="handleImageUpload($event)">
+                                            <div x-show="!selectedImages.length">
+                                                <i data-lucide="camera" class="w-12 h-12 mx-auto text-gray-400 mb-4"></i>
+                                                <p class="text-sm text-gray-600 mb-2">Click to upload images or drag and drop</p>
+                                                <p class="text-xs text-gray-500">PNG, JPG up to 2MB each</p>
+                                                <button type="button" x-on:click="$refs.imageInput.click()" 
+                                                        class="mt-3 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors">
+                                                    <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                                                    Select Images
+                                                </button>
+                                            </div>
+                                            <div x-show="selectedImages.length > 0" class="mt-4">
+                                                <div class="grid grid-cols-2 gap-4" x-ref="previewContainer">
+                                                    <template x-for="(image, index) in selectedImages" :key="index">
+                                                        <div class="relative">
+                                                            <img :src="image.preview" class="w-full h-24 object-cover rounded-lg">
+                                                            <button type="button" x-on:click="removeImage(index)" 
+                                                                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
+                                                                <i data-lucide="x" class="w-3 h-3"></i>
+                                                            </button>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                                <button type="button" x-on:click="$refs.imageInput.click()" 
+                                                        class="mt-3 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors">
+                                                    <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                                                    Add More Images
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-center">
+                                        <p class="text-xs text-gray-500">* Required fields</p>
+                                        <p class="text-sm text-blue-600 mt-1">
+                                            <i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>
+                                            Location: <span x-text="formatCoordinates(reportForm.latitude, reportForm.longitude)"></span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -340,11 +250,12 @@
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                         <button type="submit"
-                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
-                            Submit Report
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                            Add Report
                         </button>
                         <button type="button" x-on:click="closeReportForm()"
-                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
                             Cancel
                         </button>
                     </div>
@@ -372,45 +283,117 @@
                         <div class="sm:flex sm:items-start">
                             <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
                                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                                    <i data-lucide="edit-2" class="w-5 h-5 inline mr-2 text-blue-600"></i>
                                     Edit Report
                                 </h3>
                                 
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Title *</label>
                                         <input type="text" x-model="reportForm.title" required
-                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                               placeholder="Enter report title"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                     </div>
                                     
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                                        <textarea x-model="reportForm.description" required
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 rows-3"></textarea>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                                        <textarea x-model="reportForm.description" required rows="3"
+                                                placeholder="Describe the environmental issue or suggestion"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
                                     </div>
                                     
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Type *</label>
                                             <select x-model="reportForm.type" required
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                 <option value="">Select type</option>
-                                                <option value="tree_planting">Tree Planting</option>
-                                                <option value="maintenance">Maintenance</option>
-                                                <option value="pollution">Pollution</option>
-                                                <option value="green_space_suggestion">Green Space</option>
+                                                <option value="tree_planting">🌳 Tree Planting</option>
+                                                <option value="maintenance">🔧 Maintenance</option>
+                                                <option value="pollution">⚠️ Pollution</option>
+                                                <option value="green_space_suggestion">🌱 Green Space Suggestion</option>
                                             </select>
                                         </div>
                                         
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Urgency</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Urgency *</label>
                                             <select x-model="reportForm.urgency" required
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                 <option value="">Select urgency</option>
-                                                <option value="low">Low</option>
-                                                <option value="medium">Medium</option>
-                                                <option value="high">High</option>
+                                                <option value="low">🟢 Low</option>
+                                                <option value="medium">🟡 Medium</option>
+                                                <option value="high">🔴 High</option>
                                             </select>
                                         </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                                        <input type="text" x-model="reportForm.address"
+                                               placeholder="Optional: Enter full address"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+
+                                    <!-- Current Images Display -->
+                                    <div x-show="editingReport && editingReport.image_urls && editingReport.image_urls.length > 0">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Images</label>
+                                        <div class="grid grid-cols-2 gap-4 mb-4">
+                                            <template x-for="(imageUrl, index) in editingReport.image_urls" :key="index">
+                                                <div class="relative">
+                                                    <img :src="imageUrl" class="w-full h-24 object-cover rounded-lg">
+                                                    <div class="absolute bottom-1 left-1 bg-black/60 text-white px-1 py-0.5 rounded text-xs">
+                                                        Current
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Update Images 
+                                            <span class="text-xs text-gray-500">(Optional, will replace current images)</span>
+                                        </label>
+                                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                                            <input type="file" x-ref="editImageInput" multiple accept="image/*" 
+                                                   class="hidden" x-on:change="handleEditImageUpload($event)">
+                                            <div x-show="!editSelectedImages.length">
+                                                <i data-lucide="camera" class="w-12 h-12 mx-auto text-gray-400 mb-4"></i>
+                                                <p class="text-sm text-gray-600 mb-2">Click to upload new images</p>
+                                                <p class="text-xs text-gray-500">PNG, JPG up to 2MB each</p>
+                                                <button type="button" x-on:click="$refs.editImageInput.click()" 
+                                                        class="mt-3 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
+                                                    <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                                                    Select Images
+                                                </button>
+                                            </div>
+                                            <div x-show="editSelectedImages.length > 0" class="mt-4">
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <template x-for="(image, index) in editSelectedImages" :key="index">
+                                                        <div class="relative">
+                                                            <img :src="image.preview" class="w-full h-24 object-cover rounded-lg">
+                                                            <button type="button" x-on:click="removeEditImage(index)" 
+                                                                    class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
+                                                                <i data-lucide="x" class="w-3 h-3"></i>
+                                                            </button>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                                <button type="button" x-on:click="$refs.editImageInput.click()" 
+                                                        class="mt-3 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
+                                                    <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                                                    Add More Images
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-center">
+                                        <p class="text-xs text-gray-500">* Required fields</p>
+                                        <p class="text-sm text-blue-600 mt-1">
+                                            <i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>
+                                            Location: <span x-text="formatCoordinates(reportForm.latitude, reportForm.longitude)"></span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -418,11 +401,12 @@
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                         <button type="submit"
-                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                            <i data-lucide="check" class="w-4 h-4 mr-2"></i>
                             Update Report
                         </button>
                         <button type="button" x-on:click="closeEditForm()"
-                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
                             Cancel
                         </button>
                     </div>
@@ -503,6 +487,7 @@
             </div>
         </div>
     </div>
+    </div>
 </div>
 @endsection
 
@@ -566,143 +551,6 @@
 @push('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// Global variables for simple functionality
-let isAddingReport = false;
-let selectedLocation = null;
-let mapInstance = null;
-
-// Simple functions for the buttons
-function startAddReport() {
-    isAddingReport = true;
-    document.getElementById('addReportMessage').classList.remove('hidden');
-    document.getElementById('addReportBtn').innerHTML = '<i data-lucide="x" class="w-6 h-6"></i>';
-    document.getElementById('addReportBtn').classList.add('bg-red-500', 'hover:bg-red-600');
-    document.getElementById('addReportBtn').classList.remove('bg-green-500', 'hover:bg-green-600');
-    lucide.createIcons();
-}
-
-function cancelAddReport() {
-    isAddingReport = false;
-    document.getElementById('addReportMessage').classList.add('hidden');
-    document.getElementById('addReportBtn').innerHTML = '<i data-lucide="plus" class="w-6 h-6"></i>';
-    document.getElementById('addReportBtn').classList.remove('bg-red-500', 'hover:bg-red-600');
-    document.getElementById('addReportBtn').classList.add('bg-green-500', 'hover:bg-green-600');
-    lucide.createIcons();
-}
-
-function toggleSearch() {
-    const searchBar = document.getElementById('searchBar');
-    if (searchBar.classList.contains('hidden')) {
-        searchBar.classList.remove('hidden');
-        document.getElementById('searchInput').focus();
-        // Add input event listener for autocomplete
-        const searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('input', handleSearchInput);
-    } else {
-        searchBar.classList.add('hidden');
-    }
-}
-
-function handleSearchInput(event) {
-    const query = event.target.value;
-    const resultsDiv = document.getElementById('searchResults');
-    
-    if (query.length < 3) {
-        resultsDiv.innerHTML = '';
-        return;
-    }
-    
-    // Simple search using Nominatim (OpenStreetMap)
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=fr&limit=5`)
-        .then(response => response.json())
-        .then(data => {
-            resultsDiv.innerHTML = '';
-            data.forEach(place => {
-                const div = document.createElement('div');
-                div.className = 'p-2 hover:bg-gray-100 cursor-pointer border-b';
-                div.textContent = place.display_name;
-                div.onclick = () => selectPlace(place);
-                resultsDiv.appendChild(div);
-            });
-        })
-        .catch(error => {
-            console.error('Search error:', error);
-            resultsDiv.innerHTML = '<div class="p-2 text-red-500">Search error</div>';
-        });
-}
-
-function selectPlace(place) {
-    const lat = parseFloat(place.lat);
-    const lng = parseFloat(place.lon);
-    
-    // Move map to selected place
-    if (mapInstance) {
-        mapInstance.setView([lat, lng], 15);
-    }
-    
-    // Close search bar
-    toggleSearch();
-}
-
-function showReportForm(lat, lng) {
-    selectedLocation = { lat, lng };
-    document.getElementById('reportFormPopup').classList.remove('hidden');
-    document.getElementById('reportFormPopup').style.display = 'flex';
-    // Hide the message
-    document.getElementById('addReportMessage').classList.add('hidden');
-}
-
-function closeReportForm() {
-    document.getElementById('reportFormPopup').classList.add('hidden');
-    document.getElementById('reportFormPopup').style.display = 'none';
-    cancelAddReport();
-    // Reset form
-    document.getElementById('reportForm').reset();
-}
-
-async function submitReport(event) {
-    event.preventDefault();
-    
-    if (!selectedLocation) {
-        alert('No location selected');
-        return;
-    }
-    
-    const formData = {
-        title: document.getElementById('reportTitle').value,
-        type: document.getElementById('reportType').value,
-        urgency_level: document.getElementById('reportUrgency').value,
-        description: document.getElementById('reportDescription').value,
-        latitude: selectedLocation.lat,
-        longitude: selectedLocation.lng
-    };
-    
-    try {
-        const response = await fetch('/api/reports-public', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        });
-
-        const result = await response.json();
-        
-        if (response.ok && result.success) {
-            alert('Report added successfully!');
-            closeReportForm();
-            // Refresh the page to show the new report
-            window.location.reload();
-        } else {
-            throw new Error(result.message || 'Failed to create report');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error creating report: ' + error.message);
-    }
-}
 
 function mapComponent() {
     return {
@@ -713,6 +561,8 @@ function mapComponent() {
         showSearchDialog: false,
         newReportLocation: null,
         editingReport: null,
+        selectedImages: [],
+        editSelectedImages: [],
         reports: @json($reports),
         allReports: @json($reports), // Keep copy for search filtering
         searchQuery: '',
@@ -726,6 +576,7 @@ function mapComponent() {
             urgency: '',
             latitude: '',
             longitude: '',
+            address: ''
         },
         
         init() {
@@ -735,18 +586,122 @@ function mapComponent() {
         
         initMap() {
             this.map = L.map('map').setView([48.8566, 2.3522], 12);
-            mapInstance = this.map; // Store globally for simple functions
             
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             }).addTo(this.map);
             
-            // Simple click event listener for adding reports
+            // Click event listener for adding reports
             this.map.on('click', (e) => {
-                if (isAddingReport) {
-                    showReportForm(e.latlng.lat, e.latlng.lng);
+                if (this.addReportMode) {
+                    this.newReportLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
+                    this.reportForm.latitude = e.latlng.lat.toFixed(6);
+                    this.reportForm.longitude = e.latlng.lng.toFixed(6);
+                    this.showReportForm = true;
+                    this.addReportMode = false;
                 }
             });
+        },
+        
+        toggleAddReportMode() {
+            this.addReportMode = !this.addReportMode;
+            this.newReportLocation = null;
+            if (!this.addReportMode) {
+                this.showReportForm = false;
+            }
+        },
+        
+        handleImageUpload(event) {
+            const files = Array.from(event.target.files);
+            const maxFiles = 5;
+            const maxSize = 2 * 1024 * 1024; // 2MB
+            
+            // Check file count
+            if (this.selectedImages.length + files.length > maxFiles) {
+                alert(`Maximum ${maxFiles} images allowed`);
+                return;
+            }
+            
+            files.forEach(file => {
+                // Check file size
+                if (file.size > maxSize) {
+                    alert(`${file.name} is too large. Maximum size is 2MB.`);
+                    return;
+                }
+                
+                // Check file type
+                if (!file.type.startsWith('image/')) {
+                    alert(`${file.name} is not an image file.`);
+                    return;
+                }
+                
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.selectedImages.push({
+                        file: file,
+                        preview: e.target.result,
+                        name: file.name
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            // Clear input
+            event.target.value = '';
+        },
+        
+        handleEditImageUpload(event) {
+            const files = Array.from(event.target.files);
+            const maxFiles = 5;
+            const maxSize = 2 * 1024 * 1024; // 2MB
+            
+            // Check file count
+            if (this.editSelectedImages.length + files.length > maxFiles) {
+                alert(`Maximum ${maxFiles} images allowed`);
+                return;
+            }
+            
+            files.forEach(file => {
+                // Check file size
+                if (file.size > maxSize) {
+                    alert(`${file.name} is too large. Maximum size is 2MB.`);
+                    return;
+                }
+                
+                // Check file type
+                if (!file.type.startsWith('image/')) {
+                    alert(`${file.name} is not an image file.`);
+                    return;
+                }
+                
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.editSelectedImages.push({
+                        file: file,
+                        preview: e.target.result,
+                        name: file.name
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            // Clear input
+            event.target.value = '';
+        },
+        
+        removeImage(index) {
+            this.selectedImages.splice(index, 1);
+        },
+        
+        removeEditImage(index) {
+            this.editSelectedImages.splice(index, 1);
+        },
+        
+        formatCoordinates(lat, lng) {
+            if (!lat || !lng) return 'No location selected';
+            return `${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}`;
         },
         
         loadReports() {
@@ -758,85 +713,101 @@ function mapComponent() {
             console.log(`Loading ${this.reports.length} reports on map`);
             
             this.reports.forEach(report => {
-                if (!report.latitude || !report.longitude) {
-                    console.warn('Report missing coordinates:', report);
-                    return;
+                this.addReportToMap(report);
+            });
+        },
+
+        editReport(reportId) {
+            const report = this.reports.find(r => r.id == reportId);
+            if (report) {
+                this.editingReport = report;
+                this.reportForm = {
+                    title: report.title,
+                    description: report.description,
+                    type: report.type,
+                    urgency: report.urgency,
+                    latitude: report.latitude,
+                    longitude: report.longitude,
+                    address: report.address || ''
+                };
+                this.editSelectedImages = [];
+                this.showEditForm = true;
+            }
+        },
+
+        async updateReport() {
+            try {
+                const submitBtn = document.querySelector('#edit-form button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Updating...';
+                submitBtn.disabled = true;
+
+                // Create FormData for file upload if there are new images
+                let requestData;
+                let headers = {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                };
+
+                if (this.editSelectedImages.length > 0) {
+                    // Use FormData for file uploads
+                    requestData = new FormData();
+                    Object.keys(this.reportForm).forEach(key => {
+                        if (this.reportForm[key] !== null && this.reportForm[key] !== '') {
+                            requestData.append(key, this.reportForm[key]);
+                        }
+                    });
+                    
+                    // Add images
+                    this.editSelectedImages.forEach((imageObj, index) => {
+                        requestData.append('images[]', imageObj.file);
+                    });
+                } else {
+                    // Use JSON for updates without images
+                    headers['Content-Type'] = 'application/json';
+                    requestData = JSON.stringify(this.reportForm);
                 }
 
-                // Create custom icon based on urgency
-                const iconColor = this.getMarkerColor(report.urgency);
-                const marker = L.circleMarker([parseFloat(report.latitude), parseFloat(report.longitude)], {
-                    radius: 8,
-                    fillColor: iconColor,
-                    color: '#fff',
-                    weight: 2,
-                    opacity: 1,
-                    fillOpacity: 0.8
-                }).addTo(this.map);
-                
-                const popupContent = `
-                    <div class="p-4 max-w-sm">
-                        <h3 class="font-bold text-lg mb-2 text-gray-900">${report.title}</h3>
-                        <p class="text-sm text-gray-600 mb-3 leading-relaxed">${report.description}</p>
-                        
-                        <div class="flex flex-wrap gap-2 mb-3">
-                            <span class="px-2 py-1 rounded-full text-xs font-medium ${this.getUrgencyClass(report.urgency)}">
-                                ${this.capitalizeFirst(report.urgency)} priority
-                            </span>
-                            <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                                ${this.formatReportType(report.type)}
-                            </span>
-                        </div>
-                        
-                        <div class="text-xs text-gray-500 mb-3">
-                            <i data-lucide="calendar" class="w-3 h-3 inline mr-1"></i>
-                            ${new Date(report.created_at).toLocaleDateString()}
-                        </div>
-                        
-                        <div class="flex gap-2">
-                            <button class="edit-report-btn flex-1 px-3 py-2 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center gap-1" data-report-id="${report.id}">
-                                <i data-lucide="edit-2" class="w-3 h-3"></i>
-                                Edit
-                            </button>
-                            <button class="delete-report-btn flex-1 px-3 py-2 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition-colors duration-200 flex items-center justify-center gap-1" data-report-id="${report.id}">
-                                <i data-lucide="trash-2" class="w-3 h-3"></i>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                `;
-                
-                marker.bindPopup(popupContent, {
-                    maxWidth: 300,
-                    className: 'custom-popup'
+                const response = await fetch(`/api/reports-public/${this.editingReport.id}`, {
+                    method: 'PUT',
+                    headers: headers,
+                    body: requestData
                 });
 
-                // Add event listeners when popup opens
-                marker.on('popupopen', () => {
-                    // Re-initialize Lucide icons for new popup content
-                    setTimeout(() => {
-                        lucide.createIcons();
-                        
-                        // Add event listeners to buttons
-                        const editBtn = document.querySelector(`.edit-report-btn[data-report-id="${report.id}"]`);
-                        const deleteBtn = document.querySelector(`.delete-report-btn[data-report-id="${report.id}"]`);
-                        
-                        if (editBtn) {
-                            editBtn.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                this.editReport(report.id);
-                            });
-                        }
-                        
-                        if (deleteBtn) {
-                            deleteBtn.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                this.deleteReport(report.id);
-                            });
-                        }
-                    }, 100);
-                });
-            });
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert('Report updated successfully!');
+                    this.closeEditForm();
+                    // Update the report in the list
+                    const index = this.reports.findIndex(r => r.id == this.editingReport.id);
+                    if (index !== -1) {
+                        this.reports[index] = result.data;
+                    }
+                    // Reload the map to show updated markers
+                    this.reloadMap();
+                } else {
+                    throw new Error(result.message || 'Failed to update report');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error updating report: ' + error.message);
+            } finally {
+                const submitBtn = document.querySelector('#edit-form button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 mr-2"></i>Update Report';
+                    submitBtn.disabled = false;
+                }
+                // Re-initialize Lucide icons
+                setTimeout(() => lucide.createIcons(), 100);
+            }
+        },
+
+        closeEditForm() {
+            this.showEditForm = false;
+            this.editingReport = null;
+            this.editSelectedImages = [];
+            this.resetForm();
         },
 
         getMarkerColor(urgency) {
@@ -991,6 +962,7 @@ function mapComponent() {
             this.showReportForm = false;
             this.addReportMode = false;
             this.newReportLocation = null;
+            this.selectedImages = [];
             this.resetForm();
         },
         
@@ -1002,6 +974,7 @@ function mapComponent() {
                 urgency: '',
                 latitude: '',
                 longitude: '',
+                address: ''
             };
         },
         
@@ -1009,18 +982,32 @@ function mapComponent() {
             try {
                 // Show loading state
                 const submitBtn = document.querySelector('button[type="submit"]');
-                const originalText = submitBtn.textContent;
-                submitBtn.textContent = 'Submitting...';
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Adding...';
                 submitBtn.disabled = true;
+
+                // Create FormData for file upload
+                const formData = new FormData();
+                
+                // Add form fields
+                Object.keys(this.reportForm).forEach(key => {
+                    if (this.reportForm[key] !== null && this.reportForm[key] !== '') {
+                        formData.append(key, this.reportForm[key]);
+                    }
+                });
+                
+                // Add images
+                this.selectedImages.forEach((imageObj, index) => {
+                    formData.append('images[]', imageObj.file);
+                });
 
                 const response = await fetch('/api/reports-public', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify(this.reportForm)
+                    body: formData
                 });
 
                 const result = await response.json();
@@ -1032,77 +1019,7 @@ function mapComponent() {
                     
                     // Add the new report to the map immediately
                     const newReport = result.data;
-                    const iconColor = this.getMarkerColor(newReport.urgency);
-                    const marker = L.circleMarker([parseFloat(newReport.latitude), parseFloat(newReport.longitude)], {
-                        radius: 8,
-                        fillColor: iconColor,
-                        color: '#fff',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                    }).addTo(this.map);
-                    
-                    const popupContent = `
-                        <div class="p-4 max-w-sm">
-                            <h3 class="font-bold text-lg mb-2 text-gray-900">${newReport.title}</h3>
-                            <p class="text-sm text-gray-600 mb-3 leading-relaxed">${newReport.description}</p>
-                            
-                            <div class="flex flex-wrap gap-2 mb-3">
-                                <span class="px-2 py-1 rounded-full text-xs font-medium ${this.getUrgencyClass(newReport.urgency)}">
-                                    ${this.capitalizeFirst(newReport.urgency)} priority
-                                </span>
-                                <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                                    ${this.formatReportType(newReport.type)}
-                                </span>
-                            </div>
-                            
-                            <div class="text-xs text-gray-500 mb-3">
-                                <i data-lucide="calendar" class="w-3 h-3 inline mr-1"></i>
-                                Just now
-                            </div>
-                            
-                            <div class="flex gap-2">
-                                <button class="edit-report-btn flex-1 px-3 py-2 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center gap-1" data-report-id="${newReport.id}">
-                                    <i data-lucide="edit-2" class="w-3 h-3"></i>
-                                    Edit
-                                </button>
-                                <button class="delete-report-btn flex-1 px-3 py-2 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition-colors duration-200 flex items-center justify-center gap-1" data-report-id="${newReport.id}">
-                                    <i data-lucide="trash-2" class="w-3 h-3"></i>
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    
-                    marker.bindPopup(popupContent, {
-                        maxWidth: 300,
-                        className: 'custom-popup'
-                    });
-                    
-                    // Add event listeners for new marker
-                    marker.on('popupopen', () => {
-                        setTimeout(() => {
-                            lucide.createIcons();
-                            
-                            const editBtn = document.querySelector(`.edit-report-btn[data-report-id="${newReport.id}"]`);
-                            const deleteBtn = document.querySelector(`.delete-report-btn[data-report-id="${newReport.id}"]`);
-                            
-                            if (editBtn) {
-                                editBtn.addEventListener('click', (e) => {
-                                    e.preventDefault();
-                                    this.editReport(newReport.id);
-                                });
-                            }
-                            
-                            if (deleteBtn) {
-                                deleteBtn.addEventListener('click', (e) => {
-                                    e.preventDefault();
-                                    this.deleteReport(newReport.id);
-                                });
-                            }
-                        }, 100);
-                    });
-                    
+                    this.addReportToMap(newReport);
                     this.reports.push(newReport);
                 } else {
                     throw new Error(result.message || 'Failed to submit report');
@@ -1114,9 +1031,106 @@ function mapComponent() {
                 // Reset button state
                 const submitBtn = document.querySelector('button[type="submit"]');
                 if (submitBtn) {
-                    submitBtn.textContent = 'Submit Report';
+                    submitBtn.innerHTML = '<i data-lucide="plus" class="w-4 h-4 mr-2"></i>Add Report';
                     submitBtn.disabled = false;
                 }
+                // Re-initialize Lucide icons
+                setTimeout(() => lucide.createIcons(), 100);
+            }
+        },
+
+        addReportToMap(report) {
+            if (!report.latitude || !report.longitude) return;
+
+            const iconColor = this.getMarkerColor(report.urgency);
+            const marker = L.circleMarker([parseFloat(report.latitude), parseFloat(report.longitude)], {
+                radius: 8,
+                fillColor: iconColor,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(this.map);
+            
+            const popupContent = this.createPopupContent(report);
+            marker.bindPopup(popupContent, {
+                maxWidth: 300,
+                className: 'custom-popup'
+            });
+
+            // Add event listeners when popup opens
+            marker.on('popupopen', () => {
+                setTimeout(() => {
+                    lucide.createIcons();
+                    this.setupPopupButtons(report.id);
+                }, 100);
+            });
+        },
+
+        createPopupContent(report) {
+            // Handle images display
+            let imageSection = '';
+            if (report.image_urls && report.image_urls.length > 0) {
+                const firstImage = report.image_urls[0];
+                const imageCount = report.image_urls.length > 1 ? `<div class="absolute top-1 right-1 bg-black/60 text-white px-1 py-0.5 rounded text-xs">+${report.image_urls.length}</div>` : '';
+                imageSection = `
+                    <div class="relative mb-3">
+                        <img src="${firstImage}" class="w-full h-32 object-cover rounded-lg" alt="${report.title}">
+                        ${imageCount}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="p-4 max-w-sm">
+                    ${imageSection}
+                    <h3 class="font-bold text-lg mb-2 text-gray-900">${report.title}</h3>
+                    <p class="text-sm text-gray-600 mb-3 leading-relaxed">${report.description}</p>
+                    
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${this.getUrgencyClass(report.urgency)}">
+                            ${this.capitalizeFirst(report.urgency)} priority
+                        </span>
+                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                            ${this.formatReportType(report.type)}
+                        </span>
+                    </div>
+                    
+                    <div class="text-xs text-gray-500 mb-3">
+                        <i data-lucide="calendar" class="w-3 h-3 inline mr-1"></i>
+                        ${new Date(report.created_at).toLocaleDateString()}
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button class="edit-report-btn flex-1 px-3 py-2 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center gap-1" data-report-id="${report.id}">
+                            <i data-lucide="edit-2" class="w-3 h-3"></i>
+                            Edit
+                        </button>
+                        <button class="delete-report-btn flex-1 px-3 py-2 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition-colors duration-200 flex items-center justify-center gap-1" data-report-id="${report.id}">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        },
+
+        setupPopupButtons(reportId) {
+            const editBtn = document.querySelector(`.edit-report-btn[data-report-id="${reportId}"]`);
+            const deleteBtn = document.querySelector(`.delete-report-btn[data-report-id="${reportId}"]`);
+            
+            if (editBtn) {
+                editBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.editReport(reportId);
+                });
+            }
+            
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.deleteReport(reportId);
+                });
             }
         },
 
