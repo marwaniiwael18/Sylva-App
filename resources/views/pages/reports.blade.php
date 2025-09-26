@@ -3,6 +3,19 @@
 @section('page-title', 'Reports')
 @section('page-subtitle', 'Manage environmental reports and track their status')
 
+@push('styles')
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+.leaflet-container {
+    z-index: 1;
+}
+.modal-content {
+    z-index: 1000;
+}
+</style>
+@endpush
+
 @section('page-content')
 <div class="p-6 space-y-6">
     <!-- Statistics Cards -->
@@ -204,21 +217,26 @@
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Latitude *</label>
-                                            <input type="number" id="addLatitude" name="latitude" required
-                                                   step="0.000001" min="-90" max="90"
-                                                   placeholder="e.g., 40.7128"
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Location * 
+                                            <span class="text-xs text-gray-500">(Click on the map to select location)</span>
+                                        </label>
+                                        <div class="border border-gray-300 rounded-lg overflow-hidden">
+                                            <div id="addReportMap" class="h-64 bg-gray-100 relative">
+                                                <div class="absolute inset-0 flex items-center justify-center">
+                                                    <div class="text-center">
+                                                        <i data-lucide="map-pin" class="w-8 h-8 mx-auto text-gray-400 mb-2"></i>
+                                                        <p class="text-sm text-gray-500">Loading map...</p>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Longitude *</label>
-                                            <input type="number" id="addLongitude" name="longitude" required
-                                                   step="0.000001" min="-180" max="180"
-                                                   placeholder="e.g., -74.0060"
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                        <!-- Hidden inputs for coordinates -->
+                                        <input type="hidden" id="addLatitude" name="latitude" required>
+                                        <input type="hidden" id="addLongitude" name="longitude" required>
+                                        <div class="mt-2 text-xs text-gray-600">
+                                            <span id="selectedCoordinates">No location selected</span>
                                         </div>
                                     </div>
 
@@ -325,25 +343,108 @@
 </div>
 
 @push('scripts')
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 let currentEditingReportId = null;
 let reports = @json($reports->items());
+let addReportMap = null;
+let currentMarker = null;
 
 // Add Report Functions
 function openAddReportModal() {
     document.getElementById('addReportModal').classList.remove('hidden');
+    
+    // Initialize map after modal is shown
+    setTimeout(() => {
+        initializeAddReportMap();
+    }, 100);
 }
 
 function closeAddModal() {
     document.getElementById('addReportModal').classList.add('hidden');
     document.getElementById('addReportForm').reset();
+    
+    // Reset map and coordinates
+    if (addReportMap) {
+        addReportMap.remove();
+        addReportMap = null;
+    }
+    currentMarker = null;
+    document.getElementById('addLatitude').value = '';
+    document.getElementById('addLongitude').value = '';
+    document.getElementById('selectedCoordinates').textContent = 'No location selected';
+}
+
+function initializeAddReportMap() {
+    if (addReportMap) {
+        addReportMap.remove();
+    }
+    
+    // Default to New York City center
+    const defaultLat = 40.7128;
+    const defaultLng = -74.0060;
+    
+    // Initialize map
+    addReportMap = L.map('addReportMap').setView([defaultLat, defaultLng], 12);
+    
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(addReportMap);
+    
+    // Add click event to map
+    addReportMap.on('click', function(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        
+        // Remove previous marker
+        if (currentMarker) {
+            addReportMap.removeLayer(currentMarker);
+        }
+        
+        // Add new marker
+        currentMarker = L.marker([lat, lng]).addTo(addReportMap);
+        
+        // Update hidden inputs
+        document.getElementById('addLatitude').value = lat.toFixed(6);
+        document.getElementById('addLongitude').value = lng.toFixed(6);
+        
+        // Update coordinate display
+        document.getElementById('selectedCoordinates').textContent = 
+            `Selected: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        
+        // Try to get address using reverse geocoding
+        getAddressFromCoordinates(lat, lng);
+    });
+    
+    // Try to get user's current location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            addReportMap.setView([userLat, userLng], 15);
+        }, function() {
+            // If geolocation fails, keep default location
+        });
+    }
+}
+
+async function getAddressFromCoordinates(lat, lng) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+        const data = await response.json();
+        
+        if (data.display_name) {
+            document.getElementById('addAddress').value = data.display_name;
+        }
+    } catch (error) {
+        console.log('Could not get address:', error);
+    }
 }
 
 function getCurrentLocation() {
-    const latInput = document.getElementById('addLatitude');
-    const lngInput = document.getElementById('addLongitude');
-    const addressInput = document.getElementById('addAddress');
-    
     if (!navigator.geolocation) {
         alert('Geolocation is not supported by this browser.');
         return;
@@ -357,26 +458,38 @@ function getCurrentLocation() {
 
     navigator.geolocation.getCurrentPosition(
         function(position) {
-            latInput.value = position.coords.latitude.toFixed(6);
-            lngInput.value = position.coords.longitude.toFixed(6);
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
             
-            // Try to get address using reverse geocoding (optional)
-            fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.display_name) {
-                        addressInput.value = data.display_name;
-                    }
-                })
-                .catch(() => {
-                    // Ignore geocoding errors
-                });
+            // Update map view and add marker
+            if (addReportMap) {
+                addReportMap.setView([lat, lng], 16);
+                
+                // Remove previous marker
+                if (currentMarker) {
+                    addReportMap.removeLayer(currentMarker);
+                }
+                
+                // Add new marker
+                currentMarker = L.marker([lat, lng]).addTo(addReportMap);
+                
+                // Update hidden inputs
+                document.getElementById('addLatitude').value = lat.toFixed(6);
+                document.getElementById('addLongitude').value = lng.toFixed(6);
+                
+                // Update coordinate display
+                document.getElementById('selectedCoordinates').textContent = 
+                    `Selected: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                
+                // Try to get address
+                getAddressFromCoordinates(lat, lng);
+            }
                 
             // Reset button
             btn.innerHTML = originalHtml;
             btn.disabled = false;
             
-            alert('Location captured successfully!');
+            alert('Current location set successfully!');
         },
         function(error) {
             // Reset button
@@ -417,9 +530,13 @@ document.getElementById('addReportForm').addEventListener('submit', async functi
     };
 
     // Validation
-    if (!reportData.title || !reportData.description || !reportData.type || !reportData.urgency || 
-        isNaN(reportData.latitude) || isNaN(reportData.longitude)) {
+    if (!reportData.title || !reportData.description || !reportData.type || !reportData.urgency) {
         alert('Please fill in all required fields');
+        return;
+    }
+    
+    if (isNaN(reportData.latitude) || isNaN(reportData.longitude)) {
+        alert('Please select a location on the map');
         return;
     }
     
@@ -466,6 +583,166 @@ document.getElementById('addReportForm').addEventListener('submit', async functi
         }
     }
 });
+
+// Function to add new report to table instantly
+function addReportToTable(report) {
+    const tbody = document.querySelector('table tbody');
+    
+    // Remove "no reports found" message if it exists
+    const noReportsMsg = tbody.querySelector('tr td[colspan="7"]');
+    if (noReportsMsg) {
+        noReportsMsg.parentElement.remove();
+    }
+
+    // Format type display
+    const typeDisplay = report.type.replace('_', ' ').split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+
+    // Create urgency color class
+    const urgencyClass = report.urgency === 'high' ? 'bg-red-100 text-red-800' : 
+                        (report.urgency === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800');
+
+    // Create new row
+    const newRow = document.createElement('tr');
+    newRow.className = 'hover:bg-gray-50';
+    newRow.innerHTML = `
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">${report.title}</div>
+            <div class="text-sm text-gray-500">${report.description.length > 50 ? report.description.substring(0, 50) + '...' : report.description}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                ${typeDisplay}
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${urgencyClass}">
+                ${report.urgency.charAt(0).toUpperCase() + report.urgency.slice(1)}
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                Pending
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            ${report.user ? report.user.name : 'Test User'}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <div class="flex space-x-2">
+                <a href="/map" class="text-green-600 hover:text-green-900 text-xs px-2 py-1 border border-green-600 rounded hover:bg-green-50 transition-colors duration-200">
+                    <i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i>
+                    View on Map
+                </a>
+                <button onclick="editReportModal(${report.id})" class="text-blue-600 hover:text-blue-900 text-xs px-2 py-1 border border-blue-600 rounded hover:bg-blue-50 transition-colors duration-200">
+                    <i data-lucide="edit-2" class="w-3 h-3 inline mr-1"></i>
+                    Edit
+                </button>
+                <button onclick="deleteReportConfirm(${report.id})" class="text-red-600 hover:text-red-900 text-xs px-2 py-1 border border-red-600 rounded hover:bg-red-50 transition-colors duration-200">
+                    <i data-lucide="trash-2" class="w-3 h-3 inline mr-1"></i>
+                    Delete
+                </button>
+            </div>
+        </td>
+    `;
+    
+    // Insert at the beginning of the table
+    tbody.insertBefore(newRow, tbody.firstChild);
+    
+    // Add to reports array
+    reports.unshift(report);
+    
+    // Add a subtle highlight animation
+    newRow.style.backgroundColor = '#f0fdf4';
+    setTimeout(() => {
+        newRow.style.backgroundColor = '';
+    }, 3000);
+    
+    // Re-initialize Lucide icons for the new row
+    lucide.createIcons();
+}
+
+// Function to update statistics
+function updateStatistics() {
+    // Update total reports count
+    const totalElement = document.querySelector('.grid .bg-white:first-child p.text-2xl');
+    if (totalElement) {
+        const currentTotal = parseInt(totalElement.textContent);
+        totalElement.textContent = currentTotal + 1;
+    }
+    
+    // Update pending reports count
+    const pendingElement = document.querySelector('.grid .bg-white:nth-child(2) p.text-2xl');
+    if (pendingElement) {
+        const currentPending = parseInt(pendingElement.textContent);
+        pendingElement.textContent = currentPending + 1;
+    }
+    
+    // Update this month count
+    const thisMonthElement = document.querySelector('.grid .bg-white:last-child p.text-2xl');
+    if (thisMonthElement) {
+        const currentThisMonth = parseInt(thisMonthElement.textContent);
+        thisMonthElement.textContent = currentThisMonth + 1;
+    }
+}
+
+// Edit Report Functions
+function editReportModal(reportId) {
+    const report = reports.find(r => r.id == reportId);
+    if (!report) {
+        alert('Report not found');
+        return;
+    }
+    
+    currentEditingReportId = reportId;
+    
+    // Populate the form
+    document.getElementById('editTitle').value = report.title;
+    document.getElementById('editDescription').value = report.description;
+    document.getElementById('editType').value = report.type;
+    document.getElementById('editUrgency').value = report.urgency;
+    
+    // Show modal
+    document.getElementById('editReportModal').classList.remove('hidden');
+}
+
+function closeEditModal() {
+    document.getElementById('editReportModal').classList.add('hidden');
+    currentEditingReportId = null;
+}
+
+async function deleteReportConfirm(reportId) {
+    if (!confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/reports-public/${reportId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            }
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            alert('Report deleted successfully!');
+            // Reload the page to reflect changes
+            window.location.reload();
+        } else {
+            throw new Error(result.message || 'Failed to delete report');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error deleting report: ' + error.message);
+    }
+}
 
 // Function to add new report to table instantly
 function addReportToTable(report) {
