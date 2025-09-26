@@ -7,28 +7,6 @@
     <!-- Map Container -->
     <div id="map" class="w-full h-full rounded-xl shadow-lg"></div>
 
-    <!-- Floating Action Buttons -->
-        <!-- Floating Action Buttons -->
-    <div class="absolute bottom-6 right-6 z-[1000] flex flex-col space-y-3">
-        <!-- Add Report Button -->
-        <button
-            x-on:click="toggleAddReport()"
-            class="w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-white transition-all duration-300 border-4 border-white hover:scale-110 transform focus:outline-none focus:ring-4 focus:ring-offset-2"
-            :class="showAddReport ? 'bg-red-500 hover:bg-red-600 rotate-45 focus:ring-red-300' : 'bg-green-500 hover:bg-green-600 focus:ring-green-300'"
-        >
-            <i :data-lucide="showAddReport ? 'x' : 'plus'" class="w-6 h-6"></i>
-        </button>
-
-        <!-- Search Button -->
-        <button
-            x-data="{ showSearch: false }"
-            x-on:click="showSearch = !showSearch"
-            class="w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white transition-all duration-300 border-3 border-white hover:scale-110 transform bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-offset-2"
-        >
-            <i data-lucide="search" class="w-5 h-5"></i>
-        </button>
-    </div>
-
     <!-- Map Legend -->
     <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-gray-200 z-[1000] max-w-48">
         <h3 class="font-bold text-gray-900 mb-3 text-sm flex items-center gap-2">
@@ -73,30 +51,24 @@
         </div>
     </div>
 
-    <!-- Add Report Instructions -->
-    <div x-show="showAddReport" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 transform scale-95"
-         x-transition:enter-end="opacity-100 transform scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 transform scale-100"
-         x-transition:leave-end="opacity-0 transform scale-95"
-         class="absolute bottom-32 right-6 bg-white rounded-xl shadow-2xl p-6 max-w-xs border border-gray-100 z-[1000]"
-         x-cloak>
-        <div class="flex items-center space-x-3 mb-3">
-            <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                <i data-lucide="map-pin" class="w-5 h-5 text-white"></i>
-            </div>
-            <span class="font-bold text-gray-900 text-lg">Add Report</span>
-        </div>
-        <p class="text-sm text-gray-600 leading-relaxed">
-            Click anywhere on the map to report an environmental issue or suggest a location for greening initiatives.
-        </p>
-        <div class="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
-            <p class="text-xs text-green-700 font-medium">
-                💡 Tip: Choose precise locations for better community response
-            </p>
-        </div>
+    <!-- New Floating Action Buttons -->
+    <div class="absolute bottom-6 right-6 z-[1000] flex flex-col space-y-3">
+        <!-- Add Report Button -->
+        <button
+            x-on:click="toggleAddReportMode()"
+            class="w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-white transition-all duration-300 border-4 border-white hover:scale-110 transform focus:outline-none focus:ring-4 focus:ring-offset-2"
+            :class="addReportMode ? 'bg-red-500 hover:bg-red-600 rotate-45 focus:ring-red-300' : 'bg-green-500 hover:bg-green-600 focus:ring-green-300'"
+        >
+            <i :data-lucide="addReportMode ? 'x' : 'plus'" class="w-6 h-6"></i>
+        </button>
+
+        <!-- Search Button -->
+        <button
+            x-on:click="openSearchDialog()"
+            class="w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white transition-all duration-300 border-3 border-white hover:scale-110 transform bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-offset-2"
+        >
+            <i data-lucide="search" class="w-5 h-5"></i>
+        </button>
     </div>
 
     <!-- Report Form Modal -->
@@ -297,6 +269,79 @@
             </div>
         </div>
     </div>
+
+    <!-- Search Dialog Modal -->
+    <div x-show="showSearchDialog"
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[10000] overflow-y-auto"
+         x-cloak>
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                                <i data-lucide="search" class="w-5 h-5 inline mr-2"></i>
+                                Search & Filter Reports
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Search by title or description</label>
+                                    <input type="text" x-model="searchQuery" placeholder="Enter search keywords..."
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Filter by type</label>
+                                    <select x-model="searchType"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">All Types</option>
+                                        <option value="tree_planting">Tree Planting</option>
+                                        <option value="maintenance">Maintenance</option>
+                                        <option value="pollution">Pollution</option>
+                                        <option value="green_space_suggestion">Green Space Suggestion</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Filter by urgency</label>
+                                    <select x-model="searchUrgency"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">All Priorities</option>
+                                        <option value="low">Low Priority</option>
+                                        <option value="medium">Medium Priority</option>
+                                        <option value="high">High Priority</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" x-on:click="applyFilters()"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Apply Filters
+                    </button>
+                    <button type="button" x-on:click="clearFilters()"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Clear All
+                    </button>
+                    <button type="button" x-on:click="closeSearchDialog()"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -363,12 +408,17 @@
 function mapComponent() {
     return {
         map: null,
-        showAddReport: false,
+        addReportMode: false,
         showReportForm: false,
         showEditForm: false,
+        showSearchDialog: false,
         newReportLocation: null,
         editingReport: null,
         reports: @json($reports),
+        allReports: @json($reports), // Keep copy for search filtering
+        searchQuery: '',
+        searchType: '',
+        searchUrgency: '',
         reportForm: {
             title: '',
             description: '',
@@ -392,7 +442,7 @@ function mapComponent() {
             
             // Add click event listener
             this.map.on('click', (e) => {
-                if (this.showAddReport) {
+                if (this.addReportMode) {
                     this.newReportLocation = {
                         latitude: e.latlng.lat,
                         longitude: e.latlng.lng
@@ -400,6 +450,7 @@ function mapComponent() {
                     this.reportForm.latitude = e.latlng.lat;
                     this.reportForm.longitude = e.latlng.lng;
                     this.showReportForm = true;
+                    this.addReportMode = false; // Exit add mode after placing report
                 }
             });
         },
@@ -526,17 +577,68 @@ function mapComponent() {
             return classes[urgency] || 'bg-gray-100 text-gray-800';
         },
         
-        toggleAddReport() {
-            this.showAddReport = !this.showAddReport;
+        toggleAddReportMode() {
+            this.addReportMode = !this.addReportMode;
             this.newReportLocation = null;
-            if (!this.showAddReport) {
+            if (!this.addReportMode) {
                 this.showReportForm = false;
             }
+        },
+
+        openSearchDialog() {
+            this.showSearchDialog = true;
+        },
+
+        closeSearchDialog() {
+            this.showSearchDialog = false;
+            this.searchQuery = '';
+            this.searchType = '';
+            this.searchUrgency = '';
+        },
+
+        applyFilters() {
+            let filteredReports = [...this.allReports];
+
+            // Filter by search query
+            if (this.searchQuery.trim()) {
+                const query = this.searchQuery.toLowerCase();
+                filteredReports = filteredReports.filter(report =>
+                    report.title.toLowerCase().includes(query) ||
+                    report.description.toLowerCase().includes(query)
+                );
+            }
+
+            // Filter by type
+            if (this.searchType) {
+                filteredReports = filteredReports.filter(report => report.type === this.searchType);
+            }
+
+            // Filter by urgency
+            if (this.searchUrgency) {
+                filteredReports = filteredReports.filter(report => report.urgency === this.searchUrgency);
+            }
+
+            this.reports = filteredReports;
+            this.reloadMap();
+            this.closeSearchDialog();
+
+            // Show user feedback
+            alert(`Found ${filteredReports.length} report${filteredReports.length !== 1 ? 's' : ''} matching your criteria.`);
+        },
+
+        clearFilters() {
+            this.reports = [...this.allReports];
+            this.searchQuery = '';
+            this.searchType = '';
+            this.searchUrgency = '';
+            this.reloadMap();
+            this.closeSearchDialog();
+            alert('All filters cleared. Showing all reports.');
         },
         
         closeReportForm() {
             this.showReportForm = false;
-            this.showAddReport = false;
+            this.addReportMode = false;
             this.newReportLocation = null;
             this.resetForm();
         },
