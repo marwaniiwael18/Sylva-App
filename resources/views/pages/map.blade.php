@@ -71,6 +71,104 @@
         </button>
     </div>
 
+    <!-- Search Bar Overlay -->
+    <div x-show="showSearchDialog" 
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1001] w-full max-w-md"
+         x-cloak>
+        <div class="bg-white rounded-lg shadow-2xl border border-gray-200 p-4">
+            <div class="flex items-center space-x-3 mb-4">
+                <i data-lucide="search" class="w-5 h-5 text-blue-500"></i>
+                <h3 class="text-lg font-semibold text-gray-900">Search Reports</h3>
+                <button x-on:click="closeSearchDialog()" class="ml-auto p-1 hover:bg-gray-100 rounded">
+                    <i data-lucide="x" class="w-4 h-4 text-gray-500"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-3">
+                <!-- Location Search with Autocomplete -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Search by location</label>
+                    <div class="relative">
+                        <input type="text" 
+                               x-model="searchQuery"
+                               x-on:input="searchPlaces()"
+                               placeholder="Search for places in Paris..."
+                               class="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i data-lucide="map-pin" class="absolute left-3 top-3 w-4 h-4 text-gray-400"></i>
+                    </div>
+                    <!-- Autocomplete suggestions -->
+                    <div x-show="searchSuggestions.length > 0" 
+                         class="absolute bg-white border border-gray-200 rounded-lg mt-1 w-full shadow-lg z-[1002]"
+                         x-cloak>
+                        <template x-for="suggestion in searchSuggestions" :key="suggestion.place_id">
+                            <div x-on:click="selectPlace(suggestion)" 
+                                 class="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
+                                <div class="font-medium text-sm" x-text="suggestion.display_name"></div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                
+                <!-- Filter by Type -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Filter by type</label>
+                    <select x-model="searchType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Types</option>
+                        <option value="tree_planting">Tree Planting</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="pollution">Pollution</option>
+                        <option value="green_space_suggestion">Green Space</option>
+                    </select>
+                </div>
+                
+                <!-- Filter by Urgency -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Filter by urgency</label>
+                    <select x-model="searchUrgency" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Priorities</option>
+                        <option value="low">Low Priority</option>
+                        <option value="medium">Medium Priority</option>
+                        <option value="high">High Priority</option>
+                    </select>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex space-x-2 pt-2">
+                    <button x-on:click="applySearch()" 
+                            class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium">
+                        Apply Filters
+                    </button>
+                    <button x-on:click="clearFilters()" 
+                            class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm font-medium">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Report Mode Instructions -->
+    <div x-show="addReportMode" 
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[999] bg-green-600 text-white px-6 py-3 rounded-full shadow-lg pointer-events-none"
+         x-cloak>
+        <div class="flex items-center space-x-2">
+            <i data-lucide="crosshair" class="w-5 h-5 animate-pulse"></i>
+            <span class="font-medium">Click anywhere on the map to place a report</span>
+        </div>
+    </div>
+
     <!-- Report Form Modal -->
             Map Legend
         </h3>
@@ -419,6 +517,7 @@ function mapComponent() {
         searchQuery: '',
         searchType: '',
         searchUrgency: '',
+        searchSuggestions: [],
         reportForm: {
             title: '',
             description: '',
@@ -634,6 +733,63 @@ function mapComponent() {
             this.reloadMap();
             this.closeSearchDialog();
             alert('All filters cleared. Showing all reports.');
+        },
+
+        async searchPlaces() {
+            if (!this.searchQuery.trim() || this.searchQuery.length < 3) {
+                this.searchSuggestions = [];
+                return;
+            }
+
+            try {
+                // Using OpenStreetMap Nominatim API for place search
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.searchQuery)}&limit=5&addressdetails=1`);
+                const data = await response.json();
+                
+                this.searchSuggestions = data.map(place => ({
+                    name: place.display_name,
+                    lat: parseFloat(place.lat),
+                    lon: parseFloat(place.lon),
+                    type: place.type || 'location'
+                }));
+            } catch (error) {
+                console.error('Error searching places:', error);
+                this.searchSuggestions = [];
+            }
+        },
+
+        selectPlace(place) {
+            // Center the map on the selected place
+            if (this.map) {
+                this.map.setView([place.lat, place.lon], 15);
+                
+                // Add a temporary marker to show the selected location
+                if (this.selectedLocationMarker) {
+                    this.map.removeLayer(this.selectedLocationMarker);
+                }
+                
+                this.selectedLocationMarker = L.marker([place.lat, place.lon], {
+                    icon: L.divIcon({
+                        className: 'selected-location-marker',
+                        html: '<div style="background: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    })
+                }).addTo(this.map);
+                
+                // Remove the marker after 3 seconds
+                setTimeout(() => {
+                    if (this.selectedLocationMarker) {
+                        this.map.removeLayer(this.selectedLocationMarker);
+                        this.selectedLocationMarker = null;
+                    }
+                }, 3000);
+            }
+            
+            // Clear search
+            this.searchQuery = '';
+            this.searchSuggestions = [];
+            this.closeSearchDialog();
         },
         
         closeReportForm() {
