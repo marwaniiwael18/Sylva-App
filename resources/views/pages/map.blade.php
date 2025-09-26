@@ -51,24 +51,87 @@
         </div>
     </div>
 
-    <!-- New Floating Action Buttons -->
+    <!-- Simple Working Floating Buttons -->
     <div class="absolute bottom-6 right-6 z-[1000] flex flex-col space-y-3">
         <!-- Add Report Button -->
         <button
-            x-on:click="toggleAddReportMode()"
-            class="w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-white transition-all duration-300 border-4 border-white hover:scale-110 transform focus:outline-none focus:ring-4 focus:ring-offset-2"
-            :class="addReportMode ? 'bg-red-500 hover:bg-red-600 rotate-45 focus:ring-red-300' : 'bg-green-500 hover:bg-green-600 focus:ring-green-300'"
+            onclick="startAddReport()"
+            class="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 shadow-2xl flex items-center justify-center text-white transition-all duration-300 border-4 border-white hover:scale-110 transform focus:outline-none focus:ring-4 focus:ring-green-300 focus:ring-offset-2"
+            id="addReportBtn"
         >
-            <i :data-lucide="addReportMode ? 'x' : 'plus'" class="w-6 h-6"></i>
+            <i data-lucide="plus" class="w-6 h-6"></i>
         </button>
 
         <!-- Search Button -->
         <button
-            x-on:click="openSearchDialog()"
+            onclick="toggleSearch()"
             class="w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white transition-all duration-300 border-3 border-white hover:scale-110 transform bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-offset-2"
         >
             <i data-lucide="search" class="w-5 h-5"></i>
         </button>
+    </div>
+
+    <!-- Add Report Message -->
+    <div id="addReportMessage" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white px-8 py-4 rounded-lg shadow-2xl text-lg font-bold z-[10001] hidden">
+        Click where you want to add your report on the map
+        <button onclick="cancelAddReport()" class="ml-4 bg-red-500 px-3 py-1 rounded text-sm">Cancel</button>
+    </div>
+
+    <!-- Search Bar -->
+    <div id="searchBar" class="absolute top-4 right-4 bg-white rounded-lg shadow-xl p-4 w-80 z-[1001] hidden">
+        <div class="flex items-center space-x-2">
+            <input type="text" id="searchInput" placeholder="Search places..." class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="toggleSearch()" class="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <div id="searchResults" class="mt-2 max-h-40 overflow-y-auto"></div>
+    </div>
+
+    <!-- Simple Report Form Popup -->
+    <div id="reportFormPopup" class="fixed inset-0 bg-black bg-opacity-50 z-[10002] hidden" style="display: flex; align-items: center; justify-content: center;">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-xl font-bold mb-4">Add New Report</h3>
+            <form id="reportForm" onsubmit="submitReport(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                        <input type="text" id="reportTitle" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                        <select id="reportType" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <option value="">Select type...</option>
+                            <option value="tree_planting">Tree Planting</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="pollution">Pollution</option>
+                            <option value="green_space_suggestion">Green Space</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Urgency</label>
+                        <select id="reportUrgency" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <option value="">Select urgency...</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea id="reportDescription" rows="3" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
+                    </div>
+                    <div class="flex space-x-3 pt-4">
+                        <button type="submit" class="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                            Save Report
+                        </button>
+                        <button type="button" onclick="closeReportForm()" class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Search Bar Overlay -->
@@ -503,6 +566,144 @@
 @push('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// Global variables for simple functionality
+let isAddingReport = false;
+let selectedLocation = null;
+let mapInstance = null;
+
+// Simple functions for the buttons
+function startAddReport() {
+    isAddingReport = true;
+    document.getElementById('addReportMessage').classList.remove('hidden');
+    document.getElementById('addReportBtn').innerHTML = '<i data-lucide="x" class="w-6 h-6"></i>';
+    document.getElementById('addReportBtn').classList.add('bg-red-500', 'hover:bg-red-600');
+    document.getElementById('addReportBtn').classList.remove('bg-green-500', 'hover:bg-green-600');
+    lucide.createIcons();
+}
+
+function cancelAddReport() {
+    isAddingReport = false;
+    document.getElementById('addReportMessage').classList.add('hidden');
+    document.getElementById('addReportBtn').innerHTML = '<i data-lucide="plus" class="w-6 h-6"></i>';
+    document.getElementById('addReportBtn').classList.remove('bg-red-500', 'hover:bg-red-600');
+    document.getElementById('addReportBtn').classList.add('bg-green-500', 'hover:bg-green-600');
+    lucide.createIcons();
+}
+
+function toggleSearch() {
+    const searchBar = document.getElementById('searchBar');
+    if (searchBar.classList.contains('hidden')) {
+        searchBar.classList.remove('hidden');
+        document.getElementById('searchInput').focus();
+        // Add input event listener for autocomplete
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', handleSearchInput);
+    } else {
+        searchBar.classList.add('hidden');
+    }
+}
+
+function handleSearchInput(event) {
+    const query = event.target.value;
+    const resultsDiv = document.getElementById('searchResults');
+    
+    if (query.length < 3) {
+        resultsDiv.innerHTML = '';
+        return;
+    }
+    
+    // Simple search using Nominatim (OpenStreetMap)
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=fr&limit=5`)
+        .then(response => response.json())
+        .then(data => {
+            resultsDiv.innerHTML = '';
+            data.forEach(place => {
+                const div = document.createElement('div');
+                div.className = 'p-2 hover:bg-gray-100 cursor-pointer border-b';
+                div.textContent = place.display_name;
+                div.onclick = () => selectPlace(place);
+                resultsDiv.appendChild(div);
+            });
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            resultsDiv.innerHTML = '<div class="p-2 text-red-500">Search error</div>';
+        });
+}
+
+function selectPlace(place) {
+    const lat = parseFloat(place.lat);
+    const lng = parseFloat(place.lon);
+    
+    // Move map to selected place
+    if (mapInstance) {
+        mapInstance.setView([lat, lng], 15);
+    }
+    
+    // Close search bar
+    toggleSearch();
+}
+
+function showReportForm(lat, lng) {
+    selectedLocation = { lat, lng };
+    document.getElementById('reportFormPopup').classList.remove('hidden');
+    document.getElementById('reportFormPopup').style.display = 'flex';
+    // Hide the message
+    document.getElementById('addReportMessage').classList.add('hidden');
+}
+
+function closeReportForm() {
+    document.getElementById('reportFormPopup').classList.add('hidden');
+    document.getElementById('reportFormPopup').style.display = 'none';
+    cancelAddReport();
+    // Reset form
+    document.getElementById('reportForm').reset();
+}
+
+async function submitReport(event) {
+    event.preventDefault();
+    
+    if (!selectedLocation) {
+        alert('No location selected');
+        return;
+    }
+    
+    const formData = {
+        title: document.getElementById('reportTitle').value,
+        type: document.getElementById('reportType').value,
+        urgency_level: document.getElementById('reportUrgency').value,
+        description: document.getElementById('reportDescription').value,
+        latitude: selectedLocation.lat,
+        longitude: selectedLocation.lng
+    };
+    
+    try {
+        const response = await fetch('/api/reports-public', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            alert('Report added successfully!');
+            closeReportForm();
+            // Refresh the page to show the new report
+            window.location.reload();
+        } else {
+            throw new Error(result.message || 'Failed to create report');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error creating report: ' + error.message);
+    }
+}
+
 function mapComponent() {
     return {
         map: null,
@@ -534,22 +735,16 @@ function mapComponent() {
         
         initMap() {
             this.map = L.map('map').setView([48.8566, 2.3522], 12);
+            mapInstance = this.map; // Store globally for simple functions
             
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             }).addTo(this.map);
             
-            // Add click event listener
+            // Simple click event listener for adding reports
             this.map.on('click', (e) => {
-                if (this.addReportMode) {
-                    this.newReportLocation = {
-                        latitude: e.latlng.lat,
-                        longitude: e.latlng.lng
-                    };
-                    this.reportForm.latitude = e.latlng.lat;
-                    this.reportForm.longitude = e.latlng.lng;
-                    this.showReportForm = true;
-                    this.addReportMode = false; // Exit add mode after placing report
+                if (isAddingReport) {
+                    showReportForm(e.latlng.lat, e.latlng.lng);
                 }
             });
         },
