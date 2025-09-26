@@ -124,8 +124,12 @@ class ReportController extends Controller
      */
     public function update(Request $request, Report $report): JsonResponse
     {
-        // Check if user can update this report (skip check if not authenticated - for testing)
-        if (Auth::id() && $report->user_id !== Auth::id()) {
+        // For public API endpoints, skip authentication check for testing
+        // In production, you should enable proper authentication
+        $isPublicEndpoint = $request->is('api/reports-public/*');
+        
+        // Check if user can update this report (skip check for public endpoints)
+        if (!$isPublicEndpoint && Auth::id() && $report->user_id !== Auth::id()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Non autorisé à modifier ce signalement'
@@ -176,8 +180,12 @@ class ReportController extends Controller
      */
     public function destroy(Report $report): JsonResponse
     {
-        // Check if user can delete this report (skip check if not authenticated - for testing)
-        if (Auth::id() && $report->user_id !== Auth::id()) {
+        // For public API endpoints, skip authentication check for testing
+        $request = request();
+        $isPublicEndpoint = $request->is('api/reports-public/*');
+        
+        // Check if user can delete this report (skip check for public endpoints)
+        if (!$isPublicEndpoint && Auth::id() && $report->user_id !== Auth::id()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Non autorisé à supprimer ce signalement'
@@ -204,8 +212,11 @@ class ReportController extends Controller
      */
     public function validate(Request $request, Report $report): JsonResponse
     {
-        // Check if user has permission to validate (skip check if not authenticated - for testing)
-        if (Auth::user() && !Auth::user()->canValidateReports()) {
+        // For public API endpoints, skip authentication check for testing
+        $isPublicEndpoint = $request->is('api/reports-public/*');
+        
+        // Check if user has permission to validate (skip check for public endpoints)
+        if (!$isPublicEndpoint && Auth::user() && !Auth::user()->isAdmin() && !Auth::user()->isModerator()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Non autorisé à valider ce signalement'

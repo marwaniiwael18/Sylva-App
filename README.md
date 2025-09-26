@@ -2,7 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Laravel-11-red?style=for-the-badge&logo=laravel" alt="Laravel 11">
-  <img src="https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react" alt="React 18">
+  <img src="https://img.shields.io/badge/Alpine.js-3-blue?style=for-the-badge&logo=alpine.js" alt="Alpine.js 3">
   <img src="https://img.shields.io/badge/Vite-7-purple?style=for-the-badge&logo=vite" alt="Vite 7">
   <img src="https://img.shields.io/badge/TailwindCSS-3-teal?style=for-the-badge&logo=tailwindcss" alt="TailwindCSS 3">
 </p>
@@ -13,7 +13,7 @@
 
 ## 🌍 About Sylva
 
-Sylva is a modern web application that empowers communities to participate in urban greening initiatives. Built with Laravel and React, it provides a comprehensive platform for organizing tree planting events, tracking environmental impact, and fostering community engagement in sustainability efforts.
+Sylva is a modern web application that empowers communities to participate in urban greening initiatives. Built with Laravel and Blade templates, it provides a comprehensive platform for organizing tree planting events, tracking environmental impact, and fostering community engagement in sustainability efforts.
 
 ### ✨ Key Features
 
@@ -35,13 +35,12 @@ Sylva is a modern web application that empowers communities to participate in ur
 - **Laravel Sanctum** - API authentication system
 
 ### Frontend
-- **React 18** - Component-based UI library with latest features
+- **Laravel Blade** - Server-side templating engine
+- **Alpine.js** - Lightweight JavaScript framework
 - **Vite** - Fast build tool and development server
 - **TailwindCSS 3** - Utility-first CSS framework
-- **Framer Motion** - Smooth animations and transitions
-- **React-Leaflet** - Interactive maps with OpenStreetMap
-- **Recharts** - Data visualization components
-- **Lucide React** - Modern icon library
+- **Leaflet** - Interactive maps with OpenStreetMap
+- **Lucide Icons** - Modern icon library
 
 ### Development Tools
 - **Composer** - PHP dependency management
@@ -167,13 +166,12 @@ sylva/
 ├── public/                       # Web server document root
 ├── resources/                    # Frontend resources
 │   ├── css/                      # CSS files
-│   ├── js/react/                 # React application
-│   │   ├── components/           # Reusable components
-│   │   ├── contexts/             # React contexts
-│   │   ├── data/                 # Static data
-│   │   ├── hooks/                # Custom hooks
-│   │   ├── pages/                # Page components
-│   │   └── utils/                # Utility functions
+│   ├── js/                       # JavaScript files
+│   └── views/                    # Blade templates
+│       ├── auth/                 # Authentication views
+│       ├── components/           # Reusable Blade components
+│       ├── layouts/              # Layout templates
+│       └── pages/                # Main page views
 │   └── views/                    # Blade templates
 ├── routes/                       # Application routes
 ├── storage/                      # Application storage
@@ -235,7 +233,7 @@ We welcome contributions to Sylva! Here's how you can help:
 ### Development Guidelines
 
 - Follow PSR-12 coding standards for PHP
-- Use ESLint and Prettier for JavaScript/React code
+- Use proper JavaScript formatting and Alpine.js conventions
 - Write descriptive commit messages
 - Add tests for new features
 - Update documentation as needed
@@ -277,7 +275,7 @@ This project is open-sourced software licensed under the [MIT license](https://o
 ## 🙏 Acknowledgments
 
 - **Laravel Team** - For the amazing PHP framework
-- **React Team** - For the powerful UI library
+- **Alpine.js Team** - For the lightweight JavaScript framework
 - **TailwindCSS** - For the utility-first CSS framework
 - **OpenStreetMap** - For the free and open mapping platform
 - **Open Source Community** - For the countless libraries and tools

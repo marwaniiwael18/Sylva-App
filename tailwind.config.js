@@ -3,7 +3,6 @@ export default {
   content: [
     "./resources/**/*.blade.php",
     "./resources/js/**/*.js",
-    "./resources/js/react/**/*.{js,ts,jsx,tsx}",
     "./resources/views/**/*.blade.php",
   ],
   theme: {
