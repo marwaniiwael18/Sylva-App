@@ -58,8 +58,13 @@
 
     <!-- Reports Table -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h3 class="text-lg font-semibold text-gray-900">Recent Reports</h3>
+            <button onclick="openAddReportModal()" 
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Add Report</span>
+            </button>
         </div>
         
         <div class="overflow-x-auto">
@@ -146,6 +151,112 @@
         @endif
     </div>
 
+    <!-- Add Report Modal -->
+    <div id="addReportModal" class="fixed inset-0 z-50 hidden overflow-y-auto" style="background-color: rgba(0, 0, 0, 0.5);">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form id="addReportForm">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                                    <i data-lucide="plus-circle" class="w-5 h-5 inline mr-2 text-green-600"></i>
+                                    Add New Report
+                                </h3>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Title *</label>
+                                        <input type="text" id="addTitle" name="title" required
+                                               placeholder="Enter report title"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                                        <textarea id="addDescription" name="description" required rows="3"
+                                                placeholder="Describe the environmental issue or suggestion"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Type *</label>
+                                            <select id="addType" name="type" required
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                                <option value="">Select type</option>
+                                                <option value="tree_planting">🌳 Tree Planting</option>
+                                                <option value="maintenance">🔧 Maintenance</option>
+                                                <option value="pollution">⚠️ Pollution</option>
+                                                <option value="green_space_suggestion">🌱 Green Space Suggestion</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Urgency *</label>
+                                            <select id="addUrgency" name="urgency" required
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                                <option value="">Select urgency</option>
+                                                <option value="low">🟢 Low</option>
+                                                <option value="medium">🟡 Medium</option>
+                                                <option value="high">🔴 High</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Latitude *</label>
+                                            <input type="number" id="addLatitude" name="latitude" required
+                                                   step="0.000001" min="-90" max="90"
+                                                   placeholder="e.g., 40.7128"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Longitude *</label>
+                                            <input type="number" id="addLongitude" name="longitude" required
+                                                   step="0.000001" min="-180" max="180"
+                                                   placeholder="e.g., -74.0060"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                                        <input type="text" id="addAddress" name="address"
+                                               placeholder="Optional: Enter full address"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                    </div>
+
+                                    <div class="flex items-center justify-between">
+                                        <button type="button" onclick="getCurrentLocation()" 
+                                                class="text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg flex items-center space-x-1 transition-colors">
+                                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                            <span>Use Current Location</span>
+                                        </button>
+                                        <span class="text-xs text-gray-500">* Required fields</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                            Add Report
+                        </button>
+                        <button type="button" onclick="closeAddModal()"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Edit Report Modal -->
     <div id="editReportModal" class="fixed inset-0 z-50 hidden overflow-y-auto" style="background-color: rgba(0, 0, 0, 0.5);">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -216,8 +327,250 @@
 @push('scripts')
 <script>
 let currentEditingReportId = null;
-const reports = @json($reports->items());
+let reports = @json($reports->items());
 
+// Add Report Functions
+function openAddReportModal() {
+    document.getElementById('addReportModal').classList.remove('hidden');
+}
+
+function closeAddModal() {
+    document.getElementById('addReportModal').classList.add('hidden');
+    document.getElementById('addReportForm').reset();
+}
+
+function getCurrentLocation() {
+    const latInput = document.getElementById('addLatitude');
+    const lngInput = document.getElementById('addLongitude');
+    const addressInput = document.getElementById('addAddress');
+    
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by this browser.');
+        return;
+    }
+
+    // Show loading state
+    const btn = event.target;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Getting location...</span>';
+    btn.disabled = true;
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            latInput.value = position.coords.latitude.toFixed(6);
+            lngInput.value = position.coords.longitude.toFixed(6);
+            
+            // Try to get address using reverse geocoding (optional)
+            fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.display_name) {
+                        addressInput.value = data.display_name;
+                    }
+                })
+                .catch(() => {
+                    // Ignore geocoding errors
+                });
+                
+            // Reset button
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            
+            alert('Location captured successfully!');
+        },
+        function(error) {
+            // Reset button
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    alert("User denied the request for Geolocation.");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    alert("Location information is unavailable.");
+                    break;
+                case error.TIMEOUT:
+                    alert("The request to get user location timed out.");
+                    break;
+                default:
+                    alert("An unknown error occurred while getting location.");
+                    break;
+            }
+        }
+    );
+}
+
+// Handle add form submission
+document.getElementById('addReportForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const reportData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        type: formData.get('type'),
+        urgency: formData.get('urgency'),
+        latitude: parseFloat(formData.get('latitude')),
+        longitude: parseFloat(formData.get('longitude')),
+        address: formData.get('address') || null
+    };
+
+    // Validation
+    if (!reportData.title || !reportData.description || !reportData.type || !reportData.urgency || 
+        isNaN(reportData.latitude) || isNaN(reportData.longitude)) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    try {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalHtml = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Adding...';
+        submitBtn.disabled = true;
+
+        const response = await fetch('/api/reports-public', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(reportData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            // Show success message
+            alert('Report added successfully!');
+            closeAddModal();
+            
+            // Add the new report to the table instantly
+            addReportToTable(result.data);
+            
+            // Update statistics
+            updateStatistics();
+            
+        } else {
+            throw new Error(result.message || 'Failed to add report');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error adding report: ' + error.message);
+    } finally {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i data-lucide="plus" class="w-4 h-4 mr-2"></i>Add Report';
+            submitBtn.disabled = false;
+        }
+    }
+});
+
+// Function to add new report to table instantly
+function addReportToTable(report) {
+    const tbody = document.querySelector('table tbody');
+    
+    // Remove "no reports found" message if it exists
+    const noReportsMsg = tbody.querySelector('tr td[colspan="7"]');
+    if (noReportsMsg) {
+        noReportsMsg.parentElement.remove();
+    }
+
+    // Format type display
+    const typeDisplay = report.type.replace('_', ' ').split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+
+    // Create urgency color class
+    const urgencyClass = report.urgency === 'high' ? 'bg-red-100 text-red-800' : 
+                        (report.urgency === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800');
+
+    // Create new row
+    const newRow = document.createElement('tr');
+    newRow.className = 'hover:bg-gray-50';
+    newRow.innerHTML = `
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">${report.title}</div>
+            <div class="text-sm text-gray-500">${report.description.length > 50 ? report.description.substring(0, 50) + '...' : report.description}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                ${typeDisplay}
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${urgencyClass}">
+                ${report.urgency.charAt(0).toUpperCase() + report.urgency.slice(1)}
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                Pending
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            ${report.user ? report.user.name : 'Test User'}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <div class="flex space-x-2">
+                <a href="/map" class="text-green-600 hover:text-green-900 text-xs px-2 py-1 border border-green-600 rounded hover:bg-green-50 transition-colors duration-200">
+                    <i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i>
+                    View on Map
+                </a>
+                <button onclick="editReportModal(${report.id})" class="text-blue-600 hover:text-blue-900 text-xs px-2 py-1 border border-blue-600 rounded hover:bg-blue-50 transition-colors duration-200">
+                    <i data-lucide="edit-2" class="w-3 h-3 inline mr-1"></i>
+                    Edit
+                </button>
+                <button onclick="deleteReportConfirm(${report.id})" class="text-red-600 hover:text-red-900 text-xs px-2 py-1 border border-red-600 rounded hover:bg-red-50 transition-colors duration-200">
+                    <i data-lucide="trash-2" class="w-3 h-3 inline mr-1"></i>
+                    Delete
+                </button>
+            </div>
+        </td>
+    `;
+    
+    // Insert at the beginning of the table
+    tbody.insertBefore(newRow, tbody.firstChild);
+    
+    // Add to reports array
+    reports.unshift(report);
+    
+    // Add a subtle highlight animation
+    newRow.style.backgroundColor = '#f0fdf4';
+    setTimeout(() => {
+        newRow.style.backgroundColor = '';
+    }, 3000);
+}
+
+// Function to update statistics
+function updateStatistics() {
+    // Update total reports count
+    const totalElement = document.querySelector('.grid .bg-white:first-child p.text-2xl');
+    if (totalElement) {
+        const currentTotal = parseInt(totalElement.textContent);
+        totalElement.textContent = currentTotal + 1;
+    }
+    
+    // Update pending reports count
+    const pendingElement = document.querySelector('.grid .bg-white:nth-child(2) p.text-2xl');
+    if (pendingElement) {
+        const currentPending = parseInt(pendingElement.textContent);
+        pendingElement.textContent = currentPending + 1;
+    }
+    
+    // Update this month count
+    const thisMonthElement = document.querySelector('.grid .bg-white:last-child p.text-2xl');
+    if (thisMonthElement) {
+        const currentThisMonth = parseInt(thisMonthElement.textContent);
+        thisMonthElement.textContent = currentThisMonth + 1;
+    }
+}
+
+// Edit Report Functions
 function editReportModal(reportId) {
     const report = reports.find(r => r.id == reportId);
     if (!report) {
@@ -326,7 +679,13 @@ document.getElementById('editReportForm').addEventListener('submit', async funct
     }
 });
 
-// Close modal when clicking outside
+// Close modals when clicking outside
+document.getElementById('addReportModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAddModal();
+    }
+});
+
 document.getElementById('editReportModal').addEventListener('click', function(e) {
     if (e.target === this) {
         closeEditModal();
