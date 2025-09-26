@@ -13,6 +13,49 @@
 .modal-content {
     z-index: 1000;
 }
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.search-result-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.search-result-item:hover {
+    background-color: #f3f4f6;
+}
+.image-preview-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.image-preview-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.image-preview-remove:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
 </style>
 @endpush
 
@@ -80,89 +123,147 @@
             </button>
         </div>
         
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Urgency</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reporter</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($reports as $report)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $report->title }}</div>
-                            <div class="text-sm text-gray-500">{{ Str::limit($report->description, 50) }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
-                                {{ str_replace('_', ' ', $report->type) }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                {{ $report->urgency === 'high' ? 'bg-red-100 text-red-800' : 
-                                   ($report->urgency === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800') }}">
-                                {{ ucfirst($report->urgency) }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                {{ $report->status === 'validated' ? 'bg-green-100 text-green-800' : 
-                                   ($report->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800') }}">
-                                {{ ucfirst($report->status) }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $report->user->name ?? 'Unknown' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $report->created_at->format('M j, Y') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+        <!-- Reports Cards -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900">Recent Reports</h3>
+                <button onclick="openAddReportModal()" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Add Report</span>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                @if($reports->count() > 0)
+                <div id="reportsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach($reports as $report)
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+                        <!-- Image carousel if images exist -->
+                        @if($report->images && count($report->images) > 0)
+                        <div class="relative h-48 bg-gray-100">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10"></div>
+                            <img src="{{ $report->image_urls[0] }}" 
+                                 alt="{{ $report->title }}" 
+                                 class="w-full h-full object-cover">
+                            @if(count($report->images) > 1)
+                            <div class="absolute top-2 right-2 z-20 bg-black/60 text-white px-2 py-1 rounded-full text-xs">
+                                <i data-lucide="image" class="w-3 h-3 inline mr-1"></i>
+                                {{ count($report->images) }}
+                            </div>
+                            @endif
+                        </div>
+                        @else
+                        <div class="h-32 bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
+                            <div class="text-center">
+                                @php
+                                    $icon = match($report->type) {
+                                        'tree_planting' => 'tree-pine',
+                                        'maintenance' => 'wrench',
+                                        'pollution' => 'alert-triangle',
+                                        'green_space_suggestion' => 'leaf',
+                                        default => 'map-pin'
+                                    };
+                                @endphp
+                                <i data-lucide="{{ $icon }}" class="w-8 h-8 text-green-600"></i>
+                            </div>
+                        </div>
+                        @endif
+                        
+                        <div class="p-4">
+                            <!-- Header with title and urgency -->
+                            <div class="flex items-start justify-between mb-3">
+                                <h4 class="text-lg font-semibold text-gray-900 line-clamp-2 flex-1 mr-2">
+                                    {{ $report->title }}
+                                </h4>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium flex-shrink-0
+                                    {{ $report->urgency === 'high' ? 'bg-red-100 text-red-800' : 
+                                       ($report->urgency === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800') }}">
+                                    {{ ucfirst($report->urgency) }}
+                                </span>
+                            </div>
+                            
+                            <!-- Description -->
+                            <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+                                {{ $report->description }}
+                            </p>
+                            
+                            <!-- Meta information -->
+                            <div class="space-y-2 mb-4">
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i data-lucide="tag" class="w-4 h-4 mr-2"></i>
+                                    <span class="capitalize">{{ str_replace('_', ' ', $report->type) }}</span>
+                                </div>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i data-lucide="user" class="w-4 h-4 mr-2"></i>
+                                    <span>{{ $report->user->name ?? 'Unknown' }}</span>
+                                </div>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                                    <span>{{ $report->created_at->format('M j, Y') }}</span>
+                                </div>
+                                @if($report->address)
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i>
+                                    <span class="truncate">{{ Str::limit($report->address, 40) }}</span>
+                                </div>
+                                @endif
+                            </div>
+                            
+                            <!-- Status badge -->
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {{ $report->status === 'validated' ? 'bg-green-100 text-green-800' : 
+                                       ($report->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800') }}">
+                                    <i data-lucide="{{ $report->status === 'validated' ? 'check-circle' : ($report->status === 'pending' ? 'clock' : 'circle') }}" 
+                                       class="w-3 h-3 mr-1"></i>
+                                    {{ ucfirst($report->status) }}
+                                </span>
+                            </div>
+                            
+                            <!-- Action buttons -->
                             <div class="flex space-x-2">
-                                <a href="{{ route('map') }}" class="text-green-600 hover:text-green-900 text-xs px-2 py-1 border border-green-600 rounded hover:bg-green-50 transition-colors duration-200">
-                                    <i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i>
+                                <a href="{{ route('map') }}" 
+                                   class="flex-1 text-center bg-green-50 text-green-700 hover:bg-green-100 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                                    <i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>
                                     View on Map
                                 </a>
-                                <button onclick="editReportModal({{ $report->id }})" class="text-blue-600 hover:text-blue-900 text-xs px-2 py-1 border border-blue-600 rounded hover:bg-blue-50 transition-colors duration-200">
-                                    <i data-lucide="edit-2" class="w-3 h-3 inline mr-1"></i>
+                                <button onclick="editReportModal({{ $report->id }})" 
+                                        class="flex-1 bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                                    <i data-lucide="edit-2" class="w-4 h-4 inline mr-1"></i>
                                     Edit
                                 </button>
-                                <button onclick="deleteReportConfirm({{ $report->id }})" class="text-red-600 hover:text-red-900 text-xs px-2 py-1 border border-red-600 rounded hover:bg-red-50 transition-colors duration-200">
-                                    <i data-lucide="trash-2" class="w-3 h-3 inline mr-1"></i>
-                                    Delete
+                                <button onclick="deleteReportConfirm({{ $report->id }})" 
+                                        class="bg-red-50 text-red-700 hover:bg-red-100 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                                    <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
                                 </button>
                             </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-12 text-center">
-                            <div class="text-gray-500">
-                                <i data-lucide="flag" class="w-12 h-12 mx-auto mb-4 text-gray-300"></i>
-                                <p class="text-lg font-medium">No reports found</p>
-                                <p class="text-sm">Be the first to report an environmental issue!</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                @else
+                <div class="text-center py-12">
+                    <div class="text-gray-500">
+                        <i data-lucide="flag" class="w-16 h-16 mx-auto mb-4 text-gray-300"></i>
+                        <p class="text-xl font-medium mb-2">No reports found</p>
+                        <p class="text-sm mb-6">Be the first to report an environmental issue!</p>
+                        <button onclick="openAddReportModal()" 
+                                class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 mx-auto transition-colors duration-200">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                            <span>Add Your First Report</span>
+                        </button>
+                    </div>
+                </div>
+                @endif
+            </div>
+            
+            @if($reports->hasPages())
+            <div class="px-6 py-4 border-t border-gray-200">
+                {{ $reports->links() }}
+            </div>
+            @endif
         </div>
-        
-        @if($reports->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200">
-            {{ $reports->links() }}
-        </div>
-        @endif
-    </div>
 
     <!-- Add Report Modal -->
     <div id="addReportModal" class="fixed inset-0 z-50 hidden overflow-y-auto" style="background-color: rgba(0, 0, 0, 0.5);">
@@ -220,8 +321,25 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">
                                             Location * 
-                                            <span class="text-xs text-gray-500">(Click on the map to select location)</span>
+                                            <span class="text-xs text-gray-500">(Search for a place or click on the map)</span>
                                         </label>
+                                        
+                                        <!-- Search bar -->
+                                        <div class="mb-3">
+                                            <div class="relative">
+                                                <input type="text" id="locationSearch" 
+                                                       placeholder="Search for a location (e.g., Central Park, New York)"
+                                                       class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                                <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                                    <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
+                                                </div>
+                                                <!-- Search results dropdown -->
+                                                <div id="searchResults" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                                    <!-- Results will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
                                         <div class="border border-gray-300 rounded-lg overflow-hidden">
                                             <div id="addReportMap" class="h-64 bg-gray-100 relative">
                                                 <div class="absolute inset-0 flex items-center justify-center">
@@ -245,6 +363,32 @@
                                         <input type="text" id="addAddress" name="address"
                                                placeholder="Optional: Enter full address"
                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Images 
+                                            <span class="text-xs text-gray-500">(Optional, max 5 images, 2MB each)</span>
+                                        </label>
+                                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
+                                            <input type="file" id="addImages" name="images[]" multiple accept="image/*" 
+                                                   class="hidden" onchange="handleImageUpload(this)">
+                                            <div id="imageUploadArea">
+                                                <i data-lucide="camera" class="w-12 h-12 mx-auto text-gray-400 mb-4"></i>
+                                                <p class="text-sm text-gray-600 mb-2">Click to upload images or drag and drop</p>
+                                                <p class="text-xs text-gray-500">PNG, JPG up to 2MB each</p>
+                                                <button type="button" onclick="document.getElementById('addImages').click()" 
+                                                        class="mt-3 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors">
+                                                    <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                                                    Select Images
+                                                </button>
+                                            </div>
+                                            <div id="imagePreview" class="hidden mt-4">
+                                                <div class="grid grid-cols-2 gap-4" id="previewContainer">
+                                                    <!-- Image previews will be added here -->
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div class="flex items-center justify-between">
@@ -350,6 +494,207 @@ let currentEditingReportId = null;
 let reports = @json($reports->items());
 let addReportMap = null;
 let currentMarker = null;
+let searchTimeout = null;
+let selectedImages = [];
+
+// Add Report Functions
+function openAddReportModal() {
+    document.getElementById('addReportModal').classList.remove('hidden');
+    
+    // Initialize map after modal is shown
+    setTimeout(() => {
+        initializeAddReportMap();
+        setupLocationSearch();
+    }, 100);
+}
+
+function closeAddModal() {
+    document.getElementById('addReportModal').classList.add('hidden');
+    document.getElementById('addReportForm').reset();
+    
+    // Reset map and coordinates
+    if (addReportMap) {
+        addReportMap.remove();
+        addReportMap = null;
+    }
+    currentMarker = null;
+    selectedImages = [];
+    document.getElementById('addLatitude').value = '';
+    document.getElementById('addLongitude').value = '';
+    document.getElementById('selectedCoordinates').textContent = 'No location selected';
+    document.getElementById('locationSearch').value = '';
+    document.getElementById('searchResults').classList.add('hidden');
+    document.getElementById('imagePreview').classList.add('hidden');
+    document.getElementById('previewContainer').innerHTML = '';
+}
+
+function setupLocationSearch() {
+    const searchInput = document.getElementById('locationSearch');
+    const resultsContainer = document.getElementById('searchResults');
+    
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        // Clear previous timeout
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+        
+        if (query.length < 3) {
+            resultsContainer.classList.add('hidden');
+            return;
+        }
+        
+        // Debounce search
+        searchTimeout = setTimeout(() => {
+            searchLocation(query);
+        }, 300);
+    });
+    
+    // Hide results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+            resultsContainer.classList.add('hidden');
+        }
+    });
+}
+
+async function searchLocation(query) {
+    const resultsContainer = document.getElementById('searchResults');
+    
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&countrycodes=us,ca,gb,fr,de`);
+        const results = await response.json();
+        
+        if (results.length === 0) {
+            resultsContainer.innerHTML = '<div class="p-3 text-sm text-gray-500">No locations found</div>';
+        } else {
+            resultsContainer.innerHTML = results.map(result => `
+                <div class="search-result-item p-3 text-sm border-b border-gray-100 last:border-b-0" 
+                     onclick="selectSearchResult(${result.lat}, ${result.lon}, '${result.display_name.replace(/'/g, "\\'")}')">
+                    <div class="font-medium text-gray-900">${result.display_name.split(',')[0]}</div>
+                    <div class="text-gray-500">${result.display_name}</div>
+                </div>
+            `).join('');
+        }
+        
+        resultsContainer.classList.remove('hidden');
+    } catch (error) {
+        console.error('Search error:', error);
+        resultsContainer.innerHTML = '<div class="p-3 text-sm text-red-500">Search failed. Please try again.</div>';
+        resultsContainer.classList.remove('hidden');
+    }
+}
+
+function selectSearchResult(lat, lng, address) {
+    // Update map view and add marker
+    if (addReportMap) {
+        addReportMap.setView([lat, lng], 16);
+        
+        // Remove previous marker
+        if (currentMarker) {
+            addReportMap.removeLayer(currentMarker);
+        }
+        
+        // Add new marker
+        currentMarker = L.marker([lat, lng]).addTo(addReportMap);
+        
+        // Update hidden inputs
+        document.getElementById('addLatitude').value = parseFloat(lat).toFixed(6);
+        document.getElementById('addLongitude').value = parseFloat(lng).toFixed(6);
+        
+        // Update coordinate display and address
+        document.getElementById('selectedCoordinates').textContent = 
+            `Selected: ${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
+        document.getElementById('addAddress').value = address;
+        
+        // Clear search
+        document.getElementById('locationSearch').value = address.split(',')[0];
+        document.getElementById('searchResults').classList.add('hidden');
+    }
+}
+
+function handleImageUpload(input) {
+    const files = Array.from(input.files);
+    const maxFiles = 5;
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    
+    // Check file count
+    if (selectedImages.length + files.length > maxFiles) {
+        alert(`Maximum ${maxFiles} images allowed`);
+        return;
+    }
+    
+    // Process each file
+    files.forEach(file => {
+        // Check file size
+        if (file.size > maxSize) {
+            alert(`${file.name} is too large. Maximum size is 2MB.`);
+            return;
+        }
+        
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+            alert(`${file.name} is not an image file.`);
+            return;
+        }
+        
+        selectedImages.push(file);
+        
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            addImagePreview(file.name, e.target.result, selectedImages.length - 1);
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    // Show preview area
+    if (selectedImages.length > 0) {
+        document.getElementById('imagePreview').classList.remove('hidden');
+    }
+}
+
+function addImagePreview(fileName, src, index) {
+    const container = document.getElementById('previewContainer');
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'image-preview-item';
+    previewDiv.innerHTML = `
+        <img src="${src}" alt="${fileName}" class="w-full h-24 object-cover rounded-lg">
+        <button type="button" class="image-preview-remove" onclick="removeImage(${index})">
+            <i data-lucide="x" class="w-3 h-3"></i>
+        </button>
+        <div class="absolute bottom-1 left-1 bg-black/60 text-white px-1 py-0.5 rounded text-xs truncate max-w-full">
+            ${fileName}
+        </div>
+    `;
+    
+    container.appendChild(previewDiv);
+    
+    // Re-initialize Lucide icons
+    lucide.createIcons();
+}
+
+function removeImage(index) {
+    selectedImages.splice(index, 1);
+    
+    // Rebuild preview
+    const container = document.getElementById('previewContainer');
+    container.innerHTML = '';
+    
+    selectedImages.forEach((file, i) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            addImagePreview(file.name, e.target.result, i);
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    // Hide preview if no images
+    if (selectedImages.length === 0) {
+        document.getElementById('imagePreview').classList.add('hidden');
+    }
+}
 
 // Add Report Functions
 function openAddReportModal() {
@@ -519,6 +864,12 @@ document.getElementById('addReportForm').addEventListener('submit', async functi
     e.preventDefault();
     
     const formData = new FormData(this);
+    
+    // Add selected images to form data
+    selectedImages.forEach((file, index) => {
+        formData.append('images[]', file);
+    });
+    
     const reportData = {
         title: formData.get('title'),
         description: formData.get('description'),
@@ -546,14 +897,26 @@ document.getElementById('addReportForm').addEventListener('submit', async functi
         submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Adding...';
         submitBtn.disabled = true;
 
+        // Create FormData for file upload
+        const submitFormData = new FormData();
+        Object.keys(reportData).forEach(key => {
+            if (reportData[key] !== null) {
+                submitFormData.append(key, reportData[key]);
+            }
+        });
+        
+        // Add images
+        selectedImages.forEach((file, index) => {
+            submitFormData.append('images[]', file);
+        });
+
         const response = await fetch('/api/reports-public', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 'Accept': 'application/json',
             },
-            body: JSON.stringify(reportData)
+            body: submitFormData
         });
 
         const result = await response.json();
@@ -563,8 +926,8 @@ document.getElementById('addReportForm').addEventListener('submit', async functi
             alert('Report added successfully!');
             closeAddModal();
             
-            // Add the new report to the table instantly
-            addReportToTable(result.data);
+            // Add the new report to the cards instantly
+            addReportToCards(result.data);
             
             // Update statistics
             updateStatistics();
@@ -584,16 +947,31 @@ document.getElementById('addReportForm').addEventListener('submit', async functi
     }
 });
 
-// Function to add new report to table instantly
-function addReportToTable(report) {
-    const tbody = document.querySelector('table tbody');
+// Function to add new report to cards instantly
+function addReportToCards(report) {
+    const container = document.getElementById('reportsContainer');
     
     // Remove "no reports found" message if it exists
-    const noReportsMsg = tbody.querySelector('tr td[colspan="7"]');
+    const noReportsMsg = document.querySelector('.text-center.py-12');
     if (noReportsMsg) {
-        noReportsMsg.parentElement.remove();
+        noReportsMsg.remove();
     }
+    
+    // If container doesn't exist (no reports before), create it
+    if (!container) {
+        const reportsSection = document.querySelector('.bg-white.rounded-lg.shadow-sm.border.border-gray-200 .p-6');
+        reportsSection.innerHTML = '<div id="reportsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>';
+        const newContainer = document.getElementById('reportsContainer');
+        addCardToContainer(newContainer, report);
+    } else {
+        addCardToContainer(container, report);
+    }
+    
+    // Add to reports array
+    reports.unshift(report);
+}
 
+function addCardToContainer(container, report) {
     // Format type display
     const typeDisplay = report.type.replace('_', ' ').split(' ').map(word => 
         word.charAt(0).toUpperCase() + word.slice(1)
@@ -602,67 +980,110 @@ function addReportToTable(report) {
     // Create urgency color class
     const urgencyClass = report.urgency === 'high' ? 'bg-red-100 text-red-800' : 
                         (report.urgency === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800');
+    
+    // Get type icon
+    const iconMap = {
+        'tree_planting': 'tree-pine',
+        'maintenance': 'wrench',
+        'pollution': 'alert-triangle',
+        'green_space_suggestion': 'leaf'
+    };
+    const icon = iconMap[report.type] || 'map-pin';
 
-    // Create new row
-    const newRow = document.createElement('tr');
-    newRow.className = 'hover:bg-gray-50';
-    newRow.innerHTML = `
-        <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-sm font-medium text-gray-900">${report.title}</div>
-            <div class="text-sm text-gray-500">${report.description.length > 50 ? report.description.substring(0, 50) + '...' : report.description}</div>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                ${typeDisplay}
-            </span>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${urgencyClass}">
-                ${report.urgency.charAt(0).toUpperCase() + report.urgency.slice(1)}
-            </span>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                Pending
-            </span>
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-            ${report.user ? report.user.name : 'Test User'}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-        </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+    // Create image section
+    let imageSection = '';
+    if (report.image_urls && report.image_urls.length > 0) {
+        const imageCount = report.image_urls.length > 1 ? `<div class="absolute top-2 right-2 z-20 bg-black/60 text-white px-2 py-1 rounded-full text-xs"><i data-lucide="image" class="w-3 h-3 inline mr-1"></i>${report.image_urls.length}</div>` : '';
+        imageSection = `
+            <div class="relative h-48 bg-gray-100">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10"></div>
+                <img src="${report.image_urls[0]}" alt="${report.title}" class="w-full h-full object-cover">
+                ${imageCount}
+            </div>
+        `;
+    } else {
+        imageSection = `
+            <div class="h-32 bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
+                <div class="text-center">
+                    <i data-lucide="${icon}" class="w-8 h-8 text-green-600"></i>
+                </div>
+            </div>
+        `;
+    }
+
+    // Create new card
+    const newCard = document.createElement('div');
+    newCard.className = 'bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden';
+    newCard.innerHTML = `
+        ${imageSection}
+        <div class="p-4">
+            <div class="flex items-start justify-between mb-3">
+                <h4 class="text-lg font-semibold text-gray-900 line-clamp-2 flex-1 mr-2">
+                    ${report.title}
+                </h4>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${urgencyClass}">
+                    ${report.urgency.charAt(0).toUpperCase() + report.urgency.slice(1)}
+                </span>
+            </div>
+            
+            <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+                ${report.description}
+            </p>
+            
+            <div class="space-y-2 mb-4">
+                <div class="flex items-center text-sm text-gray-500">
+                    <i data-lucide="tag" class="w-4 h-4 mr-2"></i>
+                    <span class="capitalize">${typeDisplay}</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-500">
+                    <i data-lucide="user" class="w-4 h-4 mr-2"></i>
+                    <span>${report.user ? report.user.name : 'Test User'}</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-500">
+                    <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                    <span>${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                </div>
+                ${report.address ? `
+                <div class="flex items-center text-sm text-gray-500">
+                    <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i>
+                    <span class="truncate">${report.address.length > 40 ? report.address.substring(0, 40) + '...' : report.address}</span>
+                </div>
+                ` : ''}
+            </div>
+            
+            <div class="flex items-center justify-between mb-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
+                    Pending
+                </span>
+            </div>
+            
             <div class="flex space-x-2">
-                <a href="/map" class="text-green-600 hover:text-green-900 text-xs px-2 py-1 border border-green-600 rounded hover:bg-green-50 transition-colors duration-200">
-                    <i data-lucide="map-pin" class="w-3 h-3 inline mr-1"></i>
+                <a href="/map" class="flex-1 text-center bg-green-50 text-green-700 hover:bg-green-100 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                    <i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>
                     View on Map
                 </a>
-                <button onclick="editReportModal(${report.id})" class="text-blue-600 hover:text-blue-900 text-xs px-2 py-1 border border-blue-600 rounded hover:bg-blue-50 transition-colors duration-200">
-                    <i data-lucide="edit-2" class="w-3 h-3 inline mr-1"></i>
+                <button onclick="editReportModal(${report.id})" class="flex-1 bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                    <i data-lucide="edit-2" class="w-4 h-4 inline mr-1"></i>
                     Edit
                 </button>
-                <button onclick="deleteReportConfirm(${report.id})" class="text-red-600 hover:text-red-900 text-xs px-2 py-1 border border-red-600 rounded hover:bg-red-50 transition-colors duration-200">
-                    <i data-lucide="trash-2" class="w-3 h-3 inline mr-1"></i>
-                    Delete
+                <button onclick="deleteReportConfirm(${report.id})" class="bg-red-50 text-red-700 hover:bg-red-100 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200">
+                    <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
                 </button>
             </div>
-        </td>
+        </div>
     `;
     
-    // Insert at the beginning of the table
-    tbody.insertBefore(newRow, tbody.firstChild);
-    
-    // Add to reports array
-    reports.unshift(report);
+    // Insert at the beginning of the container
+    container.insertBefore(newCard, container.firstChild);
     
     // Add a subtle highlight animation
-    newRow.style.backgroundColor = '#f0fdf4';
+    newCard.style.backgroundColor = '#f0fdf4';
     setTimeout(() => {
-        newRow.style.backgroundColor = '';
+        newCard.style.backgroundColor = '';
     }, 3000);
     
-    // Re-initialize Lucide icons for the new row
+    // Re-initialize Lucide icons
     lucide.createIcons();
 }
 
