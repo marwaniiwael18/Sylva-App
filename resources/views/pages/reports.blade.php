@@ -306,24 +306,8 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">
                                             Location * 
-                                            <span class="text-xs text-gray-500">(Search for a place or click on the map)</span>
+                                            <span class="text-xs text-gray-500">(Click on the map to select location)</span>
                                         </label>
-                                        
-                                        <!-- Search bar -->
-                                        <div class="mb-3">
-                                            <div class="relative">
-                                                <input type="text" id="locationSearch" 
-                                                       placeholder="Search for a location (e.g., Central Park, New York)"
-                                                       class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                                                <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                                    <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
-                                                </div>
-                                                <!-- Search results dropdown -->
-                                                <div id="searchResults" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                                    <!-- Results will be populated by JavaScript -->
-                                                </div>
-                                            </div>
-                                        </div>
                                         
                                         <div class="border border-gray-300 rounded-lg overflow-hidden">
                                             <div id="addReportMap" class="h-64 bg-gray-100 relative">
@@ -460,24 +444,8 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">
                                             Location * 
-                                            <span class="text-xs text-gray-500">(Search for a place or click on the map)</span>
+                                            <span class="text-xs text-gray-500">(Click on the map to select location)</span>
                                         </label>
-                                        
-                                        <!-- Search bar -->
-                                        <div class="mb-3">
-                                            <div class="relative">
-                                                <input type="text" id="editLocationSearch" 
-                                                       placeholder="Search for a location (e.g., Central Park, New York)"
-                                                       class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                                <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                                    <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
-                                                </div>
-                                                <!-- Search results dropdown -->
-                                                <div id="editSearchResults" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                                    <!-- Results will be populated by JavaScript -->
-                                                </div>
-                                            </div>
-                                        </div>
                                         
                                         <div class="border border-gray-300 rounded-lg overflow-hidden">
                                             <div id="editReportMap" class="h-64 bg-gray-100 relative">
@@ -502,6 +470,42 @@
                                         <input type="text" id="editAddress" name="address"
                                                placeholder="Optional: Enter full address"
                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Images 
+                                            <span class="text-xs text-gray-500">(Optional, max 5 images, 2MB each)</span>
+                                        </label>
+                                        
+                                        <!-- Existing Images Display -->
+                                        <div id="editExistingImages" class="hidden mb-4">
+                                            <h4 class="text-sm font-medium text-gray-700 mb-2">Current Images:</h4>
+                                            <div id="editExistingImagesContainer" class="grid grid-cols-2 gap-4 mb-3">
+                                                <!-- Existing images will be populated here -->
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- New Images Upload -->
+                                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                                            <input type="file" id="editImages" name="images[]" multiple accept="image/*" 
+                                                   class="hidden" onchange="handleEditImageUpload(this)">
+                                            <div id="editImageUploadArea">
+                                                <i data-lucide="camera" class="w-12 h-12 mx-auto text-gray-400 mb-4"></i>
+                                                <p class="text-sm text-gray-600 mb-2">Click to upload new images or drag and drop</p>
+                                                <p class="text-xs text-gray-500">PNG, JPG up to 2MB each</p>
+                                                <button type="button" onclick="document.getElementById('editImages').click()" 
+                                                        class="mt-3 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
+                                                    <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                                                    Select Images
+                                                </button>
+                                            </div>
+                                            <div id="editImagePreview" class="hidden mt-4">
+                                                <div class="grid grid-cols-2 gap-4" id="editPreviewContainer">
+                                                    <!-- New image previews will be added here -->
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div class="flex items-center justify-between">
@@ -550,10 +554,9 @@ let selectedImages = [];
 function openAddReportModal() {
     document.getElementById('addReportModal').classList.remove('hidden');
     
-    // Initialize map and search after modal is shown
+    // Initialize map after modal is shown
     setTimeout(() => {
         initializeAddReportMap();
-        setupLocationSearch();
     }, 100);
 }
 
@@ -571,76 +574,8 @@ function closeAddModal() {
     document.getElementById('addLatitude').value = '';
     document.getElementById('addLongitude').value = '';
     document.getElementById('selectedCoordinates').textContent = 'No location selected';
-    document.getElementById('locationSearch').value = '';
-    document.getElementById('searchResults').classList.add('hidden');
     document.getElementById('imagePreview').classList.add('hidden');
     document.getElementById('previewContainer').innerHTML = '';
-}
-
-function setupLocationSearch() {
-    const searchInput = document.getElementById('locationSearch');
-    const resultsContainer = document.getElementById('searchResults');
-    
-    if (!searchInput || !resultsContainer) return;
-    
-    searchInput.addEventListener('input', function() {
-        const query = this.value.trim();
-        
-        // Clear previous timeout
-        if (searchTimeout) {
-            clearTimeout(searchTimeout);
-        }
-        
-        if (query.length < 3) {
-            resultsContainer.classList.add('hidden');
-            return;
-        }
-        
-        // Debounce search
-        searchTimeout = setTimeout(() => {
-            searchLocation(query);
-        }, 300);
-    });
-    
-    // Hide results when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
-            resultsContainer.classList.add('hidden');
-        }
-    });
-}
-
-function setupEditLocationSearch() {
-    const searchInput = document.getElementById('editLocationSearch');
-    const resultsContainer = document.getElementById('editSearchResults');
-    
-    if (!searchInput || !resultsContainer) return;
-    
-    searchInput.addEventListener('input', function() {
-        const query = this.value.trim();
-        
-        // Clear previous timeout
-        if (searchTimeout) {
-            clearTimeout(searchTimeout);
-        }
-        
-        if (query.length < 3) {
-            resultsContainer.classList.add('hidden');
-            return;
-        }
-        
-        // Debounce search
-        searchTimeout = setTimeout(() => {
-            searchEditLocation(query);
-        }, 300);
-    });
-    
-    // Hide results when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
-            resultsContainer.classList.add('hidden');
-        }
-    });
 }
 
 async function searchLocation(query) {
@@ -888,6 +823,134 @@ function removeImage(index) {
     // Hide preview if no images
     if (selectedImages.length === 0) {
         document.getElementById('imagePreview').classList.add('hidden');
+    }
+}
+
+// Edit form image handling
+let selectedEditImages = [];
+let existingImages = [];
+let imagesToDelete = [];
+
+function handleEditImageUpload(input) {
+    const files = Array.from(input.files);
+    const maxFiles = 5;
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    
+    // Check total file count (existing + selected + new)
+    const totalImages = existingImages.length + selectedEditImages.length + files.length;
+    if (totalImages > maxFiles) {
+        alert(`Maximum ${maxFiles} images allowed total`);
+        return;
+    }
+    
+    // Process each file
+    files.forEach(file => {
+        // Check file size
+        if (file.size > maxSize) {
+            alert(`${file.name} is too large. Maximum size is 2MB.`);
+            return;
+        }
+        
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+            alert(`${file.name} is not an image file.`);
+            return;
+        }
+        
+        selectedEditImages.push(file);
+        
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            addEditImagePreview(file.name, e.target.result, selectedEditImages.length - 1, 'new');
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    // Show preview area
+    if (selectedEditImages.length > 0) {
+        document.getElementById('editImagePreview').classList.remove('hidden');
+    }
+}
+
+function addEditImagePreview(fileName, src, index, type) {
+    const container = document.getElementById('editPreviewContainer');
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'image-preview-item relative';
+    previewDiv.innerHTML = `
+        <img src="${src}" alt="${fileName}" class="w-full h-24 object-cover rounded-lg">
+        <button type="button" class="image-preview-remove absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" onclick="removeEditImage(${index}, '${type}')">
+            <i data-lucide="x" class="w-3 h-3"></i>
+        </button>
+        <div class="absolute bottom-1 left-1 bg-black/60 text-white px-1 py-0.5 rounded text-xs truncate max-w-full">
+            ${fileName}
+        </div>
+    `;
+    
+    container.appendChild(previewDiv);
+    
+    // Re-initialize Lucide icons
+    lucide.createIcons();
+}
+
+function displayEditExistingImages(images) {
+    if (!images || images.length === 0) {
+        document.getElementById('editExistingImages').classList.add('hidden');
+        return;
+    }
+    
+    existingImages = [...images];
+    const container = document.getElementById('editExistingImagesContainer');
+    container.innerHTML = '';
+    
+    images.forEach((imageUrl, index) => {
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'image-preview-item relative';
+        previewDiv.innerHTML = `
+            <img src="${imageUrl}" alt="Existing image ${index + 1}" class="w-full h-24 object-cover rounded-lg">
+            <button type="button" class="image-preview-remove absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" onclick="removeEditImage(${index}, 'existing')">
+                <i data-lucide="x" class="w-3 h-3"></i>
+            </button>
+            <div class="absolute bottom-1 left-1 bg-green-600 text-white px-2 py-0.5 rounded text-xs">
+                Current
+            </div>
+        `;
+        
+        container.appendChild(previewDiv);
+    });
+    
+    document.getElementById('editExistingImages').classList.remove('hidden');
+    
+    // Re-initialize Lucide icons
+    lucide.createIcons();
+}
+
+function removeEditImage(index, type) {
+    if (type === 'existing') {
+        // Mark for deletion
+        imagesToDelete.push(existingImages[index]);
+        existingImages.splice(index, 1);
+        displayEditExistingImages(existingImages);
+    } else if (type === 'new') {
+        // Remove from new images
+        selectedEditImages.splice(index, 1);
+        
+        // Rebuild new image previews
+        const container = document.getElementById('editPreviewContainer');
+        container.innerHTML = '';
+        
+        selectedEditImages.forEach((file, i) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                addEditImagePreview(file.name, e.target.result, i, 'new');
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // Hide preview if no new images
+        if (selectedEditImages.length === 0) {
+            document.getElementById('editImagePreview').classList.add('hidden');
+        }
     }
 }
 
@@ -1526,13 +1589,25 @@ document.getElementById('editReportForm').addEventListener('submit', async funct
         return;
     }
     
-    const formData = new FormData(this);
-    const reportData = {
-        title: formData.get('title'),
-        description: formData.get('description'),
-        type: formData.get('type'),
-        urgency: formData.get('urgency')
-    };
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('title', document.getElementById('editTitle').value);
+    formData.append('description', document.getElementById('editDescription').value);
+    formData.append('type', document.getElementById('editType').value);
+    formData.append('urgency', document.getElementById('editUrgency').value);
+    formData.append('address', document.getElementById('editAddress').value);
+    formData.append('latitude', document.getElementById('editLatitude').value);
+    formData.append('longitude', document.getElementById('editLongitude').value);
+    
+    // Add new images
+    selectedEditImages.forEach((file, index) => {
+        formData.append('images[]', file);
+    });
+    
+    // Add information about images to delete
+    if (imagesToDelete.length > 0) {
+        formData.append('images_to_delete', JSON.stringify(imagesToDelete));
+    }
     
     try {
         const submitBtn = this.querySelector('button[type="submit"]');
@@ -1543,11 +1618,10 @@ document.getElementById('editReportForm').addEventListener('submit', async funct
         const response = await fetch(`/api/reports-public/${currentEditingReportId}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 'Accept': 'application/json',
             },
-            body: JSON.stringify(reportData)
+            body: formData
         });
 
         const result = await response.json();
