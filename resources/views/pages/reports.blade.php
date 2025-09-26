@@ -112,19 +112,8 @@
         </div>
     </div>
 
-    <!-- Reports Table -->
+    <!-- Reports Cards -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-lg font-semibold text-gray-900">Recent Reports</h3>
-            <button onclick="openAddReportModal()" 
-                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                <span>Add Report</span>
-            </button>
-        </div>
-        
-        <!-- Reports Cards -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h3 class="text-lg font-semibold text-gray-900">Recent Reports</h3>
                 <button onclick="openAddReportModal()" 
@@ -248,11 +237,7 @@
                         <i data-lucide="flag" class="w-16 h-16 mx-auto mb-4 text-gray-300"></i>
                         <p class="text-xl font-medium mb-2">No reports found</p>
                         <p class="text-sm mb-6">Be the first to report an environmental issue!</p>
-                        <button onclick="openAddReportModal()" 
-                                class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 mx-auto transition-colors duration-200">
-                            <i data-lucide="plus" class="w-5 h-5"></i>
-                            <span>Add Your First Report</span>
-                        </button>
+                        <p class="text-sm text-gray-400">Click the "Add Report" button above to get started.</p>
                     </div>
                 </div>
                 @endif
@@ -428,43 +413,104 @@
                         <div class="sm:flex sm:items-start">
                             <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
                                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                                    <i data-lucide="edit-2" class="w-5 h-5 inline mr-2 text-blue-600"></i>
                                     Edit Report
                                 </h3>
                                 
                                 <div class="space-y-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Title *</label>
                                         <input type="text" id="editTitle" name="title" required
-                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                               placeholder="Enter report title"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                     </div>
                                     
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
                                         <textarea id="editDescription" name="description" required rows="3"
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                                placeholder="Describe the environmental issue or suggestion"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
                                     </div>
                                     
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Type *</label>
                                             <select id="editType" name="type" required
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                                <option value="tree_planting">Tree Planting</option>
-                                                <option value="maintenance">Maintenance</option>
-                                                <option value="pollution">Pollution</option>
-                                                <option value="green_space_suggestion">Green Space</option>
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="">Select type</option>
+                                                <option value="tree_planting">🌳 Tree Planting</option>
+                                                <option value="maintenance">🔧 Maintenance</option>
+                                                <option value="pollution">⚠️ Pollution</option>
+                                                <option value="green_space_suggestion">🌱 Green Space Suggestion</option>
                                             </select>
                                         </div>
                                         
                                         <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Urgency</label>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Urgency *</label>
                                             <select id="editUrgency" name="urgency" required
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                                <option value="low">Low</option>
-                                                <option value="medium">Medium</option>
-                                                <option value="high">High</option>
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="">Select urgency</option>
+                                                <option value="low">🟢 Low</option>
+                                                <option value="medium">🟡 Medium</option>
+                                                <option value="high">🔴 High</option>
                                             </select>
                                         </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Location * 
+                                            <span class="text-xs text-gray-500">(Search for a place or click on the map)</span>
+                                        </label>
+                                        
+                                        <!-- Search bar -->
+                                        <div class="mb-3">
+                                            <div class="relative">
+                                                <input type="text" id="editLocationSearch" 
+                                                       placeholder="Search for a location (e.g., Central Park, New York)"
+                                                       class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                                    <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
+                                                </div>
+                                                <!-- Search results dropdown -->
+                                                <div id="editSearchResults" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                                    <!-- Results will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="border border-gray-300 rounded-lg overflow-hidden">
+                                            <div id="editReportMap" class="h-64 bg-gray-100 relative">
+                                                <div class="absolute inset-0 flex items-center justify-center">
+                                                    <div class="text-center">
+                                                        <i data-lucide="map-pin" class="w-8 h-8 mx-auto text-gray-400 mb-2"></i>
+                                                        <p class="text-sm text-gray-500">Loading map...</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Hidden inputs for coordinates -->
+                                        <input type="hidden" id="editLatitude" name="latitude" required>
+                                        <input type="hidden" id="editLongitude" name="longitude" required>
+                                        <div class="mt-2 text-xs text-gray-600">
+                                            <span id="editSelectedCoordinates">No location selected</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                                        <input type="text" id="editAddress" name="address"
+                                               placeholder="Optional: Enter full address"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+
+                                    <div class="flex items-center justify-between">
+                                        <button type="button" onclick="getEditCurrentLocation()" 
+                                                class="text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg flex items-center space-x-1 transition-colors">
+                                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                            <span>Use Current Location</span>
+                                        </button>
+                                        <span class="text-xs text-gray-500">* Required fields</span>
                                     </div>
                                 </div>
                             </div>
@@ -472,11 +518,12 @@
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                         <button type="submit"
-                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                            <i data-lucide="check" class="w-4 h-4 mr-2"></i>
                             Update Report
                         </button>
                         <button type="button" onclick="closeEditModal()"
-                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
                             Cancel
                         </button>
                     </div>
@@ -493,7 +540,9 @@
 let currentEditingReportId = null;
 let reports = @json($reports->items());
 let addReportMap = null;
+let editReportMap = null;
 let currentMarker = null;
+let editCurrentMarker = null;
 let searchTimeout = null;
 let selectedImages = [];
 
@@ -501,7 +550,7 @@ let selectedImages = [];
 function openAddReportModal() {
     document.getElementById('addReportModal').classList.remove('hidden');
     
-    // Initialize map after modal is shown
+    // Initialize map and search after modal is shown
     setTimeout(() => {
         initializeAddReportMap();
         setupLocationSearch();
@@ -532,6 +581,8 @@ function setupLocationSearch() {
     const searchInput = document.getElementById('locationSearch');
     const resultsContainer = document.getElementById('searchResults');
     
+    if (!searchInput || !resultsContainer) return;
+    
     searchInput.addEventListener('input', function() {
         const query = this.value.trim();
         
@@ -559,23 +610,84 @@ function setupLocationSearch() {
     });
 }
 
+function setupEditLocationSearch() {
+    const searchInput = document.getElementById('editLocationSearch');
+    const resultsContainer = document.getElementById('editSearchResults');
+    
+    if (!searchInput || !resultsContainer) return;
+    
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        // Clear previous timeout
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+        
+        if (query.length < 3) {
+            resultsContainer.classList.add('hidden');
+            return;
+        }
+        
+        // Debounce search
+        searchTimeout = setTimeout(() => {
+            searchEditLocation(query);
+        }, 300);
+    });
+    
+    // Hide results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+            resultsContainer.classList.add('hidden');
+        }
+    });
+}
+
 async function searchLocation(query) {
     const resultsContainer = document.getElementById('searchResults');
     
+    if (!resultsContainer) return;
+    
+    // Show loading state
+    resultsContainer.innerHTML = '<div class="p-3 text-sm text-gray-500"><i data-lucide="loader" class="w-4 h-4 inline mr-2 animate-spin"></i>Searching...</div>';
+    resultsContainer.classList.remove('hidden');
+    
     try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&countrycodes=us,ca,gb,fr,de`);
+        // Use Nominatim API for geocoding with better parameters
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=8&addressdetails=1&extratags=1&namedetails=1`, {
+            headers: {
+                'User-Agent': 'Sylva-Environmental-App/1.0'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Search service unavailable');
+        }
+        
         const results = await response.json();
         
         if (results.length === 0) {
-            resultsContainer.innerHTML = '<div class="p-3 text-sm text-gray-500">No locations found</div>';
+            resultsContainer.innerHTML = '<div class="p-3 text-sm text-gray-500">No locations found. Try a different search term.</div>';
         } else {
-            resultsContainer.innerHTML = results.map(result => `
-                <div class="search-result-item p-3 text-sm border-b border-gray-100 last:border-b-0" 
-                     onclick="selectSearchResult(${result.lat}, ${result.lon}, '${result.display_name.replace(/'/g, "\\'")}')">
-                    <div class="font-medium text-gray-900">${result.display_name.split(',')[0]}</div>
-                    <div class="text-gray-500">${result.display_name}</div>
-                </div>
-            `).join('');
+            resultsContainer.innerHTML = results.map((result, index) => {
+                const displayName = result.display_name || 'Unknown location';
+                const mainName = displayName.split(',')[0] || 'Unknown';
+                const fullAddress = displayName;
+                
+                return `
+                    <div class="search-result-item p-3 text-sm border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer" 
+                         onclick="selectSearchResult(${result.lat}, ${result.lon}, '${fullAddress.replace(/'/g, "\\'")}', '${mainName.replace(/'/g, "\\'")}')">
+                        <div class="font-medium text-gray-900 flex items-center">
+                            <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-green-600"></i>
+                            ${mainName}
+                        </div>
+                        <div class="text-gray-500 text-xs mt-1 line-clamp-2">${fullAddress}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Re-initialize Lucide icons
+            lucide.createIcons();
         }
         
         resultsContainer.classList.remove('hidden');
@@ -586,7 +698,62 @@ async function searchLocation(query) {
     }
 }
 
-function selectSearchResult(lat, lng, address) {
+async function searchEditLocation(query) {
+    const resultsContainer = document.getElementById('editSearchResults');
+    
+    if (!resultsContainer) return;
+    
+    // Show loading state
+    resultsContainer.innerHTML = '<div class="p-3 text-sm text-gray-500"><i data-lucide="loader" class="w-4 h-4 inline mr-2 animate-spin"></i>Searching...</div>';
+    resultsContainer.classList.remove('hidden');
+    
+    try {
+        // Use Nominatim API for geocoding with better parameters
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=8&addressdetails=1&extratags=1&namedetails=1`, {
+            headers: {
+                'User-Agent': 'Sylva-Environmental-App/1.0'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Search service unavailable');
+        }
+        
+        const results = await response.json();
+        
+        if (results.length === 0) {
+            resultsContainer.innerHTML = '<div class="p-3 text-sm text-gray-500">No locations found. Try a different search term.</div>';
+        } else {
+            resultsContainer.innerHTML = results.map((result, index) => {
+                const displayName = result.display_name || 'Unknown location';
+                const mainName = displayName.split(',')[0] || 'Unknown';
+                const fullAddress = displayName;
+                
+                return `
+                    <div class="search-result-item p-3 text-sm border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer" 
+                         onclick="selectEditSearchResult(${result.lat}, ${result.lon}, '${fullAddress.replace(/'/g, "\\'")}', '${mainName.replace(/'/g, "\\'")}')">
+                        <div class="font-medium text-gray-900 flex items-center">
+                            <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-blue-600"></i>
+                            ${mainName}
+                        </div>
+                        <div class="text-gray-500 text-xs mt-1 line-clamp-2">${fullAddress}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Re-initialize Lucide icons
+            lucide.createIcons();
+        }
+        
+        resultsContainer.classList.remove('hidden');
+    } catch (error) {
+        console.error('Search error:', error);
+        resultsContainer.innerHTML = '<div class="p-3 text-sm text-red-500">Search failed. Please try again.</div>';
+        resultsContainer.classList.remove('hidden');
+    }
+}
+
+function selectSearchResult(lat, lng, address, shortName) {
     // Update map view and add marker
     if (addReportMap) {
         addReportMap.setView([lat, lng], 16);
@@ -608,9 +775,37 @@ function selectSearchResult(lat, lng, address) {
             `Selected: ${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
         document.getElementById('addAddress').value = address;
         
-        // Clear search
-        document.getElementById('locationSearch').value = address.split(',')[0];
+        // Clear search and show short name in search input
+        document.getElementById('locationSearch').value = shortName || address.split(',')[0];
         document.getElementById('searchResults').classList.add('hidden');
+    }
+}
+
+function selectEditSearchResult(lat, lng, address, shortName) {
+    // Update map view and add marker
+    if (editReportMap) {
+        editReportMap.setView([lat, lng], 16);
+        
+        // Remove previous marker
+        if (editCurrentMarker) {
+            editReportMap.removeLayer(editCurrentMarker);
+        }
+        
+        // Add new marker
+        editCurrentMarker = L.marker([lat, lng]).addTo(editReportMap);
+        
+        // Update hidden inputs
+        document.getElementById('editLatitude').value = parseFloat(lat).toFixed(6);
+        document.getElementById('editLongitude').value = parseFloat(lng).toFixed(6);
+        
+        // Update coordinate display and address
+        document.getElementById('editSelectedCoordinates').textContent = 
+            `Selected: ${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
+        document.getElementById('editAddress').value = address;
+        
+        // Clear search and show short name in search input
+        document.getElementById('editLocationSearch').value = shortName || address.split(',')[0];
+        document.getElementById('editSearchResults').classList.add('hidden');
     }
 }
 
@@ -1389,6 +1584,144 @@ document.getElementById('editReportModal').addEventListener('click', function(e)
         closeEditModal();
     }
 });
+
+// Additional functions for edit form functionality
+function initializeEditReportMap(report) {
+    if (editReportMap) {
+        editReportMap.remove();
+    }
+    
+    // Use report location or default to New York City center
+    const defaultLat = report.latitude || 40.7128;
+    const defaultLng = report.longitude || -74.0060;
+    const zoomLevel = report.latitude ? 16 : 12;
+    
+    // Initialize map
+    editReportMap = L.map('editReportMap').setView([defaultLat, defaultLng], zoomLevel);
+    
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(editReportMap);
+    
+    // Add marker if report has coordinates
+    if (report.latitude && report.longitude) {
+        editCurrentMarker = L.marker([report.latitude, report.longitude]).addTo(editReportMap);
+    }
+    
+    // Add click event to map
+    editReportMap.on('click', function(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        
+        // Remove previous marker
+        if (editCurrentMarker) {
+            editReportMap.removeLayer(editCurrentMarker);
+        }
+        
+        // Add new marker
+        editCurrentMarker = L.marker([lat, lng]).addTo(editReportMap);
+        
+        // Update hidden inputs
+        document.getElementById('editLatitude').value = lat.toFixed(6);
+        document.getElementById('editLongitude').value = lng.toFixed(6);
+        
+        // Update coordinate display
+        document.getElementById('editSelectedCoordinates').textContent = 
+            `Selected: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        
+        // Try to get address using reverse geocoding
+        getEditAddressFromCoordinates(lat, lng);
+    });
+}
+
+async function getEditAddressFromCoordinates(lat, lng) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, {
+            headers: {
+                'User-Agent': 'Sylva-Environmental-App/1.0'
+            }
+        });
+        const data = await response.json();
+        
+        if (data.display_name) {
+            document.getElementById('editAddress').value = data.display_name;
+        }
+    } catch (error) {
+        console.log('Could not get address:', error);
+    }
+}
+
+function getEditCurrentLocation() {
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by this browser.');
+        return;
+    }
+
+    // Show loading state
+    const btn = event.target;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Getting location...</span>';
+    btn.disabled = true;
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            
+            // Update map view and add marker
+            if (editReportMap) {
+                editReportMap.setView([lat, lng], 16);
+                
+                // Remove previous marker
+                if (editCurrentMarker) {
+                    editReportMap.removeLayer(editCurrentMarker);
+                }
+                
+                // Add new marker
+                editCurrentMarker = L.marker([lat, lng]).addTo(editReportMap);
+                
+                // Update hidden inputs
+                document.getElementById('editLatitude').value = lat.toFixed(6);
+                document.getElementById('editLongitude').value = lng.toFixed(6);
+                
+                // Update coordinate display
+                document.getElementById('editSelectedCoordinates').textContent = 
+                    `Selected: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                
+                // Try to get address
+                getEditAddressFromCoordinates(lat, lng);
+            }
+                
+            // Reset button
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            
+            alert('Current location set successfully!');
+        },
+        function(error) {
+            // Reset button
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    alert("User denied the request for Geolocation.");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    alert("Location information is unavailable.");
+                    break;
+                case error.TIMEOUT:
+                    alert("The request to get user location timed out.");
+                    break;
+                default:
+                    alert("An unknown error occurred while getting location.");
+                    break;
+            }
+        }
+    );
+}
 </script>
 @endpush
 @endsection
