@@ -23,10 +23,4 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [WebController::class, 'dashboard'])->name('dashboard');
     Route::get('/map', [WebController::class, 'map'])->name('map');
     Route::get('/reports', [WebController::class, 'reports'])->name('reports');
-    Route::get('/projects', [WebController::class, 'projects'])->name('projects');
-    Route::get('/projects/{id}', [WebController::class, 'projectDetail'])->name('projects.detail');
-    Route::get('/events', [WebController::class, 'events'])->name('events');
-    Route::get('/events/{id}', [WebController::class, 'eventDetail'])->name('events.detail');
-    Route::get('/feedback', [WebController::class, 'feedback'])->name('feedback');
-    Route::get('/impact', [WebController::class, 'impact'])->name('impact');
 });

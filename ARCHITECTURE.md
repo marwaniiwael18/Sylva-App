@@ -243,15 +243,11 @@ POST /api/auth/forgot-password
 
 ### Data Endpoints
 ```
-GET  /api/projects
-POST /api/projects
-GET  /api/projects/{id}
-PUT  /api/projects/{id}
-DELETE /api/projects/{id}
-
-GET  /api/events
-POST /api/events
-GET  /api/events/{id}
+GET  /api/reports
+POST /api/reports
+GET  /api/reports/{id}
+PUT  /api/reports/{id}
+DELETE /api/reports/{id}
 
 GET  /api/dashboard/stats
 ```

@@ -15,7 +15,7 @@
     </div>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Trees Planted -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300">
             <div class="flex items-center justify-between mb-4">
@@ -30,40 +30,6 @@
             <div class="flex items-center text-sm text-green-600">
                 <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
                 +12 this month
-            </div>
-        </div>
-
-        <!-- Events Attended -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
-                    <i data-lucide="calendar" class="w-6 h-6 text-purple-600"></i>
-                </div>
-                <div class="text-right">
-                    <div class="text-2xl font-bold text-gray-900">{{ $stats['events_attended'] }}</div>
-                    <div class="text-sm text-gray-500">Events Attended</div>
-                </div>
-            </div>
-            <div class="flex items-center text-sm text-green-600">
-                <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
-                +3 this month
-            </div>
-        </div>
-
-        <!-- Projects Joined -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                    <i data-lucide="users" class="w-6 h-6 text-blue-600"></i>
-                </div>
-                <div class="text-right">
-                    <div class="text-2xl font-bold text-gray-900">{{ $stats['projects_joined'] }}</div>
-                    <div class="text-sm text-gray-500">Projects Joined</div>
-                </div>
-            </div>
-            <div class="flex items-center text-sm text-green-600">
-                <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
-                +2 this month
             </div>
         </div>
 
@@ -83,38 +49,46 @@
                 +45kg this month
             </div>
         </div>
+
+        <!-- Impact Score -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                    <i data-lucide="award" class="w-6 h-6 text-blue-600"></i>
+                </div>
+                <div class="text-right">
+                    <div class="text-2xl font-bold text-gray-900">{{ $stats['impact_score'] }}</div>
+                    <div class="text-sm text-gray-500">Impact Score</div>
+                </div>
+            </div>
+            <div class="flex items-center text-sm text-green-600">
+                <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                +25 this month
+            </div>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <!-- Quick Actions -->
         <div class="xl:col-span-2">
             <h2 class="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- Join a Project -->
-                <a href="{{ route('projects') }}" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
-                    <div class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i data-lucide="tree-pine" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <h3 class="font-semibold text-gray-900 mb-2">Join a Project</h3>
-                    <p class="text-sm text-gray-600">Find and join ongoing green projects in your area</p>
-                </a>
-
-                <!-- Attend an Event -->
-                <a href="{{ route('events') }}" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
-                    <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i data-lucide="calendar" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <h3 class="font-semibold text-gray-900 mb-2">Attend an Event</h3>
-                    <p class="text-sm text-gray-600">Discover upcoming environmental events</p>
-                </a>
-
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Report an Issue -->
                 <a href="{{ route('map') }}" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
-                    <div class="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <div class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                         <i data-lucide="map-pin" class="w-6 h-6 text-white"></i>
                     </div>
-                    <h3 class="font-semibold text-gray-900 mb-2">Report an Issue</h3>
-                    <p class="text-sm text-gray-600">Help identify areas that need greening</p>
+                    <h3 class="font-semibold text-gray-900 mb-2">Explore the Map</h3>
+                    <p class="text-sm text-gray-600">View environmental reports and add new ones</p>
+                </a>
+
+                <!-- View Reports -->
+                <a href="{{ route('reports') }}" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                    <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="flag" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2">View Reports</h3>
+                    <p class="text-sm text-gray-600">Browse and manage environmental reports</p>
                 </a>
             </div>
         </div>
@@ -129,7 +103,7 @@
                             <span class="text-sm">🌳</span>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm text-gray-900">You planted 3 trees in Central Park project</p>
+                            <p class="text-sm text-gray-900">You contributed to tree planting efforts</p>
                             <div class="flex items-center text-xs text-gray-500 mt-1">
                                 <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
                                 2 hours ago
@@ -139,10 +113,10 @@
                     
                     <div class="flex items-start space-x-3">
                         <div class="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span class="text-sm">📅</span>
+                            <span class="text-sm">�</span>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm text-gray-900">Joined "Community Garden Workshop" event</p>
+                            <p class="text-sm text-gray-900">Viewed environmental reports in your area</p>
                             <div class="flex items-center text-xs text-gray-500 mt-1">
                                 <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
                                 1 day ago
@@ -181,11 +155,11 @@
                 </div>
                 <div class="flex items-center space-x-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full">
                     <i data-lucide="award" class="w-4 h-4"></i>
-                    <span class="text-sm font-medium">Community Helper</span>
+                    <span class="text-sm font-medium">Environmental Reporter</span>
                 </div>
                 <div class="flex items-center space-x-2 bg-purple-50 text-purple-700 px-4 py-2 rounded-full">
                     <i data-lucide="award" class="w-4 h-4"></i>
-                    <span class="text-sm font-medium">Event Enthusiast</span>
+                    <span class="text-sm font-medium">Community Guardian</span>
                 </div>
             </div>
         </div>

@@ -57,50 +57,6 @@
                     <span x-show="!sidebarCollapsed">Reports</span>
                 </a>
             </li>
-            
-            <!-- Projects -->
-            <li>
-                <a href="{{ route('projects') }}" 
-                   class="nav-item {{ request()->routeIs('projects*') ? 'active' : '' }}"
-                   :class="sidebarCollapsed && 'justify-center'"
-                >
-                    <i data-lucide="folder" class="w-5 h-5"></i>
-                    <span x-show="!sidebarCollapsed">Projects</span>
-                </a>
-            </li>
-            
-            <!-- Events -->
-            <li>
-                <a href="{{ route('events') }}" 
-                   class="nav-item {{ request()->routeIs('events*') ? 'active' : '' }}"
-                   :class="sidebarCollapsed && 'justify-center'"
-                >
-                    <i data-lucide="calendar" class="w-5 h-5"></i>
-                    <span x-show="!sidebarCollapsed">Events</span>
-                </a>
-            </li>
-            
-            <!-- Feedback -->
-            <li>
-                <a href="{{ route('feedback') }}" 
-                   class="nav-item {{ request()->routeIs('feedback') ? 'active' : '' }}"
-                   :class="sidebarCollapsed && 'justify-center'"
-                >
-                    <i data-lucide="message-circle" class="w-5 h-5"></i>
-                    <span x-show="!sidebarCollapsed">Feedback</span>
-                </a>
-            </li>
-            
-            <!-- Impact -->
-            <li>
-                <a href="{{ route('impact') }}" 
-                   class="nav-item {{ request()->routeIs('impact') ? 'active' : '' }}"
-                   :class="sidebarCollapsed && 'justify-center'"
-                >
-                    <i data-lucide="trending-up" class="w-5 h-5"></i>
-                    <span x-show="!sidebarCollapsed">Impact</span>
-                </a>
-            </li>
         </ul>
     </nav>
 

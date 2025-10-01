@@ -47,79 +47,14 @@ Route::get('reports-statistics-public', [ReportController::class, 'statistics'])
 
 // Mock API endpoints for development
 Route::middleware('cors')->group(function () {
-    // Projects mock data
-    Route::get('projects', function () {
-        return response()->json([
-            'success' => true,
-            'data' => [
-                [
-                    'id' => 1,
-                    'title' => 'Central Park Tree Restoration',
-                    'description' => 'Restore native tree species in Central Park',
-                    'location' => 'Central Park, NY',
-                    'status' => 'active',
-                    'progress' => 75,
-                    'participants' => 45,
-                    'target_participants' => 60,
-                    'start_date' => '2024-01-15',
-                    'end_date' => '2024-06-15'
-                ],
-                [
-                    'id' => 2,
-                    'title' => 'Brooklyn Rooftop Gardens',
-                    'description' => 'Create rooftop gardens across Brooklyn',
-                    'location' => 'Brooklyn, NY',
-                    'status' => 'active',
-                    'progress' => 45,
-                    'participants' => 32,
-                    'target_participants' => 50,
-                    'start_date' => '2024-02-01',
-                    'end_date' => '2024-08-01'
-                ]
-            ]
-        ]);
-    });
-
-    // Events mock data
-    Route::get('events', function () {
-        return response()->json([
-            'success' => true,
-            'data' => [
-                [
-                    'id' => 1,
-                    'title' => 'Community Garden Workshop',
-                    'description' => 'Learn sustainable gardening practices',
-                    'location' => 'Brooklyn Community Center',
-                    'date' => '2024-03-15',
-                    'time' => '10:00',
-                    'attendees' => 25,
-                    'max_attendees' => 40
-                ],
-                [
-                    'id' => 2,
-                    'title' => 'Tree Planting Day',
-                    'description' => 'Join us for a day of tree planting',
-                    'location' => 'Prospect Park',
-                    'date' => '2024-03-22',
-                    'time' => '09:00',
-                    'attendees' => 67,
-                    'max_attendees' => 80
-                ]
-            ]
-        ]);
-    });
-
     // Dashboard stats
     Route::get('dashboard/stats', function () {
         return response()->json([
             'success' => true,
             'data' => [
                 'trees_planted' => 127,
-                'events_attended' => 23,
-                'projects_joined' => 8,
-                'impact_score' => 847,
                 'co2_saved' => '2.3 tons',
-                'badges_earned' => 5
+                'impact_score' => 847
             ]
         ]);
     });
