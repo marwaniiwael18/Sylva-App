@@ -9,12 +9,27 @@
         <div id="map" class="w-full h-full"></div>
 
     <!-- Map Legend -->
-    <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-gray-200 z-[1000] max-w-48">
+    <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-gray-200 z-[1000] max-w-64">
         <h3 class="font-bold text-gray-900 mb-3 text-sm flex items-center gap-2">
             <i data-lucide="info" class="w-4 h-4"></i>
             Map Legend
         </h3>
-        <div class="space-y-2">
+        
+        <!-- Toggle Controls -->
+        <div class="mb-3 pb-3 border-b border-gray-200">
+            <div class="flex items-center gap-2 mb-2">
+                <input type="checkbox" x-model="showReports" @change="toggleReports()" id="toggle-reports" class="rounded text-emerald-600">
+                <label for="toggle-reports" class="text-xs font-medium text-gray-700">Reports</label>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" x-model="showTrees" @change="toggleTrees()" id="toggle-trees" class="rounded text-emerald-600">
+                <label for="toggle-trees" class="text-xs font-medium text-gray-700">Trees</label>
+            </div>
+        </div>
+        
+        <!-- Reports Legend -->
+        <div x-show="showReports" class="space-y-2 mb-3">
+            <h4 class="font-semibold text-gray-800 mb-2 text-xs">Report Priorities</h4>
             <div class="flex items-center space-x-2">
                 <div class="w-3 h-3 bg-red-500 rounded-full shadow-sm"></div>
                 <span class="text-xs font-medium text-gray-700">High Priority</span>
@@ -29,24 +44,25 @@
             </div>
         </div>
         
-        <div class="mt-3 pt-3 border-t border-gray-200">
-            <h4 class="font-semibold text-gray-800 mb-2 text-xs">Report Types</h4>
+        <!-- Trees Legend -->
+        <div x-show="showTrees" class="space-y-2">
+            <h4 class="font-semibold text-gray-800 mb-2 text-xs">Tree Status</h4>
             <div class="space-y-1">
-                <div class="flex items-center space-x-1">
-                    <i data-lucide="tree-pine" class="w-3 h-3 text-green-600"></i>
-                    <span class="text-xs text-gray-600">Tree Planting</span>
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-green-600 rounded-full shadow-sm"></div>
+                    <span class="text-xs text-gray-600">Planted</span>
                 </div>
-                <div class="flex items-center space-x-1">
-                    <i data-lucide="wrench" class="w-3 h-3 text-orange-600"></i>
-                    <span class="text-xs text-gray-600">Maintenance</span>
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-yellow-600 rounded-full shadow-sm"></div>
+                    <span class="text-xs text-gray-600">Not Yet Planted</span>
                 </div>
-                <div class="flex items-center space-x-1">
-                    <i data-lucide="alert-triangle" class="w-3 h-3 text-red-600"></i>
-                    <span class="text-xs text-gray-600">Pollution</span>
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-orange-600 rounded-full shadow-sm"></div>
+                    <span class="text-xs text-gray-600">Sick</span>
                 </div>
-                <div class="flex items-center space-x-1">
-                    <i data-lucide="leaf" class="w-3 h-3 text-emerald-600"></i>
-                    <span class="text-xs text-gray-600">Green Space</span>
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-red-600 rounded-full shadow-sm"></div>
+                    <span class="text-xs text-gray-600">Dead</span>
                 </div>
             </div>
         </div>
@@ -545,6 +561,28 @@
     border-color: #10b981;
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
+
+/* Tree popup styling */
+.tree-popup .leaflet-popup-content-wrapper {
+    border: 2px solid #10b981;
+    border-radius: 12px;
+}
+
+.tree-popup .leaflet-popup-tip {
+    border-left-color: #10b981;
+    border-right-color: #10b981;
+}
+
+/* Report popup styling */
+.report-popup .leaflet-popup-content-wrapper {
+    border: 2px solid #3b82f6;
+    border-radius: 12px;
+}
+
+.report-popup .leaflet-popup-tip {
+    border-left-color: #3b82f6;
+    border-right-color: #3b82f6;
+}
 </style>
 @endpush
 
@@ -565,6 +603,12 @@ function mapComponent() {
         editSelectedImages: [],
         reports: @json($reports),
         allReports: @json($reports), // Keep copy for search filtering
+        trees: [],
+        allTrees: [],
+        showReports: true,
+        showTrees: true,
+        treeMarkers: [],
+        reportMarkers: [],
         searchQuery: '',
         searchType: '',
         searchUrgency: '',
@@ -582,6 +626,7 @@ function mapComponent() {
         init() {
             this.initMap();
             this.loadReports();
+            this.loadTrees();
         },
         
         initMap() {
@@ -1052,10 +1097,13 @@ function mapComponent() {
                 fillOpacity: 0.8
             }).addTo(this.map);
             
+            // Store marker reference
+            this.reportMarkers.push(marker);
+            
             const popupContent = this.createPopupContent(report);
             marker.bindPopup(popupContent, {
                 maxWidth: 300,
-                className: 'custom-popup'
+                className: 'custom-popup report-popup'
             });
 
             // Add event listeners when popup opens
@@ -1231,6 +1279,195 @@ function mapComponent() {
             this.resetForm();
         },
 
+        async loadTrees() {
+            try {
+                const response = await fetch('/api/trees/map/data', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    this.trees = result.data || [];
+                    this.allTrees = [...this.trees];
+                    
+                    if (this.showTrees) {
+                        this.trees.forEach(tree => {
+                            this.addTreeToMap(tree);
+                        });
+                    }
+                    
+                    console.log(`Loaded ${this.trees.length} trees`);
+                } else {
+                    console.log('Could not load trees - using empty array');
+                    this.trees = [];
+                    this.allTrees = [];
+                }
+            } catch (error) {
+                console.error('Error loading trees:', error);
+                this.trees = [];
+                this.allTrees = [];
+            }
+        },
+
+        addTreeToMap(tree) {
+            if (!tree.latitude || !tree.longitude) return;
+
+            const iconColor = this.getTreeStatusColor(tree.status);
+            const marker = L.circleMarker([parseFloat(tree.latitude), parseFloat(tree.longitude)], {
+                radius: 6,
+                fillColor: iconColor,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(this.map);
+            
+            // Store marker reference
+            this.treeMarkers.push(marker);
+            
+            const popupContent = this.createTreePopupContent(tree);
+            marker.bindPopup(popupContent, {
+                maxWidth: 300,
+                className: 'custom-popup tree-popup'
+            });
+
+            // Add event listeners when popup opens
+            marker.on('popupopen', () => {
+                setTimeout(() => {
+                    lucide.createIcons();
+                    this.setupTreePopupButtons(tree.id);
+                }, 100);
+            });
+        },
+
+        getTreeStatusColor(status) {
+            const colors = {
+                'Planted': '#22c55e',
+                'Not Yet': '#eab308', 
+                'Sick': '#f97316',
+                'Dead': '#ef4444'
+            };
+            return colors[status] || '#6b7280';
+        },
+
+        createTreePopupContent(tree) {
+            // Handle images display
+            let imageSection = '';
+            if (tree.image_urls && tree.image_urls.length > 0) {
+                const firstImage = tree.image_urls[0];
+                const imageCount = tree.image_urls.length > 1 ? `<div class="absolute top-1 right-1 bg-black/60 text-white px-1 py-0.5 rounded text-xs">+${tree.image_urls.length}</div>` : '';
+                imageSection = `
+                    <div class="relative mb-3">
+                        <img src="${firstImage}" class="w-full h-32 object-cover rounded-lg" alt="${tree.species}">
+                        ${imageCount}
+                    </div>
+                `;
+            }
+
+            // Format planting date
+            const plantingDate = new Date(tree.planting_date).toLocaleDateString();
+            
+            // Tree type icon mapping
+            const typeIcons = {
+                'Fruit': '🍎',
+                'Ornamental': '🌸', 
+                'Forest': '🌲',
+                'Medicinal': '🌿'
+            };
+            const typeIcon = typeIcons[tree.type] || '🌳';
+
+            return `
+                <div class="p-4 max-w-sm">
+                    ${imageSection}
+                    <h3 class="font-bold text-lg mb-2 text-gray-900 flex items-center gap-2">
+                        ${tree.species}
+                        <span class="text-xl">${typeIcon}</span>
+                    </h3>
+                    ${tree.description ? `<p class="text-sm text-gray-600 mb-3 leading-relaxed">${tree.description}</p>` : ''}
+                    
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${this.getTreeStatusClass(tree.status)}">
+                            ${tree.status}
+                        </span>
+                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                            ${tree.type}
+                        </span>
+                    </div>
+                    
+                    <div class="text-xs text-gray-500 mb-3 space-y-1">
+                        <div class="flex items-center gap-1">
+                            <i data-lucide="calendar" class="w-3 h-3"></i>
+                            Planted: ${plantingDate}
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <i data-lucide="user" class="w-3 h-3"></i>
+                            By: ${tree.planted_by.name}
+                        </div>
+                        ${tree.address ? `<div class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i>${tree.address}</div>` : ''}
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button class="view-tree-btn flex-1 px-3 py-2 bg-emerald-500 text-white text-xs rounded-lg hover:bg-emerald-600 transition-colors duration-200 flex items-center justify-center gap-1" data-tree-id="${tree.id}">
+                            <i data-lucide="eye" class="w-3 h-3"></i>
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            `;
+        },
+
+        getTreeStatusClass(status) {
+            const classes = {
+                'Planted': 'bg-green-100 text-green-800',
+                'Not Yet': 'bg-yellow-100 text-yellow-800',
+                'Sick': 'bg-orange-100 text-orange-800',
+                'Dead': 'bg-red-100 text-red-800'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800';
+        },
+
+        setupTreePopupButtons(treeId) {
+            const viewBtn = document.querySelector(`.view-tree-btn[data-tree-id="${treeId}"]`);
+            
+            if (viewBtn) {
+                viewBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.location.href = `/trees/${treeId}`;
+                });
+            }
+        },
+
+        toggleReports() {
+            this.reportMarkers.forEach(marker => {
+                if (this.showReports) {
+                    this.map.addLayer(marker);
+                } else {
+                    this.map.removeLayer(marker);
+                }
+            });
+            
+            if (this.showReports && this.reportMarkers.length === 0) {
+                this.loadReports();
+            }
+        },
+
+        toggleTrees() {
+            this.treeMarkers.forEach(marker => {
+                if (this.showTrees) {
+                    this.map.addLayer(marker);
+                } else {
+                    this.map.removeLayer(marker);
+                }
+            });
+            
+            if (this.showTrees && this.treeMarkers.length === 0) {
+                this.loadTrees();
+            }
+        },
+
         reloadMap() {
             // Clear existing markers
             this.map.eachLayer((layer) => {
@@ -1238,8 +1475,18 @@ function mapComponent() {
                     this.map.removeLayer(layer);
                 }
             });
-            // Reload reports
-            this.loadReports();
+            
+            // Clear marker arrays
+            this.reportMarkers = [];
+            this.treeMarkers = [];
+            
+            // Reload data based on toggle states
+            if (this.showReports) {
+                this.loadReports();
+            }
+            if (this.showTrees) {
+                this.loadTrees();
+            }
         }
     }
 }

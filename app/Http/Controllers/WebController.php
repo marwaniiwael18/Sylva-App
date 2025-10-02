@@ -43,4 +43,10 @@ class WebController extends Controller
         
         return view('pages.reports', compact('reports', 'statistics'));
     }
+
+    // Trees page
+    public function trees()
+    {
+        return redirect()->route('trees.index');
+    }
 }

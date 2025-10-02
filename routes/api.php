@@ -34,6 +34,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('reports', ReportController::class);
     Route::post('reports/{report}/validate', [ReportController::class, 'validate']);
     Route::get('reports-statistics', [ReportController::class, 'statistics']);
+    
+    // Trees CRUD
+    Route::apiResource('trees', \App\Http\Controllers\TreeController::class);
+    Route::get('trees/map/data', [\App\Http\Controllers\TreeController::class, 'mapData']);
+    Route::get('trees/user/my', [\App\Http\Controllers\TreeController::class, 'myTrees']);
 });
 
 // Temporary public routes for testing (remove in production)
