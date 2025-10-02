@@ -66,4 +66,20 @@ class User extends Authenticatable
     {
         return $this->is_admin || $this->is_moderator;
     }
+
+    /**
+     * Get all forum posts created by this user.
+     */
+    public function forumPosts()
+    {
+        return $this->hasMany(ForumPost::class, 'author_id');
+    }
+
+    /**
+     * Get all comments created by this user.
+     */
+    public function comments()
+    {
+        return $this->hasMany(Comment::class, 'author_id');
+    }
 }
