@@ -3,13 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WebController;
-
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ForumController;
-
 use App\Http\Controllers\EventController;
-
 use App\Http\Controllers\TreeController;
-
 use App\Http\Controllers\DonationController;
 
 
@@ -75,6 +72,13 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{donation}/cancel', [DonationController::class, 'cancel'])->name('cancel');
     });
 
-
+    // Admin Routes - Restricted to administrators only
+    Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/users', [AdminController::class, 'users'])->name('users');
+        Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
+        Route::patch('/users/{user}/role', [AdminController::class, 'updateUserRole'])->name('users.update-role');
+        Route::patch('/reports/{report}/validate', [AdminController::class, 'validateReport'])->name('reports.validate');
+    });
 
 });

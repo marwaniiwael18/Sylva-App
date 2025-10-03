@@ -52,6 +52,22 @@
                     <span x-show="!sidebarCollapsed" class="nav-text">Dashboard</span>
                 </a>
             </li>
+
+            <!-- Admin Dashboard (visible seulement pour les admins) -->
+            @if(Auth::user()->isAdmin())
+            <li>
+                <a href="{{ route('admin.dashboard') }}" 
+                   class="nav-item {{ request()->routeIs('admin.*') ? 'active' : '' }}"
+                   :class="sidebarCollapsed && 'justify-center'"
+                >
+                    <i data-lucide="shield-check" class="w-5 h-5 flex-shrink-0"></i>
+                    <span x-show="!sidebarCollapsed" class="nav-text">Administration</span>
+                    <span x-show="!sidebarCollapsed" class="nav-count">
+                        <span class="bg-red-400 text-red-900 text-xs font-bold px-2 py-0.5 rounded-full">Admin</span>
+                    </span>
+                </a>
+            </li>
+            @endif
             
             <!-- Tree Management -->
             <li>
