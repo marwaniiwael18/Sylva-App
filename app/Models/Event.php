@@ -89,38 +89,37 @@ class Event extends Model
     public function getFormattedDateAttribute(): string
     {
         return $this->date->format('d/m/Y à H:i');
+    }
 
-        'max_participants' => 'integer',
-        'current_participants' => 'integer'
-    ];
-
-    // Relationships
+    /**
+     * Donations related to this event
+     */
     public function donations(): HasMany
     {
         return $this->hasMany(Donation::class, 'event_id');
     }
 
-    public function organizer()
-    {
-        return $this->belongsTo(User::class, 'organized_by_user_id');
-    }
-
-    // Accessors
+    /**
+     * Get total donations amount for this event
+     */
     public function getTotalDonationsAttribute(): float
     {
         return $this->donations()->where('payment_status', 'succeeded')->sum('amount');
     }
 
-    // Scopes
+    /**
+     * Scope for active events
+     */
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
     }
 
+    /**
+     * Scope for upcoming events
+     */
     public function scopeUpcoming($query)
     {
         return $query->where('date', '>', now())->where('status', 'active');
     }
-
-  
 }

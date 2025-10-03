@@ -32,10 +32,10 @@
                 <span class="text-emerald-700">Type:</span>
                 <span class="font-medium text-emerald-900">{{ $donation->type_name }}</span>
             </div>
-            @if($donation->relatedEvent)
+            @if($donation->event)
                 <div class="flex justify-between">
                     <span class="text-emerald-700">Event:</span>
-                    <span class="font-medium text-emerald-900">{{ $donation->relatedEvent->title }}</span>
+                    <span class="font-medium text-emerald-900">{{ $donation->event->title }}</span>
                 </div>
             @endif
             <div class="flex justify-between">

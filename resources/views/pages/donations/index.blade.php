@@ -107,10 +107,10 @@
                                     </span>
                                 </td>
                                 <td class="py-4 px-6">
-                                    @if($donation->relatedEvent)
+                                    @if($donation->event)
                                         <div class="text-sm">
-                                            <div class="font-medium text-gray-900">{{ $donation->relatedEvent->title }}</div>
-                                            <div class="text-gray-500">{{ $donation->relatedEvent->date->format('M d, Y') }}</div>
+                                            <div class="font-medium text-gray-900">{{ $donation->event->title }}</div>
+                                            <div class="text-gray-500">{{ $donation->event->date->format('M d, Y') }}</div>
                                         </div>
                                     @else
                                         <span class="text-gray-500 text-sm">General Donation</span>

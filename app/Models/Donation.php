@@ -63,7 +63,7 @@ class Donation extends Model
     ];
 
     protected $attributes = [
-        'currency' => 'TND',
+        'currency' => 'EUR',
         'payment_status' => 'pending',
         'refund_status' => 'none'
     ];
@@ -74,7 +74,7 @@ class Donation extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function relatedEvent(): BelongsTo
+    public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class, 'event_id');
     }

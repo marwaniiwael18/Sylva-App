@@ -20,7 +20,7 @@ class DonationController extends Controller
     public function index()
     {
         $donations = Auth::user()->donations()
-            ->with('relatedEvent') // Now enabled
+            ->with('event') // Load event relationship
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -111,7 +111,7 @@ class DonationController extends Controller
         }
 
         // Load relationships
-        $donation->load('relatedEvent');
+        $donation->load('event');
 
         return view('pages.donations.show', compact('donation'));
     }
