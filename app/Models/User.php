@@ -84,6 +84,7 @@ class User extends Authenticatable
         return $this->belongsToMany(Event::class, 'event_user')
                     ->withPivot('registered_at')
                     ->withTimestamps();
+    }
 
     // Donations relationship
     public function donations()
@@ -94,6 +95,5 @@ class User extends Authenticatable
     public function getTotalDonationsAttribute(): float
     {
         return $this->donations()->where('payment_status', 'succeeded')->sum('amount');
-
     }
 }

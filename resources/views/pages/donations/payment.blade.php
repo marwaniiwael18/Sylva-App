@@ -28,10 +28,10 @@
                 <span class="text-emerald-700">Amount:</span>
                 <span class="font-medium text-emerald-900">{{ $donation->formatted_amount }}</span>
             </div>
-            @if($donation->relatedEvent)
+            @if($donation->event)
                 <div class="flex justify-between">
                     <span class="text-emerald-700">Event:</span>
-                    <span class="font-medium text-emerald-900">{{ $donation->relatedEvent->title }}</span>
+                    <span class="font-medium text-emerald-900">{{ $donation->event->title }}</span>
                 </div>
             @endif
             <div class="border-t border-emerald-200 pt-3 mt-4">

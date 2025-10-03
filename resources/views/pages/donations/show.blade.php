@@ -97,15 +97,15 @@
                         </div>
                     </div>
 
-                    @if($donation->relatedEvent)
+                    @if($donation->event)
                         <div class="border-t pt-4">
                             <h4 class="font-medium text-gray-900 mb-2">Linked to Event</h4>
                             <div class="bg-emerald-50 rounded-lg p-4">
-                                <h5 class="font-semibold text-emerald-900">{{ $donation->relatedEvent->title }}</h5>
-                                <p class="text-sm text-emerald-700 mt-1">{{ $donation->relatedEvent->description }}</p>
+                                <h5 class="font-semibold text-emerald-900">{{ $donation->event->title }}</h5>
+                                <p class="text-sm text-emerald-700 mt-1">{{ $donation->event->description }}</p>
                                 <p class="text-sm text-emerald-600 mt-2">
                                     <i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>
-                                    {{ $donation->relatedEvent->date->format('F d, Y') }}
+                                    {{ $donation->event->date->format('F d, Y') }}
                                 </p>
                             </div>
                         </div>

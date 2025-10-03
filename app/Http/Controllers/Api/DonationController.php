@@ -24,7 +24,7 @@ class DonationController extends Controller
     public function index(Request $request)
     {
         $donations = Auth::user()->donations()
-            ->with('relatedEvent')
+            ->with('event')
             ->when($request->status, function ($query, $status) {
                 return $query->where('payment_status', $status);
             })
@@ -58,7 +58,7 @@ class DonationController extends Controller
             // Create donation record
             $donation = Donation::create([
                 'amount' => $validated['amount'],
-                'currency' => 'TND',
+                'currency' => 'EUR',
                 'type' => $validated['type'],
                 'user_id' => Auth::id(),
                 'event_id' => $validated['event_id'] ?? null,
@@ -70,7 +70,7 @@ class DonationController extends Controller
             // Create Stripe PaymentIntent
             $paymentIntent = PaymentIntent::create([
                 'amount' => $validated['amount'] * 100, // Convert to cents
-                'currency' => 'tnd',
+                'currency' => 'eur',
                 'metadata' => [
                     'donation_id' => $donation->id,
                     'user_id' => Auth::id(),
