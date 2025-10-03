@@ -4,8 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class Event extends Model
 {
@@ -17,11 +21,14 @@ class Event extends Model
         'date',
         'location',
         'type',
+
         'organized_by_user_id',
+
     ];
 
     protected $casts = [
         'date' => 'datetime',
+
     ];
 
     /**
@@ -82,5 +89,38 @@ class Event extends Model
     public function getFormattedDateAttribute(): string
     {
         return $this->date->format('d/m/Y à H:i');
+
+        'max_participants' => 'integer',
+        'current_participants' => 'integer'
+    ];
+
+    // Relationships
+    public function donations(): HasMany
+    {
+        return $this->hasMany(Donation::class, 'event_id');
     }
+
+    public function organizer()
+    {
+        return $this->belongsTo(User::class, 'organized_by_user_id');
+    }
+
+    // Accessors
+    public function getTotalDonationsAttribute(): float
+    {
+        return $this->donations()->where('payment_status', 'succeeded')->sum('amount');
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    public function scopeUpcoming($query)
+    {
+        return $query->where('date', '>', now())->where('status', 'active');
+    }
+
+  
 }

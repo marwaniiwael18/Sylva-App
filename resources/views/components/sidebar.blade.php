@@ -55,11 +55,11 @@
             
             <!-- Tree Management -->
             <li>
-                <a href="#" 
-                   class="nav-item"
+                <a href="{{ route('trees.index') }}" 
+                   class="nav-item {{ request()->routeIs('trees.*') ? 'active' : '' }}"
                    :class="sidebarCollapsed && 'justify-center'"
                 >
-                    <i data-lucide="trees" class="w-5 h-5 flex-shrink-0"></i>
+                    <i data-lucide="tree-pine" class="w-5 h-5 flex-shrink-0"></i>
                     <span x-show="!sidebarCollapsed" class="nav-text">Tree Management</span>
                 </a>
             </li>
@@ -94,7 +94,7 @@
 
             <!-- Donations -->
             <li>
-                <a href="#" 
+                <a href="{{ route('donations.index') }}" 
                    class="nav-item"
                    :class="sidebarCollapsed && 'justify-center'"
                 >

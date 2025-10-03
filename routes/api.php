@@ -4,8 +4,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ReportController;
+
 use App\Http\Controllers\Api\EventController as ApiEventController;
 use App\Http\Controllers\Api\EventController;
+
+use App\Http\Controllers\Api\DonationController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('reports/{report}/validate', [ReportController::class, 'validate']);
     Route::get('reports-statistics', [ReportController::class, 'statistics']);
     
+
     // Events CRUD
     Route::apiResource('events', ApiEventController::class)->names([
         'index' => 'api.events.index',
@@ -49,7 +54,28 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('events/{event}/join', [ApiEventController::class, 'join'])->name('api.events.join');
     Route::delete('events/{event}/leave', [ApiEventController::class, 'leave'])->name('api.events.leave');
     Route::get('events-statistics', [ApiEventController::class, 'statistics'])->name('api.events.statistics');
+
+
+    // Trees CRUD
+    Route::apiResource('trees', \App\Http\Controllers\TreeController::class);
+    Route::get('trees/map/data', [\App\Http\Controllers\TreeController::class, 'mapData']);
+    Route::get('trees/user/my', [\App\Http\Controllers\TreeController::class, 'myTrees']);
+
+    // Donations API
+    Route::prefix('donations')->name('api.donations.')->group(function () {
+        Route::get('/', [DonationController::class, 'index']);
+        Route::post('/', [DonationController::class, 'store']);
+        Route::get('/{donation}', [DonationController::class, 'show']);
+        Route::post('/{donation}/create-payment-intent', [DonationController::class, 'createPaymentIntent']);
+        Route::post('/{donation}/refund', [DonationController::class, 'refund']);
+        Route::delete('/{donation}', [DonationController::class, 'destroy']);
+        Route::get('/user/statistics', [DonationController::class, 'userStatistics']);
+    });
+
 });
+
+// Stripe Webhook (public route - no authentication required)
+Route::post('donations/stripe/webhook', [DonationController::class, 'handleStripeWebhook'])->name('api.donations.stripe.webhook');
 
 // Temporary public routes for testing (remove in production)
 Route::get('reports-public', [ReportController::class, 'index']);

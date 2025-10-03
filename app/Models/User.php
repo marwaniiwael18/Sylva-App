@@ -67,6 +67,7 @@ class User extends Authenticatable
         return $this->is_admin || $this->is_moderator;
     }
 
+
     /**
      * Les événements organisés par cet utilisateur
      */
@@ -83,5 +84,16 @@ class User extends Authenticatable
         return $this->belongsToMany(Event::class, 'event_user')
                     ->withPivot('registered_at')
                     ->withTimestamps();
+
+    // Donations relationship
+    public function donations()
+    {
+        return $this->hasMany(Donation::class, 'user_id');
+    }
+
+    public function getTotalDonationsAttribute(): float
+    {
+        return $this->donations()->where('payment_status', 'succeeded')->sum('amount');
+
     }
 }
