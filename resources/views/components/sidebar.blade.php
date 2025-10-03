@@ -105,8 +105,8 @@
 
             <!-- Forum -->
             <li>
-                <a href="#" 
-                   class="nav-item"
+                <a href="{{ route('forum.index') }}" 
+                   class="nav-item {{ request()->routeIs('forum.*') ? 'active' : '' }}"
                    :class="sidebarCollapsed && 'justify-center'"
                 >
                     <i data-lucide="message-circle" class="w-5 h-5 flex-shrink-0"></i>

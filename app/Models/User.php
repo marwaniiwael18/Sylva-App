@@ -69,6 +69,22 @@ class User extends Authenticatable
 
 
     /**
+     * Get all forum posts created by this user.
+     */
+    public function forumPosts()
+    {
+        return $this->hasMany(ForumPost::class, 'author_id');
+    }
+
+    /**
+     * Get all comments created by this user.
+     */
+    public function comments()
+    {
+        return $this->hasMany(Comment::class, 'author_id');
+
+
+    /**
      * Les événements organisés par cet utilisateur
      */
     public function organizedEvents()
@@ -95,5 +111,6 @@ class User extends Authenticatable
     public function getTotalDonationsAttribute(): float
     {
         return $this->donations()->where('payment_status', 'succeeded')->sum('amount');
+
     }
 }

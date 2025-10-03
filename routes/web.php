@@ -3,11 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WebController;
+
+use App\Http\Controllers\ForumController;
+
 use App\Http\Controllers\EventController;
 
 use App\Http\Controllers\TreeController;
 
 use App\Http\Controllers\DonationController;
+
 
 
 // Redirect root to dashboard
@@ -29,6 +33,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [WebController::class, 'dashboard'])->name('dashboard');
     Route::get('/map', [WebController::class, 'map'])->name('map');
     Route::get('/reports', [WebController::class, 'reports'])->name('reports');
+
+    
+    // Forum Routes
+    Route::get('/forum', [ForumController::class, 'index'])->name('forum.index');
+    Route::get('/forum/create', [ForumController::class, 'create'])->name('forum.create');
+    Route::post('/forum', [ForumController::class, 'store'])->name('forum.store');
+    Route::get('/forum/{forumPost}', [ForumController::class, 'show'])->name('forum.show');
+    Route::get('/forum/{forumPost}/edit', [ForumController::class, 'edit'])->name('forum.edit');
+    Route::put('/forum/{forumPost}', [ForumController::class, 'update'])->name('forum.update');
+    Route::delete('/forum/{forumPost}', [ForumController::class, 'destroy'])->name('forum.destroy');
+    Route::post('/forum/{forumPost}/comments', [ForumController::class, 'storeComment'])->name('forum.comments.store');
+    Route::put('/comments/{comment}', [ForumController::class, 'updateComment'])->name('forum.comments.update');
+    Route::delete('/comments/{comment}', [ForumController::class, 'destroyComment'])->name('forum.comments.destroy');
+    Route::get('/forum/filter/event', [ForumController::class, 'filterByEvent'])->name('forum.filter.event');
+
 
     
     // Event Routes
@@ -55,6 +74,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/{donation}/refund', [DonationController::class, 'refund'])->name('refund');
         Route::delete('/{donation}/cancel', [DonationController::class, 'cancel'])->name('cancel');
     });
+
 
 
 });
