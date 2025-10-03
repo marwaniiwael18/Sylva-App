@@ -94,7 +94,7 @@
 
             <!-- Donations -->
             <li>
-                <a href="#" 
+                <a href="{{ route('donations.index') }}" 
                    class="nav-item"
                    :class="sidebarCollapsed && 'justify-center'"
                 >
