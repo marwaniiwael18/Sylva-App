@@ -1,54 +1,67 @@
 @extends('layouts.dashboard')
 
+@section('title', 'Dashboard - Sylva')
 @section('page-title', 'Dashboard')
+@section('page-subtitle', 'Vue d\'ensemble de votre activité environnementale')
 
 @section('page-content')
-<div class="p-6 space-y-8">
-    <!-- Welcome Header -->
-    <div class="text-center md:text-left">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {{ explode(' ', Auth::user()->name)[0] }}! 👋
-        </h1>
-        <p class="text-gray-600">
-            Ready to make a positive impact on the environment today?
-        </p>
-    </div>
+<div class="p-6 space-y-6">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Users -->
+        <div class="bg-white rounded-2xl p-6 border border-emerald-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Utilisateurs</p>
+                    <p class="text-2xl font-bold text-emerald-900">{{ number_format($stats['total_users']) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                    <i data-lucide="users" class="w-6 h-6 text-emerald-600"></i>
+                </div>
+            </div>
+        </div>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Trees Planted -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+        <!-- Total Events -->
+        <div class="bg-white rounded-2xl p-6 border border-blue-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Événements</p>
+                    <p class="text-2xl font-bold text-blue-900">{{ number_format($stats['total_events']) }}</p>
+                    <p class="text-xs text-blue-600">{{ $stats['active_events'] }} actifs</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <i data-lucide="calendar" class="w-6 h-6 text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Donations -->
+        <div class="bg-white rounded-2xl p-6 border border-purple-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Donations</p>
+                    <p class="text-2xl font-bold text-purple-900">{{ number_format($stats['total_donations'], 2) }} EUR</p>
+                    <p class="text-xs text-purple-600">{{ $stats['total_donations_count'] }} donations</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                    <i data-lucide="heart" class="w-6 h-6 text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Trees -->
+        <div class="bg-white rounded-2xl p-6 border border-green-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Arbres</p>
+                    <p class="text-2xl font-bold text-green-900">{{ number_format($stats['total_trees']) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                     <i data-lucide="tree-pine" class="w-6 h-6 text-green-600"></i>
                 </div>
-                <div class="text-right">
-                    <div class="text-2xl font-bold text-gray-900">{{ $stats['trees_planted'] }}</div>
-                    <div class="text-sm text-gray-500">Trees Planted</div>
-                </div>
-            </div>
-            <div class="flex items-center text-sm text-green-600">
-                <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
-                +12 this month
             </div>
         </div>
-
-        <!-- CO2 Saved -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
-                    <i data-lucide="target" class="w-6 h-6 text-emerald-600"></i>
-                </div>
-                <div class="text-right">
-                    <div class="text-2xl font-bold text-gray-900">{{ $stats['co2_saved'] }}</div>
-                    <div class="text-sm text-gray-500">CO₂ Saved</div>
-                </div>
-            </div>
-            <div class="flex items-center text-sm text-green-600">
-                <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
-                +45kg this month
-            </div>
-        </div>
+    </div>
 
         <!-- Impact Score -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-300">

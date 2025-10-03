@@ -1,15 +1,15 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('title', $forumPost->title . ' - Forum')
 
-@section('content')
+@section('page-content')
 <div class="p-6">
-    <!-- Header -->
-    <div class="mb-8">
-        <div class="flex items-center gap-4 mb-4">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex items-center gap-4">
             <a href="{{ route('forum.index') }}" 
-               class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+               class="inline-flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
                 Retour au forum
             </a>
         </div>

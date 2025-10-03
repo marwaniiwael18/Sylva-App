@@ -29,11 +29,11 @@ class ForumPost extends Model
     }
 
     /**
-     * Get the related event (report).
+     * Get the related event.
      */
     public function relatedEvent(): BelongsTo
     {
-        return $this->belongsTo(Report::class, 'related_event_id');
+        return $this->belongsTo(Event::class, 'related_event_id');
     }
 
     /**
