@@ -67,6 +67,7 @@ class User extends Authenticatable
         return $this->is_admin || $this->is_moderator;
     }
 
+
     /**
      * Get all forum posts created by this user.
      */
@@ -81,5 +82,35 @@ class User extends Authenticatable
     public function comments()
     {
         return $this->hasMany(Comment::class, 'author_id');
+
+
+    /**
+     * Les événements organisés par cet utilisateur
+     */
+    public function organizedEvents()
+    {
+        return $this->hasMany(Event::class, 'organized_by_user_id');
+    }
+
+    /**
+     * Les événements auxquels cet utilisateur participe
+     */
+    public function participatingEvents()
+    {
+        return $this->belongsToMany(Event::class, 'event_user')
+                    ->withPivot('registered_at')
+                    ->withTimestamps();
+    }
+
+    // Donations relationship
+    public function donations()
+    {
+        return $this->hasMany(Donation::class, 'user_id');
+    }
+
+    public function getTotalDonationsAttribute(): float
+    {
+        return $this->donations()->where('payment_status', 'succeeded')->sum('amount');
+
     }
 }

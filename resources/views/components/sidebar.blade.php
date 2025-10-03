@@ -55,11 +55,11 @@
             
             <!-- Tree Management -->
             <li>
-                <a href="#" 
-                   class="nav-item"
+                <a href="{{ route('trees.index') }}" 
+                   class="nav-item {{ request()->routeIs('trees.*') ? 'active' : '' }}"
                    :class="sidebarCollapsed && 'justify-center'"
                 >
-                    <i data-lucide="trees" class="w-5 h-5 flex-shrink-0"></i>
+                    <i data-lucide="tree-pine" class="w-5 h-5 flex-shrink-0"></i>
                     <span x-show="!sidebarCollapsed" class="nav-text">Tree Management</span>
                 </a>
             </li>
@@ -80,21 +80,21 @@
 
             <!-- Events -->
             <li>
-                <a href="#" 
-                   class="nav-item"
+                <a href="{{ route('events.index') }}" 
+                   class="nav-item {{ request()->routeIs('events.*') ? 'active' : '' }}"
                    :class="sidebarCollapsed && 'justify-center'"
                 >
                     <i data-lucide="calendar" class="w-5 h-5 flex-shrink-0"></i>
                     <span x-show="!sidebarCollapsed" class="nav-text">Events</span>
                     <span x-show="!sidebarCollapsed" class="nav-count">
-                        <span class="bg-blue-400 text-blue-900 text-xs font-bold px-2 py-0.5 rounded-full">3</span>
+                        <span class="bg-blue-400 text-blue-900 text-xs font-bold px-2 py-0.5 rounded-full">{{ \App\Models\Event::where('date', '>', now())->count() }}</span>
                     </span>
                 </a>
             </li>
 
             <!-- Donations -->
             <li>
-                <a href="#" 
+                <a href="{{ route('donations.index') }}" 
                    class="nav-item"
                    :class="sidebarCollapsed && 'justify-center'"
                 >
