@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WebController;
+use App\Http\Controllers\EventController;
 
 use App\Http\Controllers\TreeController;
 
@@ -29,6 +30,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/map', [WebController::class, 'map'])->name('map');
     Route::get('/reports', [WebController::class, 'reports'])->name('reports');
 
+    
+    // Event Routes
+    Route::resource('events', EventController::class);
+    Route::get('/my-events', [EventController::class, 'myEvents'])->name('events.my-events');
+    Route::post('/events/{event}/join', [EventController::class, 'join'])->name('events.join');
+    Route::delete('/events/{event}/leave', [EventController::class, 'leave'])->name('events.leave');
+
+
     Route::resource('trees', TreeController::class);
     
     // Additional tree routes
@@ -46,5 +55,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/{donation}/refund', [DonationController::class, 'refund'])->name('refund');
         Route::delete('/{donation}/cancel', [DonationController::class, 'cancel'])->name('cancel');
     });
+
 
 });
