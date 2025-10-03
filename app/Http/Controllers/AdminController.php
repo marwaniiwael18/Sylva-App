@@ -15,17 +15,8 @@ use Illuminate\Support\Facades\DB;
 class AdminController extends Controller
 {
     /**
-     * Middleware pour s'assurer que seuls les admins accèdent
+     * Le middleware admin est appliqué via les routes
      */
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            if (!Auth::check() || !Auth::user()->isAdmin()) {
-                abort(403, 'Accès refusé. Permissions administrateur requises.');
-            }
-            return $next($request);
-        });
-    }
 
     /**
      * Dashboard administrateur avec vue d'ensemble complète

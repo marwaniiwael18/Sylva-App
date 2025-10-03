@@ -11,6 +11,7 @@ use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use App\Models\ReportActivity;
 
 class WebController extends Controller
@@ -19,22 +20,7 @@ class WebController extends Controller
     {
         $user = Auth::user();
         
-        // Statistics générales
-        $stats = [
-            'total_users' => User::count(),
-            'total_events' => Event::count(),
-            'active_events' => Event::where('status', 'active')->count(),
-            'upcoming_events' => Event::where('date', '>', now())->where('status', 'active')->count(),
-            'total_donations' => Donation::where('payment_status', 'succeeded')->sum('amount'),
-            'total_donations_count' => Donation::where('payment_status', 'succeeded')->count(),
-            'total_trees' => Tree::count(),
-            'trees_planted' => Tree::where('planted_by_user', $user->id)->count(),
-            'total_forum_posts' => ForumPost::count(),
-            'pending_reports' => Report::where('status', 'pending')->count(),
-            'impact_score' => $this->calculateImpactScore($user),
-        ];
-
-        // Statistiques utilisateur
+        // Statistiques personnelles de l'utilisateur seulement
         $userStats = [
             'my_donations' => $user->donations()->where('payment_status', 'succeeded')->count(),
             'my_donation_amount' => $user->donations()->where('payment_status', 'succeeded')->sum('amount'),
@@ -42,38 +28,47 @@ class WebController extends Controller
             'my_events_participating' => $user->participatingEvents()->count(),
             'my_forum_posts' => $user->forumPosts()->count(),
             'my_trees' => Tree::where('planted_by_user', $user->id)->count(),
+            'my_reports' => Report::where('user_id', $user->id)->count(),
+            'impact_score' => $this->calculateImpactScore($user),
         ];
 
-        // Événements récents
-        $recentEvents = Event::with('organizer')
-            ->where('status', 'active')
+        // Mes événements récents (organisés)
+        $myRecentEvents = $user->organizedEvents()
             ->orderBy('date', 'desc')
-            ->limit(5)
+            ->limit(3)
             ->get();
 
-        // Événements à venir
-        $upcomingEvents = Event::with('organizer')
+        // Mes événements à venir (participant)
+        $myUpcomingEvents = $user->participatingEvents()
             ->where('date', '>', now())
-            ->where('status', 'active')
             ->orderBy('date', 'asc')
             ->limit(3)
             ->get();
 
-        // Donations récentes
-        $recentDonations = Donation::with(['user', 'event'])
+        // Mes donations récentes
+        $myRecentDonations = $user->donations()
             ->where('payment_status', 'succeeded')
+            ->with('event')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
 
-        // Posts du forum récents
-        $recentForumPosts = ForumPost::with(['author', 'relatedEvent'])
+        // Mes posts du forum récents
+        $myRecentForumPosts = $user->forumPosts()
+            ->with('relatedEvent')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
 
-        // Graphique des donations par mois (6 derniers mois)
-        $donationsByMonth = Donation::where('payment_status', 'succeeded')
+        // Mes rapports récents
+        $myRecentReports = Report::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        // Graphique de mes donations par mois (6 derniers mois)
+        $myDonationsByMonth = $user->donations()
+            ->where('payment_status', 'succeeded')
             ->where('created_at', '>=', now()->subMonths(6))
             ->selectRaw('MONTH(created_at) as month, YEAR(created_at) as year, SUM(amount) as total')
             ->groupBy('year', 'month')
@@ -81,21 +76,68 @@ class WebController extends Controller
             ->orderBy('month', 'desc')
             ->get();
 
-        // Événements par type
-        $eventsByType = Event::where('status', 'active')
-            ->selectRaw('type, COUNT(*) as count')
-            ->groupBy('type')
-            ->get();
+        // Mes activités récentes par type
+        $myActivities = collect()
+            ->merge(
+                $myRecentDonations->map(function ($donation) {
+                    return [
+                        'type' => 'donation',
+                        'title' => "Donation de {$donation->amount}€",
+                        'description' => $donation->event ? "Pour l'événement: {$donation->event->title}" : "Donation générale",
+                        'created_at' => $donation->created_at,
+                        'icon' => 'heart',
+                        'color' => 'purple'
+                    ];
+                })
+            )
+            ->merge(
+                $myRecentEvents->map(function ($event) {
+                    return [
+                        'type' => 'event_created',
+                        'title' => "Événement organisé: {$event->title}",
+                        'description' => "Prévu le {$event->date->format('d/m/Y')}",
+                        'created_at' => $event->created_at,
+                        'icon' => 'calendar-plus',
+                        'color' => 'green'
+                    ];
+                })
+            )
+            ->merge(
+                $myRecentForumPosts->map(function ($post) {
+                    return [
+                        'type' => 'forum_post',
+                        'title' => "Post forum: {$post->title}",
+                        'description' => Str::limit($post->content, 50),
+                        'created_at' => $post->created_at,
+                        'icon' => 'message-square',
+                        'color' => 'blue'
+                    ];
+                })
+            )
+            ->merge(
+                $myRecentReports->map(function ($report) {
+                    return [
+                        'type' => 'report',
+                        'title' => "Rapport: {$report->title}",
+                        'description' => "Status: {$report->status}",
+                        'created_at' => $report->created_at,
+                        'icon' => 'flag',
+                        'color' => 'yellow'
+                    ];
+                })
+            )
+            ->sortByDesc('created_at')
+            ->take(8);
 
         return view('pages.dashboard', compact(
-            'stats',
-            'userStats', 
-            'recentEvents',
-            'upcomingEvents',
-            'recentDonations',
-            'recentForumPosts',
-            'donationsByMonth',
-            'eventsByType'
+            'userStats',
+            'myRecentEvents',
+            'myUpcomingEvents', 
+            'myRecentDonations',
+            'myRecentForumPosts',
+            'myRecentReports',
+            'myDonationsByMonth',
+            'myActivities'
         ));
     }
 
