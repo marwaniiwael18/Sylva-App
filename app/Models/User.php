@@ -66,4 +66,15 @@ class User extends Authenticatable
     {
         return $this->is_admin || $this->is_moderator;
     }
+
+    // Donations relationship
+    public function donations()
+    {
+        return $this->hasMany(Donation::class, 'user_id');
+    }
+
+    public function getTotalDonationsAttribute(): float
+    {
+        return $this->donations()->where('payment_status', 'succeeded')->sum('amount');
+    }
 }
