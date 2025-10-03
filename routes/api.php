@@ -36,6 +36,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('reports/{report}/validate', [ReportController::class, 'validate']);
     Route::get('reports-statistics', [ReportController::class, 'statistics']);
     
+
+    // Trees CRUD
+    Route::apiResource('trees', \App\Http\Controllers\TreeController::class);
+    Route::get('trees/map/data', [\App\Http\Controllers\TreeController::class, 'mapData']);
+    Route::get('trees/user/my', [\App\Http\Controllers\TreeController::class, 'myTrees']);
+
     // Donations API
     Route::prefix('donations')->name('api.donations.')->group(function () {
         Route::get('/', [DonationController::class, 'index']);
@@ -46,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{donation}', [DonationController::class, 'destroy']);
         Route::get('/user/statistics', [DonationController::class, 'userStatistics']);
     });
+>
 });
 
 // Stripe Webhook (public route - no authentication required)

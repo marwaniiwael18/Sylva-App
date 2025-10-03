@@ -3,7 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WebController;
+
+use App\Http\Controllers\TreeController;
+
 use App\Http\Controllers\DonationController;
+
 
 // Redirect root to dashboard
 Route::get('/', function () {
@@ -24,7 +28,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [WebController::class, 'dashboard'])->name('dashboard');
     Route::get('/map', [WebController::class, 'map'])->name('map');
     Route::get('/reports', [WebController::class, 'reports'])->name('reports');
+
+    Route::resource('trees', TreeController::class);
     
+    // Additional tree routes
+    Route::get('/trees/map/data', [TreeController::class, 'mapData'])->name('trees.map.data');
+    Route::get('/trees/user/my', [TreeController::class, 'myTrees'])->name('trees.my');
+
     // Donation Routes
     Route::prefix('donations')->name('donations.')->group(function () {
         Route::get('/', [DonationController::class, 'index'])->name('index');
@@ -36,4 +46,5 @@ Route::middleware('auth')->group(function () {
         Route::post('/{donation}/refund', [DonationController::class, 'refund'])->name('refund');
         Route::delete('/{donation}/cancel', [DonationController::class, 'cancel'])->name('cancel');
     });
+
 });
