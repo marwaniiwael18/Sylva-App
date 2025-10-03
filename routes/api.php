@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\EventController as ApiEventController;
+use App\Http\Controllers\Api\EventController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +36,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('reports', ReportController::class);
     Route::post('reports/{report}/validate', [ReportController::class, 'validate']);
     Route::get('reports-statistics', [ReportController::class, 'statistics']);
+    
+    // Events CRUD
+    Route::apiResource('events', ApiEventController::class)->names([
+        'index' => 'api.events.index',
+        'store' => 'api.events.store',
+        'show' => 'api.events.show',
+        'update' => 'api.events.update',
+        'destroy' => 'api.events.destroy',
+    ]);
+    Route::get('my-events', [ApiEventController::class, 'myEvents'])->name('api.events.my-events');
+    Route::post('events/{event}/join', [ApiEventController::class, 'join'])->name('api.events.join');
+    Route::delete('events/{event}/leave', [ApiEventController::class, 'leave'])->name('api.events.leave');
+    Route::get('events-statistics', [ApiEventController::class, 'statistics'])->name('api.events.statistics');
 });
 
 // Temporary public routes for testing (remove in production)
