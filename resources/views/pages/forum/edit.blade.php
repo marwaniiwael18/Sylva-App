@@ -1,20 +1,27 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('title', 'Modifier le Post - Forum')
 
-@section('content')
+@section('page-content')
 <div class="p-6">
-    <!-- Header -->
-    <div class="mb-8">
-        <div class="flex items-center gap-4 mb-4">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex items-center gap-4">
             <a href="{{ route('forum.show', $forumPost) }}" 
-               class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+               class="inline-flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
                 Retour au post
             </a>
         </div>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Modifier le post</h1>
-        <p class="text-gray-600">Modifiez votre post pour améliorer son contenu</p>
+        <div class="mt-4">
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-white"></i>
+                </div>
+                Modifier le post
+            </h1>
+            <p class="mt-1 text-sm text-gray-600">Modifiez votre post pour améliorer son contenu</p>
+        </div>
     </div>
 
     <!-- Form -->

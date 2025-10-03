@@ -82,7 +82,7 @@ class User extends Authenticatable
     public function comments()
     {
         return $this->hasMany(Comment::class, 'author_id');
-
+    }
 
     /**
      * Les événements organisés par cet utilisateur
@@ -108,9 +108,14 @@ class User extends Authenticatable
         return $this->hasMany(Donation::class, 'user_id');
     }
 
+    // Trees planted by this user
+    public function plantedTrees()
+    {
+        return $this->hasMany(Tree::class, 'planted_by_user');
+    }
+
     public function getTotalDonationsAttribute(): float
     {
         return $this->donations()->where('payment_status', 'succeeded')->sum('amount');
-
     }
 }

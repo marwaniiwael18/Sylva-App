@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ForumPost;
 use App\Models\Comment;
-use App\Models\Report;
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,8 +19,8 @@ class ForumController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        $events = Report::where('status', 'validated')
-            ->orderBy('created_at', 'desc')
+        $events = Event::where('status', 'active')
+            ->orderBy('date', 'desc')
             ->get();
 
         return view('pages.forum.index', compact('forumPosts', 'events'));
@@ -31,8 +31,8 @@ class ForumController extends Controller
      */
     public function create()
     {
-        $events = Report::where('status', 'validated')
-            ->orderBy('created_at', 'desc')
+        $events = Event::where('status', 'active')
+            ->orderBy('date', 'desc')
             ->get();
 
         return view('pages.forum.create', compact('events'));
@@ -46,7 +46,7 @@ class ForumController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'related_event_id' => 'nullable|exists:reports,id',
+            'related_event_id' => 'nullable|exists:events,id',
         ]);
 
         ForumPost::create([
@@ -97,8 +97,8 @@ class ForumController extends Controller
             abort(403, 'Vous ne pouvez modifier que vos propres posts.');
         }
 
-        $events = Report::where('status', 'validated')
-            ->orderBy('created_at', 'desc')
+        $events = Event::where('status', 'active')
+            ->orderBy('date', 'desc')
             ->get();
 
         return view('pages.forum.edit', compact('forumPost', 'events'));
@@ -117,7 +117,7 @@ class ForumController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'related_event_id' => 'nullable|exists:reports,id',
+            'related_event_id' => 'nullable|exists:events,id',
         ]);
 
         $forumPost->update([
@@ -196,8 +196,8 @@ class ForumController extends Controller
         
         $forumPosts = $query->orderBy('created_at', 'desc')->paginate(10);
         
-        $events = Report::where('status', 'validated')
-            ->orderBy('created_at', 'desc')
+        $events = Event::where('status', 'active')
+            ->orderBy('date', 'desc')
             ->get();
 
         return view('pages.forum.index', compact('forumPosts', 'events', 'eventId'));

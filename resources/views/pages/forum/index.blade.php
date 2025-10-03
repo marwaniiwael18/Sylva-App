@@ -1,20 +1,28 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
-@section('title', 'Forum - Communauté')
+@section('title', 'Forum Management')
 
-@section('content')
+@section('page-content')
 <div class="p-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Forum Communautaire</h1>
-            <p class="text-gray-600">Partagez vos expériences, posez vos questions et échangez avec la communauté</p>
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div class="mb-4 sm:mb-0">
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                        <i data-lucide="message-square" class="w-5 h-5 text-white"></i>
+                    </div>
+                    Forum Communautaire
+                </h1>
+                <p class="mt-1 text-sm text-gray-600">Partagez vos expériences, posez vos questions et échangez avec la communauté</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('forum.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all transform hover:scale-105">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    Nouveau Post
+                </a>
+            </div>
         </div>
-        <a href="{{ route('forum.create') }}" 
-           class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-medium transition-colors shadow-lg">
-            <i data-lucide="plus" class="w-5 h-5"></i>
-            Nouveau post
-        </a>
     </div>
 
     <!-- Filters -->
