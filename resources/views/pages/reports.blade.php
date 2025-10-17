@@ -114,20 +114,196 @@
 
     <!-- Reports Cards -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-gray-900">Recent Reports</h3>
-                <button onclick="openAddReportModal()" 
-                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                    <span>Add Report</span>
-                </button>
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Recent Reports</h3>
+                    <button onclick="openAddReportModal()" 
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Add Report</span>
+                    </button>
+                </div>
+
+                <!-- Search and Filters -->
+                <div x-data="{ 
+                    searchQuery: '',
+                    selectedType: 'all',
+                    selectedUrgency: 'all',
+                    selectedStatus: 'all'
+                }" class="space-y-4">
+                    <!-- Search Bar -->
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
+                        </div>
+                        <input 
+                            type="text" 
+                            x-model="searchQuery"
+                            @input="filterReportsPage()"
+                            placeholder="Search reports by title, description, or location..." 
+                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                        <div x-show="searchQuery.length > 0" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <button @click="searchQuery = ''; filterReportsPage()" class="text-gray-400 hover:text-gray-600">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filters Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Type Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button 
+                                    @click="selectedType = 'all'; filterReportsPage()"
+                                    :class="selectedType === 'all' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                >
+                                    All
+                                </button>
+                                <button 
+                                    @click="selectedType = 'tree_planting'; filterReportsPage()"
+                                    :class="selectedType === 'tree_planting' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                >
+                                    <i data-lucide="tree-pine" class="w-3 h-3 inline mr-1"></i>
+                                    Tree
+                                </button>
+                                <button 
+                                    @click="selectedType = 'maintenance'; filterReportsPage()"
+                                    :class="selectedType === 'maintenance' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                >
+                                    <i data-lucide="wrench" class="w-3 h-3 inline mr-1"></i>
+                                    Maintenance
+                                </button>
+                                <button 
+                                    @click="selectedType = 'pollution'; filterReportsPage()"
+                                    :class="selectedType === 'pollution' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                >
+                                    <i data-lucide="alert-triangle" class="w-3 h-3 inline mr-1"></i>
+                                    Pollution
+                                </button>
+                                <button 
+                                    @click="selectedType = 'green_space_suggestion'; filterReportsPage()"
+                                    :class="selectedType === 'green_space_suggestion' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                >
+                                    <i data-lucide="leaf" class="w-3 h-3 inline mr-1"></i>
+                                    Green
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Priority Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button 
+                                    @click="selectedUrgency = 'all'; filterReportsPage()"
+                                    :class="selectedUrgency === 'all' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                >
+                                    All
+                                </button>
+                                <button 
+                                    @click="selectedUrgency = 'low'; filterReportsPage()"
+                                    :class="selectedUrgency === 'low' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                >
+                                    <span class="w-2 h-2 bg-blue-500 rounded-full inline-block mr-1"></span>
+                                    Low
+                                </button>
+                                <button 
+                                    @click="selectedUrgency = 'medium'; filterReportsPage()"
+                                    :class="selectedUrgency === 'medium' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                >
+                                    <span class="w-2 h-2 bg-yellow-500 rounded-full inline-block mr-1"></span>
+                                    Medium
+                                </button>
+                                <button 
+                                    @click="selectedUrgency = 'high'; filterReportsPage()"
+                                    :class="selectedUrgency === 'high' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                >
+                                    <span class="w-2 h-2 bg-red-500 rounded-full inline-block mr-1"></span>
+                                    High
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button 
+                                    @click="selectedStatus = 'all'; filterReportsPage()"
+                                    :class="selectedStatus === 'all' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                >
+                                    All
+                                </button>
+                                <button 
+                                    @click="selectedStatus = 'pending'; filterReportsPage()"
+                                    :class="selectedStatus === 'pending' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                >
+                                    <i data-lucide="clock" class="w-3 h-3 inline mr-1"></i>
+                                    Pending
+                                </button>
+                                <button 
+                                    @click="selectedStatus = 'validated'; filterReportsPage()"
+                                    :class="selectedStatus === 'validated' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                                    class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                >
+                                    <i data-lucide="check-circle" class="w-3 h-3 inline mr-1"></i>
+                                    Validated
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Filters Display -->
+                    <div x-show="searchQuery || selectedType !== 'all' || selectedUrgency !== 'all' || selectedStatus !== 'all'" class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-600">Active filters:</span>
+                        <span x-show="searchQuery" class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-green-100 text-green-800">
+                            Search: <span x-text="searchQuery.substring(0, 20)" class="ml-1"></span>
+                            <button @click="searchQuery = ''; filterReportsPage()" class="ml-1">×</button>
+                        </span>
+                        <span x-show="selectedType !== 'all'" class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-green-100 text-green-800">
+                            Type: <span x-text="selectedType.replace('_', ' ')" class="ml-1 capitalize"></span>
+                            <button @click="selectedType = 'all'; filterReportsPage()" class="ml-1">×</button>
+                        </span>
+                        <span x-show="selectedUrgency !== 'all'" class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-green-100 text-green-800">
+                            Priority: <span x-text="selectedUrgency" class="ml-1 capitalize"></span>
+                            <button @click="selectedUrgency = 'all'; filterReportsPage()" class="ml-1">×</button>
+                        </span>
+                        <span x-show="selectedStatus !== 'all'" class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-green-100 text-green-800">
+                            Status: <span x-text="selectedStatus" class="ml-1 capitalize"></span>
+                            <button @click="selectedStatus = 'all'; filterReportsPage()" class="ml-1">×</button>
+                        </span>
+                        <button @click="searchQuery = ''; selectedType = 'all'; selectedUrgency = 'all'; selectedStatus = 'all'; filterReportsPage()" class="text-xs text-gray-600 hover:text-gray-900">
+                            Clear all
+                        </button>
+                    </div>
+                </div>
             </div>
             
             <div class="p-6">
                 @if($reports->count() > 0)
                 <div id="reportsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @foreach($reports as $report)
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+                    <div class="report-card-item bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
+                         data-title="{{ $report->title }}"
+                         data-description="{{ $report->description }}"
+                         data-type="{{ $report->type }}"
+                         data-urgency="{{ $report->urgency }}"
+                         data-status="{{ $report->status }}"
+                         data-address="{{ $report->address ?? '' }}">
                         <!-- Image carousel if images exist -->
                         @if($report->images && count($report->images) > 0)
                         <div class="relative h-48 bg-gray-100">
@@ -1923,6 +2099,134 @@ function getEditCurrentLocation() {
         }
     );
 }
+
+// Store all reports data for filtering
+let allReportsPage = [];
+
+// Initialize reports filtering
+document.addEventListener('DOMContentLoaded', function() {
+    // Store initial reports
+    allReportsPage = Array.from(document.querySelectorAll('.report-card-item')).map(card => ({
+        element: card,
+        title: card.dataset.title?.toLowerCase() || '',
+        description: card.dataset.description?.toLowerCase() || '',
+        type: card.dataset.type || '',
+        urgency: card.dataset.urgency || '',
+        status: card.dataset.status || '',
+        address: card.dataset.address?.toLowerCase() || ''
+    }));
+});
+
+// Smart filter function with multi-word search for Reports page
+function filterReportsPage() {
+    const searchInput = document.querySelector('input[x-model="searchQuery"]');
+    const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    
+    // Get Alpine.js component data
+    const alpineComponent = document.querySelector('[x-data]');
+    let selectedType = 'all';
+    let selectedUrgency = 'all';
+    let selectedStatus = 'all';
+    
+    if (alpineComponent && alpineComponent.__x) {
+        selectedType = alpineComponent.__x.$data.selectedType || 'all';
+        selectedUrgency = alpineComponent.__x.$data.selectedUrgency || 'all';
+        selectedStatus = alpineComponent.__x.$data.selectedStatus || 'all';
+    }
+    
+    // Split search query into words for multi-word search
+    const searchWords = searchQuery.split(' ').filter(word => word.length > 0);
+    
+    let visibleCount = 0;
+    
+    allReportsPage.forEach(report => {
+        let matchesSearch = true;
+        let matchesType = true;
+        let matchesUrgency = true;
+        let matchesStatus = true;
+        
+        // Multi-word search - all words must match
+        if (searchWords.length > 0) {
+            matchesSearch = searchWords.every(word => 
+                report.title.includes(word) || 
+                report.description.includes(word) || 
+                report.address.includes(word)
+            );
+        }
+        
+        // Type filter
+        if (selectedType !== 'all') {
+            matchesType = report.type === selectedType;
+        }
+        
+        // Urgency filter
+        if (selectedUrgency !== 'all') {
+            matchesUrgency = report.urgency === selectedUrgency;
+        }
+        
+        // Status filter
+        if (selectedStatus !== 'all') {
+            matchesStatus = report.status === selectedStatus;
+        }
+        
+        // Show/hide report based on all filters
+        if (matchesSearch && matchesType && matchesUrgency && matchesStatus) {
+            report.element.style.display = '';
+            visibleCount++;
+        } else {
+            report.element.style.display = 'none';
+        }
+    });
+    
+    // Show/hide empty state
+    const container = document.getElementById('reportsContainer');
+    let emptyState = document.getElementById('filterEmptyState');
+    
+    if (visibleCount === 0 && allReportsPage.length > 0) {
+        if (!emptyState) {
+            emptyState = document.createElement('div');
+            emptyState.id = 'filterEmptyState';
+            emptyState.className = 'col-span-full text-center py-12';
+            emptyState.innerHTML = `
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="search-x" class="w-8 h-8 text-gray-400"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">No reports found</h3>
+                <p class="text-gray-600 mb-4">Try adjusting your filters or search terms</p>
+                <button onclick="clearAllFiltersPage()" class="text-green-600 hover:text-green-700 font-medium">
+                    Clear all filters
+                </button>
+            `;
+            container.appendChild(emptyState);
+            lucide.createIcons();
+        }
+    } else if (emptyState) {
+        emptyState.remove();
+    }
+    
+    // Reinitialize icons
+    setTimeout(() => lucide.createIcons(), 100);
+}
+
+// Clear all filters for Reports page
+function clearAllFiltersPage() {
+    const input = document.querySelector('input[x-model="searchQuery"]');
+    if (input) input.value = '';
+    
+    const alpineComponent = document.querySelector('[x-data]');
+    if (alpineComponent && alpineComponent.__x) {
+        alpineComponent.__x.$data.searchQuery = '';
+        alpineComponent.__x.$data.selectedType = 'all';
+        alpineComponent.__x.$data.selectedUrgency = 'all';
+        alpineComponent.__x.$data.selectedStatus = 'all';
+    }
+    
+    filterReportsPage();
+}
+
+// Make functions globally available
+window.filterReportsPage = filterReportsPage;
+window.clearAllFiltersPage = clearAllFiltersPage;
 </script>
 @endpush
 @endsection
