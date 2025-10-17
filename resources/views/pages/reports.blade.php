@@ -272,10 +272,18 @@
                                     </div>
                                     
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="block text-sm font-medium text-gray-700">Description *</label>
+                                            <button type="button" onclick="generateDescription()" 
+                                                    class="text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1 rounded-lg flex items-center space-x-1 transition-colors">
+                                                <i data-lucide="sparkles" class="w-3 h-3"></i>
+                                                <span>Generate with AI</span>
+                                            </button>
+                                        </div>
                                         <textarea id="addDescription" name="description" required rows="3"
-                                                placeholder="Describe the environmental issue or suggestion"
+                                                placeholder="Describe the environmental issue or suggestion (or use AI to generate)"
                                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
+                                        <div id="aiGenerationStatus" class="hidden mt-1 text-xs text-gray-500"></div>
                                     </div>
                                     
                                     <div class="grid grid-cols-2 gap-4">
@@ -549,6 +557,104 @@ let currentMarker = null;
 let editCurrentMarker = null;
 let searchTimeout = null;
 let selectedImages = [];
+
+// Gemini AI Configuration
+const GEMINI_API_KEY = 'AIzaSyBwSyHbc1uN-yNIsgVl48Z8AwxWEeEeR1g';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+
+// AI Description Generation Function
+async function generateDescription() {
+    const titleInput = document.getElementById('addTitle');
+    const descriptionTextarea = document.getElementById('addDescription');
+    const statusDiv = document.getElementById('aiGenerationStatus');
+    const generateBtn = event.target.closest('button');
+    
+    const title = titleInput.value.trim();
+    
+    if (!title) {
+        alert('Please enter a title first to generate description');
+        titleInput.focus();
+        return;
+    }
+    
+    // Show loading state
+    const originalHtml = generateBtn.innerHTML;
+    generateBtn.innerHTML = '<i data-lucide="loader" class="w-3 h-3 animate-spin"></i><span>Generating...</span>';
+    generateBtn.disabled = true;
+    lucide.createIcons();
+    
+    statusDiv.textContent = 'AI is generating an attractive description...';
+    statusDiv.className = 'mt-1 text-xs text-blue-600';
+    statusDiv.classList.remove('hidden');
+    
+    try {
+        const prompt = `Generate an attractive, concise, and promotional environmental report description for: "${title}". 
+        
+Requirements:
+- Under 100 words
+- Sound natural and engaging
+- Focus on environmental impact and community benefit
+- Use professional yet accessible language
+- Highlight the importance and urgency if applicable
+- Make it compelling for stakeholders to take action
+
+Generate only the description text without any labels or extra formatting.`;
+
+        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 200,
+                    topP: 0.8,
+                    topK: 40
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || 'Failed to generate description');
+        }
+
+        const data = await response.json();
+        const generatedText = data.candidates[0]?.content?.parts[0]?.text;
+
+        if (generatedText) {
+            descriptionTextarea.value = generatedText.trim();
+            statusDiv.textContent = '✨ Description generated successfully!';
+            statusDiv.className = 'mt-1 text-xs text-green-600';
+            
+            // Add a nice animation to the textarea
+            descriptionTextarea.style.backgroundColor = '#f0fdf4';
+            setTimeout(() => {
+                descriptionTextarea.style.backgroundColor = '';
+                statusDiv.classList.add('hidden');
+            }, 3000);
+        } else {
+            throw new Error('No description generated');
+        }
+    } catch (error) {
+        console.error('Error generating description:', error);
+        statusDiv.textContent = '❌ Failed to generate description. Please try again or write manually.';
+        statusDiv.className = 'mt-1 text-xs text-red-600';
+        setTimeout(() => {
+            statusDiv.classList.add('hidden');
+        }, 5000);
+    } finally {
+        generateBtn.innerHTML = originalHtml;
+        generateBtn.disabled = false;
+        lucide.createIcons();
+    }
+}
 
 // Add Report Functions
 function openAddReportModal() {
