@@ -1,41 +1,41 @@
 <!-- Social Feed Component for Reports -->
-<div x-data="reportFeed({{ $reportId }})" x-init="init()" class="mt-6 bg-white rounded-lg shadow-md p-6">
+<div x-data="reportFeed({{ $reportId }})" x-init="init()" class="mt-4">
     <!-- Stats Bar -->
-    <div class="flex items-center justify-between border-b pb-4 mb-4">
+    <div class="flex items-center justify-between pb-4 mb-4 border-b border-gray-200">
         <div class="flex items-center space-x-6">
             <!-- Vote Score -->
-            <div class="flex items-center space-x-2">
-                <button @click="vote(1)" :class="userVote === 1 ? 'text-green-600' : 'text-gray-400'" class="hover:text-green-600 transition">
-                    <i data-lucide="arrow-up" class="w-5 h-5"></i>
+            <div class="flex items-center space-x-1.5">
+                <button @click="vote(1)" :class="userVote === 1 ? 'text-green-600 bg-green-50' : 'text-gray-400 hover:text-green-600 hover:bg-green-50'" class="p-1.5 rounded-lg transition">
+                    <i data-lucide="arrow-up" class="w-4 h-4"></i>
                 </button>
-                <span class="font-semibold text-lg" x-text="stats.vote_score"></span>
-                <button @click="vote(-1)" :class="userVote === -1 ? 'text-red-600' : 'text-gray-400'" class="hover:text-red-600 transition">
-                    <i data-lucide="arrow-down" class="w-5 h-5"></i>
+                <span class="font-semibold text-base min-w-[2rem] text-center" x-text="stats.vote_score"></span>
+                <button @click="vote(-1)" :class="userVote === -1 ? 'text-red-600 bg-red-50' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'" class="p-1.5 rounded-lg transition">
+                    <i data-lucide="arrow-down" class="w-4 h-4"></i>
                 </button>
             </div>
 
             <!-- Comments Button (Toggle) -->
-            <button @click="showComments = !showComments" class="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition">
-                <i data-lucide="message-circle" class="w-5 h-5"></i>
-                <span x-text="stats.total_comments"></span>
+            <button @click="showComments = !showComments" class="flex items-center space-x-1.5 text-gray-600 hover:text-green-600 hover:bg-green-50 px-3 py-1.5 rounded-lg transition">
+                <i data-lucide="message-circle" class="w-4 h-4"></i>
+                <span class="text-sm font-medium" x-text="stats.total_comments"></span>
                 <span class="text-sm" x-text="showComments ? 'Hide' : 'Comment'"></span>
             </button>
 
             <!-- Reactions -->
-            <div class="flex items-center space-x-2">
-                <button @click="react('like')" :class="userReaction === 'like' ? 'text-blue-600' : 'text-gray-400'" class="hover:text-blue-600 transition">
-                    <i data-lucide="thumbs-up" class="w-5 h-5"></i>
+            <div class="flex items-center space-x-1">
+                <button @click="react('like')" :class="userReaction === 'like' ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'" class="p-1.5 rounded-lg transition" title="Like">
+                    <i data-lucide="thumbs-up" class="w-4 h-4"></i>
                 </button>
-                <button @click="react('love')" :class="userReaction === 'love' ? 'text-red-600' : 'text-gray-400'" class="hover:text-red-600 transition">
-                    <i data-lucide="heart" class="w-5 h-5"></i>
+                <button @click="react('love')" :class="userReaction === 'love' ? 'text-red-600 bg-red-50' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'" class="p-1.5 rounded-lg transition" title="Love">
+                    <i data-lucide="heart" class="w-4 h-4"></i>
                 </button>
-                <button @click="react('support')" :class="userReaction === 'support' ? 'text-green-600' : 'text-gray-400'" class="hover:text-green-600 transition">
-                    <i data-lucide="hand-heart" class="w-5 h-5"></i>
+                <button @click="react('support')" :class="userReaction === 'support' ? 'text-green-600 bg-green-50' : 'text-gray-400 hover:text-green-600 hover:bg-green-50'" class="p-1.5 rounded-lg transition" title="Support">
+                    <i data-lucide="hand-heart" class="w-4 h-4"></i>
                 </button>
-                <button @click="react('concern')" :class="userReaction === 'concern' ? 'text-orange-600' : 'text-gray-400'" class="hover:text-orange-600 transition">
-                    <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                <button @click="react('concern')" :class="userReaction === 'concern' ? 'text-orange-600 bg-orange-50' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'" class="p-1.5 rounded-lg transition" title="Concern">
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
                 </button>
-                <span class="text-gray-600 text-sm ml-2" x-text="stats.total_reactions"></span>
+                <span class="text-gray-600 text-sm ml-1 font-medium" x-text="stats.total_reactions" x-show="stats.total_reactions > 0"></span>
             </div>
         </div>
     </div>
