@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tree;
+use App\Services\PlantIdentificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -10,6 +11,12 @@ use Illuminate\Validation\Rule;
 
 class TreeController extends Controller
 {
+    protected $plantIdService;
+
+    public function __construct(PlantIdentificationService $plantIdService)
+    {
+        $this->plantIdService = $plantIdService;
+    }
    
     public function index()
     {
@@ -210,5 +217,108 @@ class TreeController extends Controller
             'success' => true,
             'data' => $trees
         ]);
+    }
+
+    /**
+     * Identify a plant/tree from uploaded image
+     */
+    public function identifyPlant(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120' // Max 5MB
+        ]);
+
+        try {
+            // Store image temporarily
+            $image = $request->file('image');
+            $tempPath = $image->store('temp', 'public');
+            $fullPath = storage_path('app/public/' . $tempPath);
+
+            // Call Plant.id API
+            $result = $this->plantIdService->identifyPlant($fullPath);
+
+            // Delete temporary file
+            Storage::disk('public')->delete($tempPath);
+
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Failed to identify plant',
+                    'error' => $result['error'] ?? 'unknown'
+                ], 400);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Plant identified successfully!',
+                'data' => [
+                    'name' => $result['name'],
+                    'common_names' => $result['common_names'],
+                    'scientific_name' => $result['scientific_name'],
+                    'confidence' => $result['confidence'],
+                    'taxonomy' => $result['taxonomy'],
+                    'description' => $result['description'],
+                    'suggested_type' => $result['suggested_type'] ?? 'Ornamental',
+                    'watering' => $result['watering'],
+                    'suggestions' => $result['all_suggestions'] ?? []
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while identifying the plant',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Assess tree health from uploaded image
+     */
+    public function assessHealth(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120'
+        ]);
+
+        try {
+            // Store image temporarily
+            $image = $request->file('image');
+            $tempPath = $image->store('temp', 'public');
+            $fullPath = storage_path('app/public/' . $tempPath);
+
+            // Call Plant.id health assessment API
+            $result = $this->plantIdService->assessHealth($fullPath);
+
+            // Delete temporary file
+            Storage::disk('public')->delete($tempPath);
+
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Failed to assess plant health',
+                    'error' => $result['error'] ?? 'unknown'
+                ], 400);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Health assessment completed!',
+                'data' => [
+                    'is_healthy' => $result['is_healthy'],
+                    'health_probability' => $result['health_probability'],
+                    'diseases' => $result['diseases'],
+                    'suggestions' => $result['suggestions']
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred during health assessment',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
