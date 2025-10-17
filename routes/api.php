@@ -76,6 +76,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('trees/map/data', [\App\Http\Controllers\TreeController::class, 'mapData']);
     Route::get('trees/user/my', [\App\Http\Controllers\TreeController::class, 'myTrees']);
 
+    // Tree Care CRUD
+    Route::apiResource('tree-care', \App\Http\Controllers\Api\TreeCareController::class);
+    Route::get('tree-care-stats', [\App\Http\Controllers\Api\TreeCareController::class, 'stats']);
+    Route::get('trees/{tree}/care-history', [\App\Http\Controllers\Api\TreeCareController::class, 'treeHistory']);
+    Route::get('user/care-activities', [\App\Http\Controllers\Api\TreeCareController::class, 'userActivities']);
+
     // Donations API
     Route::prefix('donations')->name('api.donations.')->group(function () {
         Route::get('/', [DonationController::class, 'index']);

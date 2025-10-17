@@ -8,6 +8,11 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
+    <!-- API Token for authenticated users -->
+    @auth
+    <meta name="api-token" content="{{ auth()->user()->createToken('web-access')->plainTextToken }}">
+    @endauth
+    
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     

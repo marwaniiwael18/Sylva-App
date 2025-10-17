@@ -227,7 +227,7 @@
                 <div class="flex gap-2 mt-4">
                     <button 
                         @click="viewTree({{ $tree->id }})"
-                        class="flex-1 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-medium hover:bg-emerald-100 transition-colors"
+                        class="flex-1 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-medium hover:bg-emerald-100 transition-colors text-sm"
                     >
                         View Details
                     </button>
@@ -240,6 +240,15 @@
                     </button>
                     @endif
                 </div>
+                
+                <!-- Tree Care Button -->
+                <button 
+                    @click="openCareModal({{ $tree->id }})"
+                    class="w-full mt-2 px-3 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 text-sm"
+                >
+                    <i data-lucide="heart" class="w-4 h-4"></i>
+                    Tree Care
+                </button>
             </div>
         </div>
         @endforeach
@@ -526,6 +535,11 @@ function treeManagement() {
 
         async viewTree(treeId) {
             window.location.href = `/trees/${treeId}`;
+        },
+
+        openCareModal(treeId) {
+            // Redirect to tree detail page with care section
+            window.location.href = `/trees/${treeId}#care`;
         },
 
         async deleteTree(treeId) {
