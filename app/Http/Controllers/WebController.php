@@ -45,7 +45,7 @@ class WebController extends Controller
         return view('pages.reports', compact('reports', 'statistics'));
     }
 
-    // Community Feed page
+    // Repports Feed page
     public function communityFeed()
     {
         // Get all reports with their activities

@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('page-title', 'Community Feed')
+@section('page-title', 'Repports Feed')
 @section('page-subtitle', 'Engage with environmental reports - vote, comment, and react')
 
 @push('styles')

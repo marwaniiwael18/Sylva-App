@@ -529,7 +529,8 @@
                                             <div id="imageUploadArea">
                                                 <i data-lucide="camera" class="w-12 h-12 mx-auto text-gray-400 mb-4"></i>
                                                 <p class="text-sm text-gray-600 mb-2">Click to upload images or drag and drop</p>
-                                                <p class="text-xs text-gray-500">PNG, JPG up to 2MB each</p>
+                                                <p class="text-xs text-gray-500">PNG, JPG, WebP up to 5MB each</p>
+                                                <p class="text-xs text-purple-600 mt-2">✨ AI will analyze and describe your images automatically</p>
                                                 <button type="button" onclick="document.getElementById('addImages').click()" 
                                                         class="mt-3 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors">
                                                     <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
@@ -540,6 +541,12 @@
                                                 <div class="grid grid-cols-2 gap-4" id="previewContainer">
                                                     <!-- Image previews will be added here -->
                                                 </div>
+                                            </div>
+                                        </div>
+                                        <div id="imageAiStatus" class="hidden mt-2 text-xs p-2 bg-purple-50 border border-purple-200 rounded-lg">
+                                            <div class="flex items-center space-x-2">
+                                                <i data-lucide="sparkles" class="w-4 h-4 text-purple-600 animate-pulse"></i>
+                                                <span class="text-purple-700 font-medium">AI is analyzing your images...</span>
                                             </div>
                                         </div>
                                     </div>
@@ -677,7 +684,7 @@
                                             <div id="editImageUploadArea">
                                                 <i data-lucide="camera" class="w-12 h-12 mx-auto text-gray-400 mb-4"></i>
                                                 <p class="text-sm text-gray-600 mb-2">Click to upload new images or drag and drop</p>
-                                                <p class="text-xs text-gray-500">PNG, JPG up to 2MB each</p>
+                                                <p class="text-xs text-gray-500">PNG, JPG, WebP up to 5MB each</p>
                                                 <button type="button" onclick="document.getElementById('editImages').click()" 
                                                         class="mt-3 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
                                                     <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
@@ -1069,6 +1076,18 @@ function handleImageUpload(input) {
     const maxFiles = 5;
     const maxSize = 2 * 1024 * 1024; // 2MB
     
+    // Reset previous error/status messages when new images are uploaded
+    const statusEl = document.getElementById('aiGenerationStatus');
+    const imageAiStatus = document.getElementById('imageAiStatus');
+    if (statusEl) {
+        statusEl.classList.add('hidden');
+        statusEl.textContent = '';
+        statusEl.className = '';
+    }
+    if (imageAiStatus) {
+        imageAiStatus.classList.add('hidden');
+    }
+    
     // Check file count
     if (selectedImages.length + files.length > maxFiles) {
         alert(`Maximum ${maxFiles} images allowed`);
@@ -1102,6 +1121,15 @@ function handleImageUpload(input) {
     // Show preview area
     if (selectedImages.length > 0) {
         document.getElementById('imagePreview').classList.remove('hidden');
+        
+        // Automatically trigger AI analysis after a short delay
+        setTimeout(() => {
+            const descriptionField = document.getElementById('addDescription');
+            // Only auto-analyze if description is empty
+            if (!descriptionField.value.trim()) {
+                generateDescription();
+            }
+        }, 500);
     }
 }
 
@@ -1143,6 +1171,377 @@ function removeImage(index) {
     // Hide preview if no images
     if (selectedImages.length === 0) {
         document.getElementById('imagePreview').classList.add('hidden');
+        // Clear the file input
+        document.getElementById('addImages').value = '';
+        
+        // Hide and reset status messages
+        const statusEl = document.getElementById('aiGenerationStatus');
+        const imageAiStatus = document.getElementById('imageAiStatus');
+        if (statusEl) {
+            statusEl.classList.add('hidden');
+            statusEl.textContent = '';
+        }
+        if (imageAiStatus) {
+            imageAiStatus.classList.add('hidden');
+        }
+    }
+}
+
+// Clear all images
+function clearAllImages() {
+    selectedImages = [];
+    const container = document.getElementById('previewContainer');
+    if (container) {
+        container.innerHTML = '';
+    }
+    
+    document.getElementById('imagePreview').classList.add('hidden');
+    document.getElementById('addImages').value = '';
+    
+    // Hide and reset status messages
+    const statusEl = document.getElementById('aiGenerationStatus');
+    const imageAiStatus = document.getElementById('imageAiStatus');
+    if (statusEl) {
+        statusEl.classList.add('hidden');
+        statusEl.textContent = '';
+        statusEl.className = '';
+    }
+    if (imageAiStatus) {
+        imageAiStatus.classList.add('hidden');
+        imageAiStatus.innerHTML = '';
+    }
+    
+    lucide.createIcons();
+}
+
+// Clear images and allow retry
+function clearImagesAndRetry() {
+    clearAllImages();
+    showNotification('Images cleared. Please upload environment-related photos.', 'info');
+    // Trigger file input click to upload new images
+    setTimeout(() => {
+        document.getElementById('addImages').click();
+    }, 300);
+}
+
+// AI Image Analysis
+async function generateDescription() {
+    const imageInput = document.getElementById('addImages');
+    const files = imageInput.files;
+    
+    if (files.length === 0) {
+        showNotification('Please upload images first before generating description', 'warning');
+        return;
+    }
+    
+    // Show loading state
+    const statusEl = document.getElementById('aiGenerationStatus');
+    const imageAiStatus = document.getElementById('imageAiStatus');
+    const generateBtn = document.querySelector('[onclick="generateDescription()"]');
+    
+    // Show image AI status indicator
+    if (imageAiStatus) {
+        imageAiStatus.classList.remove('hidden');
+    }
+    
+    statusEl.textContent = '🤖 Analyzing images with AI... Please wait';
+    statusEl.classList.remove('hidden', 'text-green-600', 'text-red-600');
+    statusEl.classList.add('text-blue-600', 'animate-pulse');
+    
+    // Disable button if it exists
+    let originalBtnContent = '';
+    if (generateBtn) {
+        originalBtnContent = generateBtn.innerHTML;
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<i data-lucide="loader" class="w-3 h-3 animate-spin"></i><span class="ml-1">Analyzing...</span>';
+        lucide.createIcons();
+    }
+    
+    // Prepare FormData
+    const formData = new FormData();
+    if (files.length === 1) {
+        // Single image endpoint expects 'image' (singular)
+        formData.append('image', files[0]);
+    } else {
+        // Multiple images endpoint expects 'images[]' (array)
+        for (let i = 0; i < files.length; i++) {
+            formData.append('images[]', files[i]);
+        }
+    }
+    
+    // Add context if available
+    const title = document.getElementById('addTitle').value;
+    if (title) {
+        formData.append('context', `Report title: ${title}`);
+    }
+    
+    try {
+        const endpoint = files.length === 1 ? '/api/analyze-image-public' : '/api/analyze-images-public';
+        
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+        
+        const data = await response.json();
+        
+        // Check if response is not successful
+        if (!response.ok || !data.success) {
+            // Check if it's a rate limit error
+            if (response.status === 429 || data.error === 'rate_limit' || data.error === 'quota_exceeded') {
+                const waitMessage = data.error === 'quota_exceeded' 
+                    ? 'Daily quota exceeded. Try again tomorrow.' 
+                    : 'Rate limit reached. Please wait 60 seconds...';
+                throw new Error('RATE_LIMIT:' + waitMessage);
+            }
+            
+            // Check if it's a non-environmental image error
+            if (data.error === 'not_environmental' || (data.message && data.message.includes('not related to environmental'))) {
+                throw new Error('NOT_ENVIRONMENTAL:' + (data.message || "This photo is not related to environmental issues."));
+            }
+            throw new Error(data.message || data.error || 'Analysis failed');
+        }
+        
+        if (data.success && data.data) {
+            // Auto-fill form fields
+            const descriptionField = document.getElementById('addDescription');
+            descriptionField.value = data.data.description;
+            
+            // Highlight the field briefly
+            descriptionField.classList.add('ring-2', 'ring-green-500', 'bg-green-50');
+            setTimeout(() => {
+                descriptionField.classList.remove('ring-2', 'ring-green-500', 'bg-green-50');
+            }, 2000);
+            
+            // Set suggested type
+            if (data.data.suggested_type) {
+                const typeSelect = document.getElementById('addType');
+                typeSelect.value = data.data.suggested_type;
+                typeSelect.classList.add('ring-2', 'ring-green-500', 'bg-green-50');
+                setTimeout(() => {
+                    typeSelect.classList.remove('ring-2', 'ring-green-500', 'bg-green-50');
+                }, 2000);
+            }
+            
+            // Set suggested urgency
+            if (data.data.suggested_urgency) {
+                const urgencySelect = document.getElementById('addUrgency');
+                urgencySelect.value = data.data.suggested_urgency;
+                urgencySelect.classList.add('ring-2', 'ring-green-500', 'bg-green-50');
+                setTimeout(() => {
+                    urgencySelect.classList.remove('ring-2', 'ring-green-500', 'bg-green-50');
+                }, 2000);
+            }
+            
+            // Hide image AI status
+            if (imageAiStatus) {
+                imageAiStatus.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="check-circle" class="w-4 h-4 text-green-600"></i>
+                        <span class="text-green-700 font-medium">✨ AI analysis complete!</span>
+                    </div>
+                `;
+                imageAiStatus.classList.remove('bg-purple-50', 'border-purple-200');
+                imageAiStatus.classList.add('bg-green-50', 'border-green-200');
+                lucide.createIcons();
+                
+                setTimeout(() => {
+                    imageAiStatus.classList.add('hidden');
+                }, 3000);
+            }
+            
+            // Show recommendations if available
+            statusEl.classList.remove('animate-pulse');
+            if (data.data.recommendations && data.data.recommendations.length > 0) {
+                statusEl.innerHTML = `
+                    <div class="text-green-700">
+                        <strong>✅ AI Analysis Complete!</strong> Description and suggestions added.
+                        <details class="mt-1">
+                            <summary class="cursor-pointer hover:underline text-xs">💡 View AI Recommendations</summary>
+                            <ul class="list-disc list-inside text-xs mt-1 ml-2 space-y-1">
+                                ${data.data.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                            </ul>
+                        </details>
+                    </div>
+                `;
+            } else {
+                statusEl.textContent = '✅ AI analysis complete! Description generated successfully.';
+            }
+            
+            statusEl.classList.add('text-green-600');
+            showNotification('AI generated description successfully!', 'success');
+            
+        } else {
+            // Check if it's a non-environmental image error
+            if (data.error === 'not_environmental') {
+                throw new Error(data.message || "This photo is not related to environmental issues. We can only accept environment-related photos.");
+            }
+            throw new Error(data.error || data.message || 'Analysis failed');
+        }
+    } catch (error) {
+        statusEl.classList.remove('animate-pulse');
+        
+        // Check if it's a rate limit error
+        const isRateLimit = error.message.startsWith('RATE_LIMIT:');
+        
+        // Check if it's a non-environmental image error
+        const isNonEnvironmental = error.message.startsWith('NOT_ENVIRONMENTAL:') || 
+                                   error.message.includes('not related to environmental') || 
+                                   error.message.includes('not environmental');
+        
+        if (isRateLimit) {
+            // Extract the message
+            const errorMsg = error.message.replace('RATE_LIMIT:', '').trim();
+            const isQuotaExceeded = errorMsg.includes('quota') || errorMsg.includes('tomorrow');
+            
+            statusEl.innerHTML = `
+                <div class="text-yellow-700 space-y-2">
+                    <div class="flex items-center space-x-1">
+                        <i data-lucide="clock" class="w-4 h-4"></i>
+                        <strong>⏱️ ${isQuotaExceeded ? 'Daily Quota Exceeded' : 'Rate Limit Reached'}</strong>
+                    </div>
+                    <p class="text-xs">${errorMsg}</p>
+                    ${!isQuotaExceeded ? `
+                        <p class="text-xs mt-1">⚠️ Free API allows only 2-3 requests per minute.</p>
+                        <p class="text-xs font-medium mt-2">Please wait: <span id="rateLimitCountdown" class="text-yellow-900 font-bold">60</span> seconds</p>
+                    ` : `
+                        <p class="text-xs mt-1">The free tier has a daily limit. Try again tomorrow or describe manually.</p>
+                    `}
+                </div>
+            `;
+            statusEl.classList.add('text-yellow-600');
+            
+            // Update image AI status
+            if (imageAiStatus) {
+                imageAiStatus.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="clock" class="w-4 h-4 text-yellow-600"></i>
+                        <span class="text-yellow-700 font-medium">⏱️ ${isQuotaExceeded ? 'Daily quota exceeded' : 'Please wait 60 seconds...'}</span>
+                    </div>
+                `;
+                imageAiStatus.classList.remove('bg-purple-50', 'border-purple-200', 'hidden');
+                imageAiStatus.classList.add('bg-yellow-50', 'border-yellow-200');
+                lucide.createIcons();
+            }
+            
+            showNotification(isQuotaExceeded ? '⏱️ Daily quota exceeded. Try again tomorrow.' : '⏱️ Rate limit reached. Please wait 60 seconds before trying again.', 'warning');
+            
+            // Start countdown if not quota exceeded
+            if (!isQuotaExceeded) {
+                let countdown = 60;
+                const countdownEl = document.getElementById('rateLimitCountdown');
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+                    if (countdownEl) {
+                        countdownEl.textContent = countdown;
+                    }
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+                        if (imageAiStatus) {
+                            imageAiStatus.innerHTML = `
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="check-circle" class="w-4 h-4 text-green-600"></i>
+                                    <span class="text-green-700 font-medium">✅ Ready! You can try again now.</span>
+                                </div>
+                            `;
+                            imageAiStatus.classList.remove('bg-yellow-50', 'border-yellow-200');
+                            imageAiStatus.classList.add('bg-green-50', 'border-green-200');
+                            lucide.createIcons();
+                            setTimeout(() => {
+                                imageAiStatus.classList.add('hidden');
+                            }, 3000);
+                        }
+                        showNotification('✅ Ready! You can try analyzing your images again.', 'success');
+                    }
+                }, 1000);
+            }
+            
+        } else if (isNonEnvironmental) {
+            // Extract the message
+            const errorMsg = error.message.replace('NOT_ENVIRONMENTAL:', '').trim();
+            
+            statusEl.innerHTML = `
+                <div class="text-orange-700 space-y-1">
+                    <div class="flex items-center space-x-1">
+                        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                        <strong>❌ Not an environmental photo</strong>
+                    </div>
+                    <p class="text-xs">${errorMsg || 'This photo doesn\'t show environmental issues.'}</p>
+                    <p class="text-xs mt-2">Please upload images of:</p>
+                    <ul class="text-xs list-disc list-inside ml-2 space-y-0.5">
+                        <li>Trees, plants, or forests</li>
+                        <li>Pollution or waste</li>
+                        <li>Parks or green spaces</li>
+                        <li>Environmental damage</li>
+                    </ul>
+                    <button onclick="clearImagesAndRetry()" class="mt-2 text-xs bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-1 rounded transition-colors">
+                        Clear images and upload new ones
+                    </button>
+                </div>
+            `;
+            statusEl.classList.add('text-orange-600');
+            
+            // Update image AI status with specific message
+            if (imageAiStatus) {
+                imageAiStatus.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="x-circle" class="w-4 h-4 text-orange-600"></i>
+                            <span class="text-orange-700 font-medium">⚠️ Not environmental - Image will be removed</span>
+                        </div>
+                    </div>
+                `;
+                imageAiStatus.classList.remove('bg-purple-50', 'border-purple-200', 'hidden');
+                imageAiStatus.classList.add('bg-orange-50', 'border-orange-200');
+                lucide.createIcons();
+            }
+            
+            showNotification('❌ Not an environmental photo. Images will be cleared. Please upload environment-related images only.', 'warning');
+            
+            // Automatically remove the non-environmental images after showing message
+            setTimeout(() => {
+                clearAllImages();
+                if (imageAiStatus) {
+                    imageAiStatus.classList.add('hidden');
+                }
+                showNotification('Images cleared. Please upload environment-related photos.', 'info');
+            }, 3000);
+            
+        } else {
+            statusEl.textContent = '❌ Failed to generate description. Please write manually or try again.';
+            statusEl.classList.add('text-red-600');
+            
+            // Update image AI status for general errors
+            if (imageAiStatus) {
+                imageAiStatus.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-red-600"></i>
+                        <span class="text-red-700 font-medium">Analysis failed. You can try again or write manually.</span>
+                    </div>
+                `;
+                imageAiStatus.classList.remove('bg-purple-50', 'border-purple-200', 'hidden');
+                imageAiStatus.classList.add('bg-red-50', 'border-red-200');
+                lucide.createIcons();
+                
+                setTimeout(() => {
+                    imageAiStatus.classList.add('hidden');
+                }, 5000);
+            }
+            
+            showNotification(`AI analysis failed: ${error.message}`, 'error');
+        }
+        
+        lucide.createIcons();
+        console.error('AI Analysis Error:', error);
+    } finally {
+        if (generateBtn) {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = originalBtnContent;
+            lucide.createIcons();
+        }
     }
 }
 
@@ -2227,6 +2626,55 @@ function clearAllFiltersPage() {
 // Make functions globally available
 window.filterReportsPage = filterReportsPage;
 window.clearAllFiltersPage = clearAllFiltersPage;
+
+// Notification helper function
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-[9999] max-w-md px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+    
+    // Set color based on type
+    const colors = {
+        success: 'bg-green-600 text-white',
+        error: 'bg-red-600 text-white',
+        warning: 'bg-yellow-600 text-white',
+        info: 'bg-blue-600 text-white'
+    };
+    
+    notification.classList.add(...colors[type].split(' '));
+    
+    // Set icon based on type
+    const icons = {
+        success: 'check-circle',
+        error: 'alert-circle',
+        warning: 'alert-triangle',
+        info: 'info'
+    };
+    
+    notification.innerHTML = `
+        <div class="flex items-center space-x-3">
+            <i data-lucide="${icons[type]}" class="w-5 h-5 flex-shrink-0"></i>
+            <p class="font-medium">${message}</p>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    lucide.createIcons();
+    
+    // Slide in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Slide out and remove
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+
 </script>
 @endpush
 @endsection

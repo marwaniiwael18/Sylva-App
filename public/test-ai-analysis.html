@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Analysis - Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    🤖 AI Image Analysis Test
+                </h1>
+                <p class="text-gray-600">
+                    Upload an image to test the Gemini AI integration
+                </p>
+            </div>
+
+            <!-- Main Card -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div class="space-y-6">
+                    <!-- Image Upload Area -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Upload Image
+                        </label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition-colors">
+                            <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+                            <div id="uploadArea" class="cursor-pointer" onclick="document.getElementById('imageInput').click()">
+                                <i data-lucide="camera" class="w-16 h-16 mx-auto text-gray-400 mb-4"></i>
+                                <p class="text-sm text-gray-600 mb-2">Click to upload an image</p>
+                                <p class="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                                <button type="button" class="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                                    <i data-lucide="upload" class="w-4 h-4 inline mr-2"></i>
+                                    Select Image
+                                </button>
+                            </div>
+                            
+                            <!-- Image Preview -->
+                            <div id="imagePreview" class="hidden mt-4">
+                                <img id="previewImage" class="max-w-full h-64 mx-auto rounded-lg shadow" alt="Preview">
+                                <button type="button" onclick="clearImage()" class="mt-3 text-sm text-red-600 hover:text-red-800">
+                                    <i data-lucide="x" class="w-4 h-4 inline"></i>
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Context Input -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Additional Context (Optional)
+                        </label>
+                        <input 
+                            type="text" 
+                            id="contextInput" 
+                            placeholder="E.g., 'Taken in central park' or 'Near highway'"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        >
+                    </div>
+
+                    <!-- Analyze Button -->
+                    <button 
+                        id="analyzeBtn"
+                        onclick="analyzeImage()" 
+                        class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                        disabled
+                    >
+                        <i data-lucide="sparkles" class="w-5 h-5 inline mr-2"></i>
+                        Analyze with AI
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Card -->
+            <div id="resultsCard" class="hidden bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <i data-lucide="check-circle" class="w-6 h-6 text-green-600 mr-2"></i>
+                    Analysis Results
+                </h2>
+                
+                <!-- Description -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-2">📝 Description</h3>
+                    <p id="resultDescription" class="text-gray-800 bg-gray-50 p-4 rounded-lg"></p>
+                </div>
+
+                <!-- Suggestions Grid -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h3 class="text-sm font-semibold text-blue-900 mb-2">🏷️ Suggested Type</h3>
+                        <p id="resultType" class="text-blue-700 font-medium capitalize"></p>
+                    </div>
+                    <div class="bg-orange-50 p-4 rounded-lg">
+                        <h3 class="text-sm font-semibold text-orange-900 mb-2">⚡ Urgency Level</h3>
+                        <p id="resultUrgency" class="text-orange-700 font-medium capitalize"></p>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-700 mb-2">💡 Recommendations</h3>
+                    <ul id="resultRecommendations" class="space-y-2"></ul>
+                </div>
+
+                <!-- Raw Response (for debugging) -->
+                <details class="mt-6">
+                    <summary class="cursor-pointer text-sm text-gray-600 hover:text-gray-900">
+                        Show Raw API Response
+                    </summary>
+                    <pre id="rawResponse" class="mt-2 bg-gray-900 text-green-400 p-4 rounded-lg text-xs overflow-x-auto"></pre>
+                </details>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="hidden bg-white rounded-lg shadow-lg p-8 text-center">
+                <div class="inline-block">
+                    <i data-lucide="loader" class="w-12 h-12 text-purple-600 animate-spin mb-4"></i>
+                </div>
+                <p class="text-gray-600 font-medium">Analyzing image with AI...</p>
+                <p class="text-sm text-gray-500 mt-2">This may take 2-5 seconds</p>
+            </div>
+
+            <!-- Error Alert -->
+            <div id="errorAlert" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div class="flex items-start">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-600 mr-3 mt-0.5"></i>
+                    <div>
+                        <h3 class="text-sm font-semibold text-red-900">Error</h3>
+                        <p id="errorMessage" class="text-sm text-red-700 mt-1"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file
+            if (!file.type.startsWith('image/')) {
+                showError('Please select an image file');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                showError('File size must be less than 5MB');
+                return;
+            }
+
+            selectedFile = file;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImage').src = e.target.result;
+                document.getElementById('uploadArea').classList.add('hidden');
+                document.getElementById('imagePreview').classList.remove('hidden');
+                document.getElementById('analyzeBtn').disabled = false;
+            };
+            reader.readAsDataURL(file);
+
+            // Hide results and errors
+            document.getElementById('resultsCard').classList.add('hidden');
+            document.getElementById('errorAlert').classList.add('hidden');
+        }
+
+        function clearImage() {
+            selectedFile = null;
+            document.getElementById('imageInput').value = '';
+            document.getElementById('uploadArea').classList.remove('hidden');
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('resultsCard').classList.add('hidden');
+            document.getElementById('errorAlert').classList.add('hidden');
+        }
+
+        async function analyzeImage() {
+            if (!selectedFile) {
+                showError('Please select an image first');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            document.getElementById('resultsCard').classList.add('hidden');
+            document.getElementById('errorAlert').classList.add('hidden');
+
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+            
+            const context = document.getElementById('contextInput').value;
+            if (context) {
+                formData.append('context', context);
+            }
+
+            try {
+                const response = await fetch('/api/analyze-image-public', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data.data);
+                    document.getElementById('rawResponse').textContent = JSON.stringify(data, null, 2);
+                } else {
+                    throw new Error(data.error || data.message || 'Analysis failed');
+                }
+            } catch (error) {
+                showError(`Failed to analyze image: ${error.message}`);
+                console.error('Error:', error);
+            } finally {
+                document.getElementById('loadingIndicator').classList.add('hidden');
+            }
+        }
+
+        function displayResults(data) {
+            document.getElementById('resultDescription').textContent = data.description || 'No description available';
+            document.getElementById('resultType').textContent = data.suggested_type ? data.suggested_type.replace('_', ' ') : 'Not specified';
+            document.getElementById('resultUrgency').textContent = data.suggested_urgency || 'Not specified';
+
+            const recommendationsList = document.getElementById('resultRecommendations');
+            recommendationsList.innerHTML = '';
+            
+            if (data.recommendations && data.recommendations.length > 0) {
+                data.recommendations.forEach(rec => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-start text-sm text-gray-700';
+                    li.innerHTML = `
+                        <i data-lucide="check" class="w-4 h-4 text-green-600 mr-2 mt-0.5 flex-shrink-0"></i>
+                        <span>${rec}</span>
+                    `;
+                    recommendationsList.appendChild(li);
+                });
+            } else {
+                recommendationsList.innerHTML = '<li class="text-sm text-gray-500 italic">No recommendations available</li>';
+            }
+
+            document.getElementById('resultsCard').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorAlert').classList.remove('hidden');
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
