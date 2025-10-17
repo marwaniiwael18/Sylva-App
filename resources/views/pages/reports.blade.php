@@ -1288,8 +1288,17 @@ async function generateDescription() {
         
         const data = await response.json();
         
+        // Debug: Log the full response
+        console.log('API Response Status:', response.status);
+        console.log('API Response Data:', data);
+        
         // Check if response is not successful
         if (!response.ok || !data.success) {
+            // Log validation errors if present
+            if (data.errors) {
+                console.error('Validation Errors:', data.errors);
+            }
+            
             // Check if it's a rate limit error
             if (response.status === 429 || data.error === 'rate_limit' || data.error === 'quota_exceeded') {
                 const waitMessage = data.error === 'quota_exceeded' 
@@ -1302,6 +1311,13 @@ async function generateDescription() {
             if (data.error === 'not_environmental' || (data.message && data.message.includes('not related to environmental'))) {
                 throw new Error('NOT_ENVIRONMENTAL:' + (data.message || "This photo is not related to environmental issues."));
             }
+            
+            // Show validation errors if present
+            if (data.errors) {
+                const errorMessages = Object.values(data.errors).flat().join(', ');
+                throw new Error('Validation Error: ' + errorMessages);
+            }
+            
             throw new Error(data.message || data.error || 'Analysis failed');
         }
         
