@@ -227,7 +227,7 @@
                 <div class="flex gap-2 mt-4">
                     <button 
                         @click="viewTree({{ $tree->id }})"
-                        class="flex-1 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-medium hover:bg-emerald-100 transition-colors"
+                        class="flex-1 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-medium hover:bg-emerald-100 transition-colors text-sm"
                     >
                         View Details
                     </button>
@@ -240,6 +240,15 @@
                     </button>
                     @endif
                 </div>
+                
+                <!-- Tree Care Button -->
+                <button 
+                    @click="openCareModal({{ $tree->id }})"
+                    class="w-full mt-2 px-3 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 text-sm"
+                >
+                    <i data-lucide="heart" class="w-4 h-4"></i>
+                    Tree Care
+                </button>
             </div>
         </div>
         @endforeach
@@ -386,15 +395,86 @@
 
                 <!-- Images -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Images</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Images
+                        <span class="text-emerald-600 text-xs ml-2">🤖 AI will identify the plant automatically</span>
+                    </label>
                     <input 
                         type="file" 
                         @change="handleImageUpload($event)"
                         multiple
                         accept="image/*"
+                        id="tree-image-input"
                         class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     >
-                    <p class="text-sm text-gray-500 mt-1">You can upload multiple images (JPEG, PNG, JPG, GIF)</p>
+                    <p class="text-sm text-gray-500 mt-1">Upload a clear photo of the tree. AI will identify the species! 📸</p>
+                    
+                    <!-- AI Identification Loading -->
+                    <div x-show="identifyingPlant" class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                        <div class="flex items-center">
+                            <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
+                            <span class="text-sm text-blue-700 font-medium">🤖 AI is identifying the plant...</span>
+                        </div>
+                    </div>
+
+                    <!-- AI Identification Result -->
+                    <div x-show="plantIdentification && plantIdentification.success" class="mt-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl">
+                        <div class="flex items-start">
+                            <div class="p-2 bg-emerald-100 rounded-lg mr-3">
+                                <i data-lucide="sparkles" class="w-5 h-5 text-emerald-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-sm font-bold text-emerald-900 mb-1">✨ Plant Identified!</h4>
+                                <p class="text-sm text-emerald-800 mb-2">
+                                    <strong x-text="plantIdentification.data.name"></strong>
+                                    <span class="text-emerald-600 italic ml-1" x-show="plantIdentification.data.scientific_name">
+                                        (<span x-text="plantIdentification.data.scientific_name"></span>)
+                                    </span>
+                                </p>
+                                
+                                <!-- Suggested Type -->
+                                <div x-show="plantIdentification.data.suggested_type" class="mb-2 text-xs text-emerald-700">
+                                    <span class="font-medium">Suggested Type:</span>
+                                    <span class="ml-1 px-2 py-0.5 bg-emerald-100 rounded-full" x-text="plantIdentification.data.suggested_type"></span>
+                                </div>
+                                
+                                <div class="flex items-center text-xs text-emerald-700 mb-3">
+                                    <span class="font-medium">Confidence:</span>
+                                    <span class="ml-1" x-text="plantIdentification.data.confidence + '%'"></span>
+                                    <div class="ml-2 flex-1 max-w-32 h-2 bg-emerald-200 rounded-full overflow-hidden">
+                                        <div class="h-full bg-emerald-500 rounded-full transition-all" :style="'width: ' + plantIdentification.data.confidence + '%'"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Auto-fill Button -->
+                                <button 
+                                    type="button"
+                                    @click="autoFillFromAI()"
+                                    class="w-full mb-2 px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center"
+                                >
+                                    <i data-lucide="wand-2" class="w-4 h-4 mr-2"></i>
+                                    Auto-fill Species, Type & Description
+                                </button>
+                                
+                                <div x-show="plantIdentification.data.common_names && plantIdentification.data.common_names.length > 1" class="mt-2 text-xs text-emerald-600">
+                                    <span class="font-medium">Other names:</span>
+                                    <span x-text="plantIdentification.data.common_names.slice(1).join(', ')"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Identification Error -->
+                    <div x-show="plantIdentification && !plantIdentification.success" class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                        <div class="flex items-start">
+                            <i data-lucide="alert-circle" class="w-5 h-5 text-yellow-600 mr-2"></i>
+                            <div>
+                                <p class="text-sm text-yellow-800 font-medium">Could not identify plant</p>
+                                <p class="text-xs text-yellow-700 mt-1" x-text="plantIdentification.message"></p>
+                                <p class="text-xs text-yellow-600 mt-1">You can still enter the species name manually.</p>
+                            </div>
+                        </div>
+                    </div>
                     
                     <!-- Current Images (for edit mode) -->
                     <div x-show="currentImages.length > 0" class="mt-4">
@@ -456,6 +536,8 @@ function treeManagement() {
         showMyTrees: false,
         currentImages: [],
         imagesToDelete: [],
+        identifyingPlant: false,
+        plantIdentification: null,
         form: {
             species: '',
             type: '',
@@ -526,6 +608,11 @@ function treeManagement() {
 
         async viewTree(treeId) {
             window.location.href = `/trees/${treeId}`;
+        },
+
+        openCareModal(treeId) {
+            // Redirect to tree detail page with care section
+            window.location.href = `/trees/${treeId}#care`;
         },
 
         async deleteTree(treeId) {
@@ -625,8 +712,113 @@ function treeManagement() {
             }
         },
 
-        handleImageUpload(event) {
+        async handleImageUpload(event) {
             this.form.images = Array.from(event.target.files);
+            
+            // If we have at least one image, try to identify the plant
+            if (this.form.images.length > 0) {
+                await this.identifyPlantFromImage(this.form.images[0]);
+            }
+        },
+
+        async identifyPlantFromImage(imageFile) {
+            this.identifyingPlant = true;
+            this.plantIdentification = null;
+
+            try {
+                const formData = new FormData();
+                formData.append('image', imageFile);
+
+                const response = await fetch('/api/identify-plant', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Authorization': 'Bearer ' + document.querySelector('meta[name="api-token"]')?.content
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+                this.plantIdentification = result;
+
+                if (result.success && result.data) {
+                    // Show success message
+                    this.showNotification('Plant identified: ' + result.data.name, 'success');
+                    
+                    // Auto-fill species name if empty
+                    if (!this.form.species) {
+                        this.form.species = result.data.name;
+                    }
+                    
+                    // Auto-fill type if empty and we have a suggestion
+                    if (!this.form.type && result.data.suggested_type) {
+                        this.form.type = result.data.suggested_type;
+                    }
+                    
+                    // Auto-fill description if empty and we have AI description
+                    if (!this.form.description && result.data.description) {
+                        // Truncate description to reasonable length
+                        let desc = result.data.description;
+                        if (desc.length > 300) {
+                            desc = desc.substring(0, 297) + '...';
+                        }
+                        this.form.description = desc;
+                    }
+                    
+                    this.showNotification('Species, type, and description auto-filled!', 'success');
+                }
+            } catch (error) {
+                console.error('Error identifying plant:', error);
+                this.plantIdentification = {
+                    success: false,
+                    message: 'An error occurred while identifying the plant. You can still enter the species manually.'
+                };
+            } finally {
+                this.identifyingPlant = false;
+            }
+        },
+
+        autoFillFromAI() {
+            if (!this.plantIdentification || !this.plantIdentification.success) {
+                return;
+            }
+
+            const data = this.plantIdentification.data;
+            
+            // Fill species name
+            if (data.name) {
+                this.form.species = data.name;
+            }
+            
+            // Fill type if we have a suggestion
+            if (data.suggested_type) {
+                this.form.type = data.suggested_type;
+            }
+            
+            // Fill description if available
+            if (data.description) {
+                let desc = data.description;
+                // Truncate to 300 characters if too long
+                if (desc.length > 300) {
+                    desc = desc.substring(0, 297) + '...';
+                }
+                this.form.description = desc;
+            }
+            
+            this.showNotification('✨ Auto-filled: Species, Type, and Description!', 'success');
+            
+            // Show a visual confirmation
+            alert('✅ Auto-filled successfully!\n\n' +
+                  '• Species: ' + (data.name || 'N/A') + '\n' +
+                  '• Type: ' + (data.suggested_type || 'N/A') + '\n' +
+                  '• Description: ' + (data.description ? 'Added' : 'N/A'));
+        },
+
+        showNotification(message, type = 'info') {
+            // Simple notification - you can enhance this
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            // You could add a toast notification library here
         },
 
         removeImage(index) {

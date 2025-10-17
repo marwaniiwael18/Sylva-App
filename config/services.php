@@ -41,4 +41,8 @@ return [
         'api_key' => env('GEMINI_API_KEY'),
     ],
 
+    'plantid' => [
+        'api_key' => env('PLANT_ID_API_KEY'),
+    ],
+
 ];
