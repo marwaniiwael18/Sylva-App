@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Report extends Model
 {
@@ -34,7 +35,10 @@ class Report extends Model
     ];
 
     protected $appends = [
-        'image_urls'
+        'image_urls',
+        'vote_score',
+        'total_comments',
+        'total_reactions'
     ];
 
     protected $attributes = [
@@ -50,6 +54,68 @@ class Report extends Model
     public function validator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'validated_by');
+    }
+
+    /**
+     * Get all activities for this report (comments, votes, reactions)
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(ReportActivity::class)->latest();
+    }
+
+    /**
+     * Get all comments for this report
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(ReportActivity::class)
+                    ->where('activity_type', 'comment')
+                    ->whereNull('parent_id')
+                    ->with('replies')
+                    ->latest();
+    }
+
+    /**
+     * Get all votes for this report
+     */
+    public function votes(): HasMany
+    {
+        return $this->hasMany(ReportActivity::class)
+                    ->where('activity_type', 'vote');
+    }
+
+    /**
+     * Get all reactions for this report
+     */
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(ReportActivity::class)
+                    ->where('activity_type', 'reaction');
+    }
+
+    /**
+     * Get vote score (upvotes - downvotes)
+     */
+    public function getVoteScoreAttribute(): int
+    {
+        return $this->votes()->sum('vote_value');
+    }
+
+    /**
+     * Get total comments count (including replies)
+     */
+    public function getTotalCommentsAttribute(): int
+    {
+        return $this->activities()->where('activity_type', 'comment')->count();
+    }
+
+    /**
+     * Get total reactions count
+     */
+    public function getTotalReactionsAttribute(): int
+    {
+        return $this->reactions()->count();
     }
 
     // Scopes
