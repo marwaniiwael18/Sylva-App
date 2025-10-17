@@ -1379,19 +1379,67 @@ function editReportModal(reportId) {
     
     currentEditingReportId = reportId;
     
+    // Reset edit form variables
+    selectedEditImages = [];
+    existingImages = [];
+    imagesToDelete = [];
+    
     // Populate the form
     document.getElementById('editTitle').value = report.title;
     document.getElementById('editDescription').value = report.description;
     document.getElementById('editType').value = report.type;
     document.getElementById('editUrgency').value = report.urgency;
+    document.getElementById('editAddress').value = report.address || '';
+    document.getElementById('editLatitude').value = report.latitude || '';
+    document.getElementById('editLongitude').value = report.longitude || '';
+    
+    // Update coordinate display
+    if (report.latitude && report.longitude) {
+        document.getElementById('editSelectedCoordinates').textContent = 
+            `Selected: ${parseFloat(report.latitude).toFixed(6)}, ${parseFloat(report.longitude).toFixed(6)}`;
+    } else {
+        document.getElementById('editSelectedCoordinates').textContent = 'No location selected';
+    }
+    
+    // Display existing images
+    if (report.image_urls && report.image_urls.length > 0) {
+        displayEditExistingImages(report.image_urls);
+    } else {
+        document.getElementById('editExistingImages').classList.add('hidden');
+    }
+    
+    // Clear new image previews
+    document.getElementById('editImagePreview').classList.add('hidden');
+    document.getElementById('editPreviewContainer').innerHTML = '';
     
     // Show modal
     document.getElementById('editReportModal').classList.remove('hidden');
+    
+    // Initialize map after modal is shown
+    setTimeout(() => {
+        initializeEditReportMap(report);
+    }, 100);
 }
 
 function closeEditModal() {
     document.getElementById('editReportModal').classList.add('hidden');
+    document.getElementById('editReportForm').reset();
     currentEditingReportId = null;
+    selectedEditImages = [];
+    existingImages = [];
+    imagesToDelete = [];
+    
+    // Reset map
+    if (editReportMap) {
+        editReportMap.remove();
+        editReportMap = null;
+    }
+    editCurrentMarker = null;
+    
+    // Clear previews
+    document.getElementById('editExistingImages').classList.add('hidden');
+    document.getElementById('editImagePreview').classList.add('hidden');
+    document.getElementById('editSelectedCoordinates').textContent = 'No location selected';
 }
 
 async function deleteReportConfirm(reportId) {
@@ -1502,84 +1550,6 @@ function addReportToTable(report) {
     }, 3000);
 }
 
-// Function to update statistics
-function updateStatistics() {
-    // Update total reports count
-    const totalElement = document.querySelector('.grid .bg-white:first-child p.text-2xl');
-    if (totalElement) {
-        const currentTotal = parseInt(totalElement.textContent);
-        totalElement.textContent = currentTotal + 1;
-    }
-    
-    // Update pending reports count
-    const pendingElement = document.querySelector('.grid .bg-white:nth-child(2) p.text-2xl');
-    if (pendingElement) {
-        const currentPending = parseInt(pendingElement.textContent);
-        pendingElement.textContent = currentPending + 1;
-    }
-    
-    // Update this month count
-    const thisMonthElement = document.querySelector('.grid .bg-white:last-child p.text-2xl');
-    if (thisMonthElement) {
-        const currentThisMonth = parseInt(thisMonthElement.textContent);
-        thisMonthElement.textContent = currentThisMonth + 1;
-    }
-}
-
-// Edit Report Functions
-function editReportModal(reportId) {
-    const report = reports.find(r => r.id == reportId);
-    if (!report) {
-        alert('Report not found');
-        return;
-    }
-    
-    currentEditingReportId = reportId;
-    
-    // Populate the form
-    document.getElementById('editTitle').value = report.title;
-    document.getElementById('editDescription').value = report.description;
-    document.getElementById('editType').value = report.type;
-    document.getElementById('editUrgency').value = report.urgency;
-    
-    // Show modal
-    document.getElementById('editReportModal').classList.remove('hidden');
-}
-
-function closeEditModal() {
-    document.getElementById('editReportModal').classList.add('hidden');
-    currentEditingReportId = null;
-}
-
-async function deleteReportConfirm(reportId) {
-    if (!confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/reports-public/${reportId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json',
-            }
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            alert('Report deleted successfully!');
-            // Reload the page to reflect changes
-            window.location.reload();
-        } else {
-            throw new Error(result.message || 'Failed to delete report');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error deleting report: ' + error.message);
-    }
-}
-
 // Handle edit form submission
 document.getElementById('editReportForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -1591,11 +1561,12 @@ document.getElementById('editReportForm').addEventListener('submit', async funct
     
     // Create FormData for file upload
     const formData = new FormData();
+    formData.append('_method', 'PUT'); // Method spoofing for Laravel
     formData.append('title', document.getElementById('editTitle').value);
     formData.append('description', document.getElementById('editDescription').value);
     formData.append('type', document.getElementById('editType').value);
     formData.append('urgency', document.getElementById('editUrgency').value);
-    formData.append('address', document.getElementById('editAddress').value);
+    formData.append('address', document.getElementById('editAddress').value || '');
     formData.append('latitude', document.getElementById('editLatitude').value);
     formData.append('longitude', document.getElementById('editLongitude').value);
     
@@ -1609,14 +1580,25 @@ document.getElementById('editReportForm').addEventListener('submit', async funct
         formData.append('images_to_delete', JSON.stringify(imagesToDelete));
     }
     
+    // Validation
+    if (!formData.get('title') || !formData.get('description') || !formData.get('type') || !formData.get('urgency')) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    if (!formData.get('latitude') || !formData.get('longitude')) {
+        alert('Please select a location on the map');
+        return;
+    }
+    
     try {
         const submitBtn = this.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Updating...';
+        const originalHtml = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Updating...';
         submitBtn.disabled = true;
 
         const response = await fetch(`/api/reports-public/${currentEditingReportId}`, {
-            method: 'PUT',
+            method: 'POST', // Changed to POST with _method field
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 'Accept': 'application/json',
@@ -1640,8 +1622,9 @@ document.getElementById('editReportForm').addEventListener('submit', async funct
     } finally {
         const submitBtn = this.querySelector('button[type="submit"]');
         if (submitBtn) {
-            submitBtn.textContent = 'Update Report';
+            submitBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4 mr-2"></i>Update Report';
             submitBtn.disabled = false;
+            lucide.createIcons();
         }
     }
 });
