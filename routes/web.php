@@ -33,6 +33,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [WebController::class, 'dashboard'])->name('dashboard');
     Route::get('/map', [WebController::class, 'map'])->name('map');
     Route::get('/reports', [WebController::class, 'reports'])->name('reports');
+    Route::get('/community-feed', [WebController::class, 'communityFeed'])->name('community.feed');
 
     
     // Forum Routes

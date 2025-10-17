@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\ReportActivityController;
 
 use App\Http\Controllers\Api\EventController as ApiEventController;
 use App\Http\Controllers\Api\EventController;
@@ -40,6 +41,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('reports', ReportController::class);
     Route::post('reports/{report}/validate', [ReportController::class, 'validate']);
     Route::get('reports-statistics', [ReportController::class, 'statistics']);
+    
+    // Report Activities (Social Feed)
+    Route::get('reports/{report}/activities', [ReportActivityController::class, 'index']);
+    Route::post('reports/{report}/comments', [ReportActivityController::class, 'storeComment']);
+    Route::post('reports/{report}/vote', [ReportActivityController::class, 'vote']);
+    Route::post('reports/{report}/react', [ReportActivityController::class, 'react']);
+    Route::put('activities/{activity}', [ReportActivityController::class, 'update']);
+    Route::delete('activities/{activity}', [ReportActivityController::class, 'destroy']);
+    Route::post('activities/{activity}/pin', [ReportActivityController::class, 'togglePin']);
     
 
     // Events CRUD
