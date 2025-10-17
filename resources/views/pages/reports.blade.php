@@ -559,13 +559,17 @@ let searchTimeout = null;
 let selectedImages = [];
 
 // Gemini AI Configuration
-const GEMINI_API_KEY = 'AIzaSyBwSyHbc1uN-yNIsgVl48Z8AwxWEeEeR1g';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+const GEMINI_API_KEY = '{{ env('GEMINI_API_KEY') }}';
+const GEMINI_MODEL = 'gemini-2.0-flash-exp';
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // AI Description Generation Function
 async function generateDescription() {
     const titleInput = document.getElementById('addTitle');
     const descriptionTextarea = document.getElementById('addDescription');
+    const typeSelect = document.getElementById('addType');
+    const urgencySelect = document.getElementById('addUrgency');
+    const addressInput = document.getElementById('addAddress');
     const statusDiv = document.getElementById('aiGenerationStatus');
     const generateBtn = event.target.closest('button');
     
@@ -577,28 +581,57 @@ async function generateDescription() {
         return;
     }
     
+    // Get additional context
+    const reportType = typeSelect.value || 'environmental report';
+    const urgency = urgencySelect.value || 'medium';
+    const location = addressInput.value.trim();
+    
     // Show loading state
     const originalHtml = generateBtn.innerHTML;
     generateBtn.innerHTML = '<i data-lucide="loader" class="w-3 h-3 animate-spin"></i><span>Generating...</span>';
     generateBtn.disabled = true;
     lucide.createIcons();
     
-    statusDiv.textContent = 'AI is generating an attractive description...';
+    statusDiv.textContent = '✨ AI is crafting your description...';
     statusDiv.className = 'mt-1 text-xs text-blue-600';
     statusDiv.classList.remove('hidden');
     
     try {
-        const prompt = `Generate an attractive, concise, and promotional environmental report description for: "${title}". 
+        // Build contextual prompt
+        const typeDescriptions = {
+            'tree_planting': 'tree planting initiative',
+            'maintenance': 'maintenance request',
+            'pollution': 'pollution report',
+            'green_space_suggestion': 'green space suggestion'
+        };
         
+        const urgencyDescriptions = {
+            'high': 'This is urgent and requires immediate attention.',
+            'medium': 'This requires timely action.',
+            'low': 'This can be addressed at a convenient time.'
+        };
+        
+        const typeText = typeDescriptions[reportType] || 'environmental report';
+        const urgencyText = urgencyDescriptions[urgency] || '';
+        const locationText = location ? `Location: ${location}` : '';
+        
+        const prompt = `Generate a professional, engaging, and promotional description for an environmental report with these details:
+
+Title: "${title}"
+Type: ${typeText}
+Urgency: ${urgency}
+${locationText}
+
 Requirements:
 - Under 100 words
-- Sound natural and engaging
+- Sound natural, professional, and compelling
 - Focus on environmental impact and community benefit
-- Use professional yet accessible language
-- Highlight the importance and urgency if applicable
-- Make it compelling for stakeholders to take action
+- Use accessible language that inspires action
+- ${urgencyText}
+- Highlight why this matters for the community and environment
+- Make it persuasive for stakeholders to take notice
 
-Generate only the description text without any labels or extra formatting.`;
+Generate ONLY the description text without any labels, titles, or extra formatting.`;
 
         const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
             method: 'POST',
@@ -621,12 +654,13 @@ Generate only the description text without any labels or extra formatting.`;
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'Failed to generate description');
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData.error?.message || `API Error: ${response.status} ${response.statusText}`;
+            throw new Error(errorMessage);
         }
 
         const data = await response.json();
-        const generatedText = data.candidates[0]?.content?.parts[0]?.text;
+        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (generatedText) {
             descriptionTextarea.value = generatedText.trim();
@@ -640,11 +674,12 @@ Generate only the description text without any labels or extra formatting.`;
                 statusDiv.classList.add('hidden');
             }, 3000);
         } else {
-            throw new Error('No description generated');
+            throw new Error('No description generated from AI');
         }
     } catch (error) {
         console.error('Error generating description:', error);
-        statusDiv.textContent = '❌ Failed to generate description. Please try again or write manually.';
+        const errorMsg = error.message || 'Unknown error occurred';
+        statusDiv.textContent = `❌ ${errorMsg.includes('API') || errorMsg.includes('not found') ? 'AI service error' : 'Failed to generate'}. Try again or write manually.`;
         statusDiv.className = 'mt-1 text-xs text-red-600';
         setTimeout(() => {
             statusDiv.classList.add('hidden');
@@ -652,7 +687,10 @@ Generate only the description text without any labels or extra formatting.`;
     } finally {
         generateBtn.innerHTML = originalHtml;
         generateBtn.disabled = false;
-        lucide.createIcons();
+        // Re-initialize icons safely
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
     }
 }
 
