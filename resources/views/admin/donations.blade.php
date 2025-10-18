@@ -446,7 +446,17 @@
             <h4 class="text-lg font-medium text-white">Campagnes Suggérées</h4>
             @foreach($aiInsights['campaigns'] as $campaign)
             <div class="bg-gray-700 rounded-lg p-4">
-                <p class="text-gray-300">{{ $campaign }}</p>
+                @if(is_array($campaign))
+                    <h5 class="text-white font-medium">{{ $campaign['name'] ?? 'Campagne' }}</h5>
+                    <p class="text-gray-300 text-sm">{{ $campaign['message'] ?? '' }}</p>
+                    <div class="mt-2 text-xs text-gray-400">
+                        <span>Audience: {{ $campaign['audience'] ?? 'N/A' }}</span><br>
+                        <span>Impact: {{ $campaign['impact'] ?? 'N/A' }}</span><br>
+                        <span>Timeline: {{ $campaign['timeline'] ?? 'N/A' }}</span>
+                    </div>
+                @else
+                    <p class="text-gray-300">{{ $campaign }}</p>
+                @endif
             </div>
             @endforeach
         </div>
@@ -592,7 +602,17 @@
                         <h4 class="text-lg font-medium text-white">Campagnes Suggérées</h4>
                         @foreach($aiInsights['campaigns'] as $campaign)
                         <div class="bg-gray-700 rounded-lg p-4">
-                            <p class="text-gray-300">{{ $campaign }}</p>
+                            @if(is_array($campaign))
+                                <h5 class="text-white font-medium">{{ $campaign['name'] ?? 'Campagne' }}</h5>
+                                <p class="text-gray-300 text-sm">{{ $campaign['message'] ?? '' }}</p>
+                                <div class="mt-2 text-xs text-gray-400">
+                                    <span>Audience: {{ $campaign['audience'] ?? 'N/A' }}</span><br>
+                                    <span>Impact: {{ $campaign['impact'] ?? 'N/A' }}</span><br>
+                                    <span>Timeline: {{ $campaign['timeline'] ?? 'N/A' }}</span>
+                                </div>
+                            @else
+                                <p class="text-gray-300">{{ $campaign }}</p>
+                            @endif
                         </div>
                         @endforeach
                     </div>
@@ -840,7 +860,23 @@ async function generateCampaignRecommendations() {
                             </div>
                             <div>
                                 <span class="text-gray-400">Timeline:</span>
-                                <p class="text-white">${campaign.timeline || 'Non spécifié'}</p>
+                                <div class="text-white text-xs">
+                                    ${(() => {
+                                        if (typeof campaign.timeline === 'object' && campaign.timeline) {
+                                            let timelineHtml = `<p><strong>${campaign.timeline.start_date || 'N/A'} - ${campaign.timeline.end_date || 'N/A'}</strong></p>`;
+                                            if (campaign.timeline.key_dates && Array.isArray(campaign.timeline.key_dates)) {
+                                                timelineHtml += '<ul class="mt-1 space-y-1">';
+                                                campaign.timeline.key_dates.forEach(date => {
+                                                    timelineHtml += `<li>• ${date}</li>`;
+                                                });
+                                                timelineHtml += '</ul>';
+                                            }
+                                            return timelineHtml;
+                                        } else {
+                                            return `<p>${campaign.timeline || 'Non spécifié'}</p>`;
+                                        }
+                                    })()}
+                                </div>
                             </div>
                         </div>
                     </div>

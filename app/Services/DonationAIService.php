@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Log;
 class DonationAIService
 {
     private string $apiKey;
-    private string $baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
+    private string $baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
+    private string $model = 'gemini-2.0-flash';
 
     public function __construct()
     {
@@ -22,14 +23,8 @@ class DonationAIService
      */
     public function generateInsights(array $donationData = []): array
     {
-        // Try to use AI first, but fall back to enhanced insights if it fails
-        try {
-            $response = $this->callGeminiAPI($this->buildInsightsPrompt($donationData));
-            return $this->parseInsightsResponse($response);
-        } catch (\Exception $e) {
-            Log::warning('Gemini API failed, using enhanced insights: ' . $e->getMessage());
-            return $this->getEnhancedInsights($donationData);
-        }
+        $response = $this->callGeminiAPI($this->buildInsightsPrompt($donationData));
+        return $this->parseInsightsResponse($response);
     }
 
     /**
@@ -38,14 +33,8 @@ class DonationAIService
     public function generateThankYouMessage(Donation $donation): string
     {
         $prompt = $this->buildThankYouPrompt($donation);
-
-        try {
-            $response = $this->callGeminiAPI($prompt);
-            return $this->parseThankYouResponse($response);
-        } catch (\Exception $e) {
-            Log::error('Gemini API error for thank you message: ' . $e->getMessage());
-            return $this->getFallbackThankYouMessage($donation);
-        }
+        $response = $this->callGeminiAPI($prompt);
+        return $this->parseThankYouResponse($response);
     }
 
     /**
@@ -54,14 +43,8 @@ class DonationAIService
     public function generateCampaignRecommendations(array $historicalData = []): array
     {
         $prompt = $this->buildCampaignPrompt($historicalData);
-
-        try {
-            $response = $this->callGeminiAPI($prompt);
-            return $this->parseCampaignResponse($response);
-        } catch (\Exception $e) {
-            Log::error('Gemini API error for campaign recommendations: ' . $e->getMessage());
-            return $this->getFallbackCampaignRecommendations();
-        }
+        $response = $this->callGeminiAPI($prompt);
+        return $this->parseCampaignResponse($response);
     }
 
     /**
@@ -70,14 +53,8 @@ class DonationAIService
     public function analyzePatterns(array $donationHistory = []): array
     {
         $prompt = $this->buildPatternAnalysisPrompt($donationHistory);
-
-        try {
-            $response = $this->callGeminiAPI($prompt);
-            return $this->parsePatternResponse($response);
-        } catch (\Exception $e) {
-            Log::error('Gemini API error for pattern analysis: ' . $e->getMessage());
-            return $this->getFallbackPatternAnalysis();
-        }
+        $response = $this->callGeminiAPI($prompt);
+        return $this->parsePatternResponse($response);
     }
 
     /**
@@ -86,20 +63,14 @@ class DonationAIService
     public function analyzeRefundRisk(Donation $donation): array
     {
         $prompt = $this->buildRefundAnalysisPrompt($donation);
-
-        try {
-            $response = $this->callGeminiAPI($prompt);
-            return $this->parseRefundResponse($response);
-        } catch (\Exception $e) {
-            Log::error('Gemini API error for refund analysis: ' . $e->getMessage());
-            return $this->getFallbackRefundAnalysis();
-        }
+        $response = $this->callGeminiAPI($prompt);
+        return $this->parseRefundResponse($response);
     }
 
     private function callGeminiAPI(string $prompt): array
     {
         try {
-            $response = Http::timeout(30)->post($this->baseUrl . '?key=' . $this->apiKey, [
+            $response = Http::timeout(30)->post("{$this->baseUrl}/models/{$this->model}:generateContent?key={$this->apiKey}", [
                 'contents' => [
                     [
                         'parts' => [
@@ -120,7 +91,7 @@ class DonationAIService
                 Log::error('Gemini API request failed', [
                     'status' => $response->status(),
                     'body' => $errorBody,
-                    'url' => $this->baseUrl
+                    'url' => "{$this->baseUrl}/models/{$this->model}:generateContent"
                 ]);
                 throw new \Exception('Gemini API request failed with status ' . $response->status() . ': ' . $errorBody);
             }
@@ -136,7 +107,7 @@ class DonationAIService
             Log::error('Gemini API call exception: ' . $e->getMessage(), [
                 'api_key_configured' => !empty($this->apiKey),
                 'api_key_length' => strlen($this->apiKey ?? ''),
-                'base_url' => $this->baseUrl
+                'url' => "{$this->baseUrl}/models/{$this->model}:generateContent"
             ]);
             throw $e;
         }
@@ -197,20 +168,26 @@ Write only the thank you message, no additional text.";
         $successful = $data['successful_campaigns'] ?? [];
         $demographics = $data['donor_demographics'] ?? [];
 
-        return "Based on donation platform data, suggest 3 targeted donation campaigns for Sylva (environmental platform):
+        return "Based on donation platform data, suggest 3 targeted donation campaigns for Sylva (environmental platform).
 
 Seasonal Patterns: " . implode(', ', $seasonal) . "
 Successful Past Campaigns: " . implode(', ', $successful) . "
 Donor Demographics: " . implode(', ', $demographics) . "
 
-For each campaign suggest:
-- Campaign name
-- Target audience
-- Key message
-- Expected impact
-- Timeline
+Generate 3 campaign suggestions. For each campaign, provide a JSON object with these exact fields:
+{
+  \"name\": \"Descriptive campaign name\",
+  \"audience\": \"Target audience description\",
+  \"message\": \"Key marketing message\",
+  \"impact\": \"Expected environmental impact\",
+  \"timeline\": {
+    \"start_date\": \"Start date\",
+    \"end_date\": \"End date\",
+    \"key_dates\": [\"Specific date: activity description\", \"Another date: activity\"]
+  }
+}
 
-Format as JSON array of campaign objects.";
+Return ONLY a JSON array of these 3 campaign objects. No additional text or formatting.";
     }
 
     private function buildPatternAnalysisPrompt(array $data): string
@@ -260,12 +237,12 @@ Format as JSON: {risk_level: string, reasoning: string, recommendations: array}"
         $text = str_replace('```json', '', $text);
         $text = str_replace('```', '', $text);
 
-        return json_decode($text, true) ?: $this->getFallbackInsights();
+        return json_decode($text, true);
     }
 
     private function parseThankYouResponse(array $response): string
     {
-        return $response['candidates'][0]['content']['parts'][0]['text'] ?? $this->getFallbackThankYouMessage(null);
+        return $response['candidates'][0]['content']['parts'][0]['text'] ?? '';
     }
 
     private function parseCampaignResponse(array $response): array
@@ -274,7 +251,7 @@ Format as JSON: {risk_level: string, reasoning: string, recommendations: array}"
         $text = str_replace('```json', '', $text);
         $text = str_replace('```', '', $text);
 
-        return json_decode($text, true) ?: $this->getFallbackCampaignRecommendations();
+        return json_decode($text, true);
     }
 
     private function parsePatternResponse(array $response): array
@@ -283,7 +260,7 @@ Format as JSON: {risk_level: string, reasoning: string, recommendations: array}"
         $text = str_replace('```json', '', $text);
         $text = str_replace('```', '', $text);
 
-        return json_decode($text, true) ?: $this->getFallbackPatternAnalysis();
+        return json_decode($text, true);
     }
 
     private function parseRefundResponse(array $response): array
@@ -292,7 +269,7 @@ Format as JSON: {risk_level: string, reasoning: string, recommendations: array}"
         $text = str_replace('```json', '', $text);
         $text = str_replace('```', '', $text);
 
-        return json_decode($text, true) ?: $this->getFallbackRefundAnalysis();
+        return json_decode($text, true);
     }
 
     private function getFallbackInsights(): array
