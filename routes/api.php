@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\EventController as ApiEventController;
 use App\Http\Controllers\Api\EventController;
 
 use App\Http\Controllers\Api\DonationController;
+use App\Http\Controllers\Api\AIController;
 
 
 /*
@@ -95,6 +96,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{donation}/refund', [DonationController::class, 'refund']);
         Route::delete('/{donation}', [DonationController::class, 'destroy']);
         Route::get('/user/statistics', [DonationController::class, 'userStatistics']);
+    });
+
+    // AI Routes
+    Route::prefix('ai')->name('api.ai.')->group(function () {
+        Route::post('/generate-event', [AIController::class, 'generateEvent'])->name('generate-event');
+        Route::post('/enrich-description', [AIController::class, 'enrichDescription'])->name('enrich-description');
+        Route::post('/events/ask', [AIController::class, 'askEventQuestion'])->name('ask-event-question');
+        Route::post('/events/social-posts', [AIController::class, 'generateSocialPosts'])->name('generate-social-posts');
     });
 
 });

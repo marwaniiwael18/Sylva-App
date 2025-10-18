@@ -27,7 +27,7 @@ class EventController extends Controller
      */
     public function create(): View
     {
-        return view('pages.events.create');
+        return view('pages.events.create-ai');
     }
 
     /**
