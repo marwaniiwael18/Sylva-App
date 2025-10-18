@@ -154,6 +154,7 @@ class AdminController extends Controller
     /**
      * Gestion des utilisateurs
      */
+
     public function users(Request $request)
     {
         $query = User::withCount(['donations', 'organizedEvents', 'forumPosts']);
@@ -191,11 +192,13 @@ class AdminController extends Controller
             'adminUsers',
             'newUsersThisMonth'
         ));
+
     }
 
     /**
      * Gestion des rapports
      */
+
     public function reports(Request $request)
     {
         $query = Report::with('user', 'validator');
@@ -231,6 +234,7 @@ class AdminController extends Controller
             'rejectedReports',
             'totalReports'
         ));
+
     }
 
     /**
@@ -274,6 +278,7 @@ class AdminController extends Controller
 
         return redirect()->back()->with('success', 'Rôle utilisateur mis à jour.');
     }
+
 
     /**
      * Supprimer un utilisateur
@@ -828,4 +833,5 @@ class AdminController extends Controller
         // À implémenter selon vos besoins
         return redirect()->back()->with('success', 'Paramètres mis à jour avec succès.');
     }
+
 }

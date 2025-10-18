@@ -76,6 +76,7 @@ Route::middleware('auth')->group(function () {
     // Admin Routes - Restricted to administrators only
     Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+
         
         // User Management
         Route::get('/users', [AdminController::class, 'users'])->name('users');
@@ -117,6 +118,7 @@ Route::middleware('auth')->group(function () {
         // Settings
         Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
         Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
+
     });
 
 });
