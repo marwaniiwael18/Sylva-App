@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\ReportActivityController;
+use App\Http\Controllers\Api\ImageAnalysisController;
 
 use App\Http\Controllers\Api\EventController as ApiEventController;
 use App\Http\Controllers\Api\EventController;
@@ -36,10 +38,23 @@ Route::prefix('auth')->group(function () {
 
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
+    // AI Image Analysis
+    Route::post('analyze-image', [ImageAnalysisController::class, 'analyzeImage']);
+    Route::post('analyze-images', [ImageAnalysisController::class, 'analyzeMultipleImages']);
+    
     // Reports CRUD
     Route::apiResource('reports', ReportController::class);
     Route::post('reports/{report}/validate', [ReportController::class, 'validate']);
     Route::get('reports-statistics', [ReportController::class, 'statistics']);
+    
+    // Report Activities (Social Feed)
+    Route::get('reports/{report}/activities', [ReportActivityController::class, 'index']);
+    Route::post('reports/{report}/comments', [ReportActivityController::class, 'storeComment']);
+    Route::post('reports/{report}/vote', [ReportActivityController::class, 'vote']);
+    Route::post('reports/{report}/react', [ReportActivityController::class, 'react']);
+    Route::put('activities/{activity}', [ReportActivityController::class, 'update']);
+    Route::delete('activities/{activity}', [ReportActivityController::class, 'destroy']);
+    Route::post('activities/{activity}/pin', [ReportActivityController::class, 'togglePin']);
     
 
     // Events CRUD
@@ -60,6 +75,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('trees', \App\Http\Controllers\TreeController::class);
     Route::get('trees/map/data', [\App\Http\Controllers\TreeController::class, 'mapData']);
     Route::get('trees/user/my', [\App\Http\Controllers\TreeController::class, 'myTrees']);
+    
+    // Plant Identification (AI)
+    Route::post('identify-plant', [\App\Http\Controllers\TreeController::class, 'identifyPlant']);
+    Route::post('assess-tree-health', [\App\Http\Controllers\TreeController::class, 'assessHealth']);
+
+    // Tree Care CRUD
+    Route::apiResource('tree-care', \App\Http\Controllers\Api\TreeCareController::class);
+    Route::get('tree-care-stats', [\App\Http\Controllers\Api\TreeCareController::class, 'stats']);
+    Route::get('trees/{tree}/care-history', [\App\Http\Controllers\Api\TreeCareController::class, 'treeHistory']);
+    Route::get('user/care-activities', [\App\Http\Controllers\Api\TreeCareController::class, 'userActivities']);
 
     // Donations API
     Route::prefix('donations')->name('api.donations.')->group(function () {
@@ -78,6 +103,9 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('donations/stripe/webhook', [DonationController::class, 'handleStripeWebhook'])->name('api.donations.stripe.webhook');
 
 // Temporary public routes for testing (remove in production)
+Route::post('analyze-image-public', [ImageAnalysisController::class, 'analyzeImage']);
+Route::post('analyze-images-public', [ImageAnalysisController::class, 'analyzeMultipleImages']);
+
 Route::get('reports-public', [ReportController::class, 'index']);
 Route::post('reports-public', [ReportController::class, 'store']);
 Route::get('reports-public/{report}', [ReportController::class, 'show']);

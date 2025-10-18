@@ -10,8 +10,15 @@ use App\Models\Tree;
 use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+
+use Illuminate\Support\Facades\Http;
+use App\Models\Report;
+use App\Models\User;
+use App\Models\ReportActivity;
+
 
 class WebController extends Controller
 {
@@ -232,6 +239,26 @@ class WebController extends Controller
         }
 
         return view('pages.reports', compact('reports', 'statistics'));
+    }
+
+    // Repports Feed page
+    public function communityFeed()
+    {
+        // Get all reports with their activities
+        $reports = Report::with(['user', 'activities.user'])
+            ->withCount(['comments', 'votes', 'reactions'])
+            ->latest()
+            ->paginate(10);
+        
+        // Get overall statistics
+        $statistics = [
+            'total_comments' => ReportActivity::where('activity_type', 'comment')->count(),
+            'total_votes' => ReportActivity::where('activity_type', 'vote')->count(),
+            'total_reactions' => ReportActivity::where('activity_type', 'reaction')->count(),
+            'active_discussions' => Report::has('comments')->count()
+        ];
+        
+        return view('pages.community-feed', compact('reports', 'statistics'));
     }
 
     // Trees page

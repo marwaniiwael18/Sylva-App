@@ -1,0 +1,488 @@
+{
+  "info": {
+    "name": "Sylva - Tree Maintenance API",
+    "description": "Complete API collection for testing Tree Maintenance endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"demo@sylva.com\",\n  \"password\": \"demo123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tree Maintenance",
+      "item": [
+        {
+          "name": "List All Maintenances",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tree-maintenance?per_page=15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tree-maintenance"],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "15"
+                },
+                {
+                  "key": "tree_id",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "user_id",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "activity_type",
+                  "value": "watering",
+                  "disabled": true
+                },
+                {
+                  "key": "days",
+                  "value": "30",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Maintenance (Watering)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tree_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "activity_type",
+                  "value": "watering",
+                  "type": "text"
+                },
+                {
+                  "key": "performed_at",
+                  "value": "2025-10-17",
+                  "type": "text"
+                },
+                {
+                  "key": "condition_after",
+                  "value": "good",
+                  "type": "text"
+                },
+                {
+                  "key": "notes",
+                  "value": "Regular watering session. Tree looks healthy.",
+                  "type": "text"
+                },
+                {
+                  "key": "images[]",
+                  "type": "file",
+                  "src": [],
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tree-maintenance",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tree-maintenance"]
+            }
+          }
+        },
+        {
+          "name": "Create Maintenance (Pruning)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tree_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "activity_type",
+                  "value": "pruning",
+                  "type": "text"
+                },
+                {
+                  "key": "performed_at",
+                  "value": "2025-10-17",
+                  "type": "text"
+                },
+                {
+                  "key": "condition_after",
+                  "value": "excellent",
+                  "type": "text"
+                },
+                {
+                  "key": "notes",
+                  "value": "Removed dead branches and shaped the tree.",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tree-maintenance",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tree-maintenance"]
+            }
+          }
+        },
+        {
+          "name": "Get Single Maintenance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tree-maintenance/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tree-maintenance", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Maintenance",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"condition_after\": \"excellent\",\n  \"notes\": \"Updated notes: Tree is doing very well!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tree-maintenance/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tree-maintenance", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Maintenance",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tree-maintenance/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tree-maintenance", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Statistics & History",
+      "item": [
+        {
+          "name": "Get Maintenance Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tree-maintenance-stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tree-maintenance-stats"],
+              "query": [
+                {
+                  "key": "tree_id",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "user_id",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tree Maintenance History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/trees/1/maintenance-history",
+              "host": ["{{base_url}}"],
+              "path": ["api", "trees", "1", "maintenance-history"]
+            }
+          }
+        },
+        {
+          "name": "Get User Maintenance Activities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/maintenance-activities",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "maintenance-activities"],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Filtered Queries",
+      "item": [
+        {
+          "name": "Filter by Tree",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tree-maintenance?tree_id=1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tree-maintenance"],
+              "query": [
+                {
+                  "key": "tree_id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter by Activity Type",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tree-maintenance?activity_type=watering",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tree-maintenance"],
+              "query": [
+                {
+                  "key": "activity_type",
+                  "value": "watering"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Recent Maintenances (Last 7 Days)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tree-maintenance?days=7",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tree-maintenance"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "7"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter by Condition",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tree-maintenance?condition=poor",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tree-maintenance"],
+              "query": [
+                {
+                  "key": "condition",
+                  "value": "poor"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

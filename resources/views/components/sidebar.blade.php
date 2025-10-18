@@ -94,6 +94,20 @@
                 </a>
             </li>
 
+            <!-- Repports Feed -->
+            <li>
+                <a href="{{ route('community.feed') }}" 
+                   class="nav-item {{ request()->routeIs('community.feed') ? 'active' : '' }}"
+                   :class="sidebarCollapsed && 'justify-center'"
+                >
+                    <i data-lucide="messages-square" class="w-5 h-5 flex-shrink-0"></i>
+                    <span x-show="!sidebarCollapsed" class="nav-text">Repports Feed</span>
+                    <span x-show="!sidebarCollapsed" class="nav-count">
+                        <span class="bg-purple-400 text-purple-900 text-xs font-bold px-2 py-0.5 rounded-full">{{ \App\Models\ReportActivity::where('activity_type', 'comment')->count() }}</span>
+                    </span>
+                </a>
+            </li>
+
             <!-- Events -->
             <li>
                 <a href="{{ route('events.index') }}" 

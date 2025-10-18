@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Tree extends Model
 {
@@ -42,6 +43,23 @@ class Tree extends Model
     public function plantedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'planted_by_user');
+    }
+
+    public function careRecords(): HasMany
+    {
+        return $this->hasMany(TreeCare::class);
+    }
+
+    public function latestCare()
+    {
+        return $this->hasOne(TreeCare::class)->latestOfMany('performed_at');
+    }
+
+    public function recentCare($days = 30)
+    {
+        return $this->careRecords()
+            ->where('performed_at', '>=', now()->subDays($days))
+            ->orderBy('performed_at', 'desc');
     }
 
     // Scopes
@@ -140,5 +158,47 @@ class Tree extends Model
             'latitude' => $this->latitude,
             'longitude' => $this->longitude
         ];
+    }
+
+    // Care-related helper methods
+    public function getLastCareDateAttribute()
+    {
+        return $this->latestCare?->performed_at;
+    }
+
+    public function getCareCountAttribute(): int
+    {
+        return $this->careRecords()->count();
+    }
+
+    public function getLastConditionAttribute(): ?string
+    {
+        return $this->latestCare?->condition_after;
+    }
+
+    public function needsCare($daysThreshold = 7): bool
+    {
+        if (!$this->last_care_date) {
+            return true;
+        }
+        
+        return $this->last_care_date->diffInDays(now()) > $daysThreshold;
+    }
+
+    public function getHealthScoreAttribute(): ?int
+    {
+        $lastCare = $this->latestCare;
+        
+        if (!$lastCare || !$lastCare->condition_after) {
+            return null;
+        }
+
+        return match($lastCare->condition_after) {
+            'excellent' => 100,
+            'good' => 75,
+            'fair' => 50,
+            'poor' => 25,
+            default => null
+        };
     }
 }

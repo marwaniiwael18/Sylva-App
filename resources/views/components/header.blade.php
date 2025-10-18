@@ -20,7 +20,7 @@
                 </h1>
                 @hasSection('page-subtitle')
                     <p class="text-sm text-emerald-600 mt-1 flex items-center gap-1">
-                        <i data-lucide="seedling" class="w-3 h-3"></i>
+                        <i data-lucide="sprout" class="w-3 h-3"></i>
                         @yield('page-subtitle')
                     </p>
                 @endif
