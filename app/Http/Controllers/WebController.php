@@ -15,8 +15,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 use Illuminate\Support\Facades\Http;
-use App\Models\Report;
-use App\Models\User;
 use App\Models\ReportActivity;
 
 
