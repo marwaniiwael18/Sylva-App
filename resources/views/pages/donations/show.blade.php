@@ -162,42 +162,45 @@
             </div>
 
             <!-- Refund Information -->
-            @if($donation->refund_status !== 'none')
+            @if($donation->refunds->count() > 0)
                 <div class="bg-white rounded-2xl p-6 border border-orange-200 shadow-sm">
                     <h2 class="text-lg font-semibold text-gray-900 mb-4">Refund Information</h2>
                     <div class="space-y-3">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Refund Status:</span>
-                            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
-                                @if($donation->refund_status === 'succeeded') bg-green-100 text-green-800
-                                @elseif($donation->refund_status === 'pending') bg-yellow-100 text-yellow-800
-                                @else bg-red-100 text-red-800 @endif">
-                                {{ $donation->refund_status_name }}
-                            </span>
-                        </div>
-                        
-                        @if($donation->refunded_amount)
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Refunded Amount:</span>
-                                <span class="font-semibold text-gray-900">{{ number_format($donation->refunded_amount, 2) }} {{ strtoupper($donation->currency) }}</span>
-                            </div>
-                        @endif
-                        
-                        @if($donation->refund_reason)
-                            <div class="border-t pt-3">
-                                <h4 class="font-medium text-gray-900 mb-2">Refund Reason</h4>
-                                <div class="bg-orange-50 rounded-lg p-4">
-                                    <p class="text-orange-800">{{ $donation->refund_reason }}</p>
+                        @foreach($donation->refunds as $refund)
+                            <div class="border-b border-gray-100 pb-3 mb-3 last:border-b-0 last:pb-0 last:mb-0">
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-gray-600">Refund Status:</span>
+                                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium
+                                        @if($refund->status === 'completed') bg-green-100 text-green-800
+                                        @elseif($refund->status === 'pending') bg-yellow-100 text-yellow-800
+                                        @elseif($refund->status === 'processing') bg-blue-100 text-blue-800
+                                        @else bg-red-100 text-red-800 @endif">
+                                        {{ $refund->status_name }}
+                                    </span>
                                 </div>
+
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-gray-600">Refund Amount:</span>
+                                    <span class="font-semibold text-gray-900">{{ number_format($refund->amount, 2) }} {{ strtoupper($refund->currency) }}</span>
+                                </div>
+
+                                @if($refund->reason)
+                                    <div class="mb-2">
+                                        <h4 class="font-medium text-gray-900 mb-1">Refund Reason</h4>
+                                        <div class="bg-orange-50 rounded-lg p-3">
+                                            <p class="text-orange-800 text-sm">{{ $refund->reason }}</p>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if($refund->processed_at)
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Processed At:</span>
+                                        <span class="font-semibold text-gray-900">{{ $refund->processed_at->format('M d, Y H:i') }}</span>
+                                    </div>
+                                @endif
                             </div>
-                        @endif
-                        
-                        @if($donation->refunded_at)
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Refunded At:</span>
-                                <span class="font-semibold text-gray-900">{{ $donation->refunded_at->format('M d, Y H:i') }}</span>
-                            </div>
-                        @endif
+                        @endforeach
                     </div>
                 </div>
             @endif

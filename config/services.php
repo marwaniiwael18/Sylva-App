@@ -37,4 +37,8 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY', 'AIzaSyDKsQlechmg9jfkJ0P5NoB9LiHe47neUtA'),
+    ],
+
 ];
