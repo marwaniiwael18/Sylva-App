@@ -237,7 +237,8 @@ Format as JSON: {risk_level: string, reasoning: string, recommendations: array}"
         $text = str_replace('```json', '', $text);
         $text = str_replace('```', '', $text);
 
-        return json_decode($text, true);
+        $decoded = json_decode($text, true);
+        return $decoded ?: [];
     }
 
     private function parseThankYouResponse(array $response): string
@@ -251,7 +252,8 @@ Format as JSON: {risk_level: string, reasoning: string, recommendations: array}"
         $text = str_replace('```json', '', $text);
         $text = str_replace('```', '', $text);
 
-        return json_decode($text, true);
+        $decoded = json_decode($text, true);
+        return $decoded ?: [];
     }
 
     private function parsePatternResponse(array $response): array
@@ -260,7 +262,8 @@ Format as JSON: {risk_level: string, reasoning: string, recommendations: array}"
         $text = str_replace('```json', '', $text);
         $text = str_replace('```', '', $text);
 
-        return json_decode($text, true);
+        $decoded = json_decode($text, true);
+        return $decoded ?: [];
     }
 
     private function parseRefundResponse(array $response): array
@@ -269,7 +272,8 @@ Format as JSON: {risk_level: string, reasoning: string, recommendations: array}"
         $text = str_replace('```json', '', $text);
         $text = str_replace('```', '', $text);
 
-        return json_decode($text, true);
+        $decoded = json_decode($text, true);
+        return $decoded ?: [];
     }
 
     private function getFallbackInsights(): array
