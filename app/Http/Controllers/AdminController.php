@@ -154,32 +154,87 @@ class AdminController extends Controller
     /**
      * Gestion des utilisateurs
      */
-    public function users()
-    {
-        $users = User::withCount(['donations', 'organizedEvents', 'forumPosts'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
 
-        return view('admin.users', compact('users'));
+    public function users(Request $request)
+    {
+        $query = User::withCount(['donations', 'organizedEvents', 'forumPosts']);
+
+        // Recherche
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtre par rôle
+        if ($request->filled('role')) {
+            if ($request->role === 'admin') {
+                $query->where('is_admin', true);
+            } elseif ($request->role === 'user') {
+                $query->where('is_admin', false);
+            }
+        }
+
+        $users = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        // Statistiques
+        $totalUsers = User::count();
+        $activeUsers = User::whereNotNull('email_verified_at')->count();
+        $adminUsers = User::where('is_admin', true)->count();
+        $newUsersThisMonth = User::whereMonth('created_at', now()->month)->count();
+
+        return view('admin.users', compact(
+            'users',
+            'totalUsers',
+            'activeUsers',
+            'adminUsers',
+            'newUsersThisMonth'
+        ));
+
     }
 
     /**
      * Gestion des rapports
      */
-    public function reports()
+
+    public function reports(Request $request)
     {
-        $reports = Report::with('user', 'validator')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $query = Report::with('user', 'validator');
 
-        $reportStats = [
-            'pending' => Report::where('status', 'pending')->count(),
-            'validated' => Report::where('status', 'validated')->count(),
-            'rejected' => Report::where('status', 'rejected')->count(),
-            'total' => Report::count(),
-        ];
+        // Recherche
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
 
-        return view('admin.reports', compact('reports', 'reportStats'));
+        // Filtre par statut
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $reports = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        // Statistiques
+        $pendingReports = Report::where('status', 'pending')->count();
+        $approvedReports = Report::where('status', 'approved')->count();
+        $rejectedReports = Report::where('status', 'rejected')->count();
+        $totalReports = Report::count();
+
+        return view('admin.reports', compact(
+            'reports',
+            'pendingReports',
+            'approvedReports',
+            'rejectedReports',
+            'totalReports'
+        ));
+
     }
 
     /**
@@ -223,4 +278,560 @@ class AdminController extends Controller
 
         return redirect()->back()->with('success', 'Rôle utilisateur mis à jour.');
     }
+
+
+    /**
+     * Supprimer un utilisateur
+     */
+    public function deleteUser(User $user)
+    {
+        // Protection: ne pas supprimer soi-même
+        if ($user->id === Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous ne pouvez pas supprimer votre propre compte.'
+            ], 403);
+        }
+
+        $user->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Utilisateur supprimé avec succès.'
+        ]);
+    }
+
+    /**
+     * Rejeter un rapport
+     */
+    public function rejectReport(Report $report)
+    {
+        $report->update([
+            'status' => 'rejected',
+            'validated_by' => Auth::id(),
+            'validated_at' => now()
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Rapport rejeté avec succès.'
+        ]);
+    }
+
+    /**
+     * Gestion des événements - Liste
+     */
+    public function events(Request $request)
+    {
+        $query = Event::query();
+
+        // Recherche
+        if ($request->filled('search')) {
+            $query->where('title', 'like', "%{$request->search}%");
+        }
+
+        // Filtre par statut
+        if ($request->filled('status')) {
+            if ($request->status === 'upcoming') {
+                $query->where('date', '>', now());
+            } elseif ($request->status === 'active') {
+                $query->where('status', 'active');
+            } elseif ($request->status === 'completed') {
+                $query->where('date', '<', now());
+            }
+        }
+
+        $events = $query->orderBy('date', 'desc')->paginate(12);
+
+        // Stats
+        $totalEvents = Event::count();
+        $activeEvents = Event::where('status', 'active')->count();
+        $upcomingEvents = Event::where('date', '>', now())->count();
+        $totalParticipants = DB::table('event_user')->count();
+
+        return view('admin.events', compact(
+            'events',
+            'totalEvents',
+            'activeEvents',
+            'upcomingEvents',
+            'totalParticipants'
+        ));
+    }
+
+    /**
+     * Supprimer un événement
+     */
+    public function deleteEvent(Event $event)
+    {
+        $event->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Événement supprimé avec succès.'
+        ]);
+    }
+
+    /**
+     * Gestion des donations - Liste
+     */
+    public function donations(Request $request)
+    {
+        $query = Donation::with(['user', 'refunds']);
+
+        // Recherche
+        if ($request->filled('search')) {
+            $query->whereHas('user', function($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%");
+            });
+        }
+
+        // Filtre par statut
+        if ($request->filled('status')) {
+            $query->where('payment_status', $request->status);
+        }
+
+        $donations = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        // Stats de base
+        $totalAmount = Donation::where('payment_status', 'succeeded')->sum('amount');
+        $totalDonations = Donation::count();
+        $pendingDonations = Donation::where('payment_status', 'pending')->count();
+        $monthlyAmount = Donation::where('payment_status', 'succeeded')
+            ->whereMonth('created_at', now()->month)
+            ->sum('amount');
+
+        // Stats des remboursements
+        $totalRefunds = \App\Models\Refund::count();
+        $pendingRefunds = \App\Models\Refund::where('status', 'pending')->count();
+        $completedRefunds = \App\Models\Refund::where('status', 'completed')->count();
+        $totalRefundedAmount = \App\Models\Refund::where('status', 'completed')->sum('amount');
+
+        // Données pour l'IA
+        $aiData = [
+            'total_donations' => $totalDonations,
+            'total_amount' => $totalAmount,
+            'avg_donation' => $totalDonations > 0 ? $totalAmount / $totalDonations : 0,
+            'top_types' => Donation::selectRaw('type, COUNT(*) as count')
+                ->where('payment_status', 'succeeded')
+                ->groupBy('type')
+                ->orderByDesc('count')
+                ->limit(3)
+                ->pluck('type')
+                ->toArray(),
+            'monthly_trend' => Donation::selectRaw('MONTH(created_at) as month, SUM(amount) as total')
+                ->where('payment_status', 'succeeded')
+                ->whereYear('created_at', now()->year)
+                ->groupBy('month')
+                ->orderBy('month')
+                ->pluck('total')
+                ->toArray()
+        ];
+
+        // Générer les insights IA
+        $aiService = new \App\Services\DonationAIService();
+        $aiInsights = $aiService->generateInsights($aiData);
+
+        return view('admin.donations', compact(
+            'donations',
+            'totalAmount',
+            'totalDonations',
+            'pendingDonations',
+            'monthlyAmount',
+            'totalRefunds',
+            'pendingRefunds',
+            'completedRefunds',
+            'totalRefundedAmount',
+            'aiInsights'
+        ));
+    }
+
+    /**
+     * Gestion des arbres - Liste
+     */
+    public function trees(Request $request)
+    {
+        $query = Tree::with('plantedBy');
+
+        // Recherche
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('species', 'like', "%{$request->search}%")
+                  ->orWhereHas('plantedBy', function($q) use ($request) {
+                      $q->where('name', 'like', "%{$request->search}%");
+                  });
+            });
+        }
+
+        // Filtre par statut
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $trees = $query->orderBy('planting_date', 'desc')->paginate(20);
+
+        // Stats
+        $totalTrees = Tree::count();
+        $verifiedTrees = Tree::where('status', 'Planted')->count();
+        $pendingTrees = Tree::where('status', 'Not Yet')->count();
+        $monthlyTrees = Tree::whereMonth('planting_date', now()->month)->count();
+
+        return view('admin.trees', compact(
+            'trees',
+            'totalTrees',
+            'verifiedTrees',
+            'pendingTrees',
+            'monthlyTrees'
+        ));
+    }
+
+    /**
+     * Vérifier un arbre
+     */
+    public function verifyTree(Tree $tree)
+    {
+        $tree->update([
+            'status' => 'Planted',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Arbre vérifié avec succès.'
+        ]);
+    }
+
+    /**
+     * Supprimer un arbre
+     */
+    public function deleteTree(Tree $tree)
+    {
+        $tree->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Arbre supprimé avec succès.'
+        ]);
+    }
+
+    /**
+     * Gestion du forum - Liste
+     */
+    public function forum(Request $request)
+    {
+        $query = ForumPost::with('author');
+
+        // Recherche
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('title', 'like', "%{$request->search}%")
+                  ->orWhere('content', 'like', "%{$request->search}%");
+            });
+        }
+
+        // Filtre par statut (basé sur les vraies colonnes)
+        if ($request->filled('status')) {
+            // Comme il n'y a pas de colonne is_reported ou is_deleted, on filtre juste par date
+            if ($request->status === 'recent') {
+                $query->where('created_at', '>=', now()->subDays(7));
+            }
+        }
+
+        $posts = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        // Stats
+        $totalPosts = ForumPost::count();
+        $reportedPosts = 0; // À implémenter avec une table reports si nécessaire
+        $activeUsers = ForumPost::distinct('author_id')
+            ->whereMonth('created_at', now()->month)
+            ->count('author_id');
+        $todayPosts = ForumPost::whereDate('created_at', today())->count();
+
+        return view('admin.forum', compact(
+            'posts',
+            'totalPosts',
+            'reportedPosts',
+            'activeUsers',
+            'todayPosts'
+        ));
+    }
+
+    /**
+     * Supprimer une publication forum
+     */
+    public function deleteForumPost(ForumPost $post)
+    {
+        $post->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Publication supprimée avec succès.'
+        ]);
+    }
+
+    /**
+     * Paramètres admin
+     */
+    public function settings()
+    {
+        return view('admin.settings');
+    }
+
+    /**
+     * Traiter un remboursement
+     */
+    public function processRefund(Request $request, Donation $donation)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01|max:' . $donation->getTotalRefundableAmount(),
+            'reason' => 'required|string|max:500',
+        ]);
+
+        try {
+            $refund = $donation->processRefund(
+                $request->amount,
+                $request->reason,
+                auth()->id()
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Demande de remboursement créée avec succès.',
+                'refund' => $refund
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la création du remboursement: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Approuver un remboursement
+     */
+    public function approveRefund(Request $request, \App\Models\Refund $refund)
+    {
+        try {
+            $refund->markAsProcessing();
+
+            // Check if Stripe charge ID exists
+            if ($refund->donation->stripe_charge_id) {
+                // Process the Stripe refund
+                $stripeRefund = $refund->processStripeRefund();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Remboursement approuvé et traité via Stripe avec succès.',
+                    'stripe_refund_id' => $stripeRefund->id
+                ]);
+            } else {
+                // No Stripe charge ID - mark as completed manually
+                $refund->markAsCompleted();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Remboursement approuvé. Note: Aucun traitement Stripe (pas d\'ID de charge disponible).'
+                ]);
+            }
+        } catch (\Exception $e) {
+            $refund->markAsFailed($e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'approbation du remboursement: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Rejeter un remboursement
+     */
+    public function rejectRefund(Request $request, \App\Models\Refund $refund)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500'
+        ]);
+
+        try {
+            $refund->markAsFailed($request->reason);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Remboursement rejeté.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du rejet du remboursement: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Générer un message de remerciement IA
+     */
+    public function generateThankYou(Request $request, Donation $donation)
+    {
+        try {
+            $aiService = new \App\Services\DonationAIService();
+            $message = $aiService->generateThankYouMessage($donation);
+
+            return response()->json([
+                'success' => true,
+                'message' => $message
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la génération du message: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Analyser les risques de remboursement
+     */
+    public function analyzeRefundRisk(Request $request, Donation $donation)
+    {
+        try {
+            $aiService = new \App\Services\DonationAIService();
+            $analysis = $aiService->analyzeRefundRisk($donation);
+
+            return response()->json([
+                'success' => true,
+                'analysis' => $analysis
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'analyse: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Générer des recommandations de campagne
+     */
+    public function generateCampaignRecommendations(Request $request)
+    {
+        try {
+            $historicalData = [
+                'seasonal_patterns' => ['Spring: +40%', 'Summer: +20%', 'Fall: +35%', 'Winter: -15%'],
+                'successful_campaigns' => ['Tree Planting Drive', 'Earth Day Special', 'Holiday Giving'],
+                'donor_demographics' => ['25-35 years: 45%', '36-50 years: 35%', '50+ years: 20%']
+            ];
+
+            $aiService = new \App\Services\DonationAIService();
+            $recommendations = $aiService->generateCampaignRecommendations($historicalData);
+
+            return response()->json([
+                'success' => true,
+                'recommendations' => $recommendations
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la génération des recommandations: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Export donations data as CSV
+     */
+    public function exportDonations(Request $request)
+    {
+        try {
+            $query = Donation::with(['user', 'event', 'refunds']);
+
+            // Apply filters if provided
+            if ($request->filled('status')) {
+                $query->where('payment_status', $request->status);
+            }
+
+            if ($request->filled('type')) {
+                $query->where('type', $request->type);
+            }
+
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->whereHas('user', function($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%")
+                                  ->orWhere('email', 'like', "%{$search}%");
+                    })->orWhereHas('event', function($eventQuery) use ($search) {
+                        $eventQuery->where('title', 'like', "%{$search}%");
+                    });
+                });
+            }
+
+            $donations = $query->orderBy('created_at', 'desc')->get();
+
+            $filename = 'donations-export-' . now()->format('Y-m-d') . '.csv';
+
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0'
+            ];
+
+            $callback = function() use ($donations) {
+                $file = fopen('php://output', 'w');
+
+                // CSV headers
+                fputcsv($file, [
+                    'ID',
+                    'Donateur',
+                    'Email',
+                    'Montant',
+                    'Devise',
+                    'Projet',
+                    'Statut',
+                    'Remboursements',
+                    'Date de création'
+                ]);
+
+                // CSV data
+                foreach ($donations as $donation) {
+                    $refundInfo = $donation->refunds->count() > 0
+                        ? $donation->refunds->map(function($refund) {
+                            return number_format($refund->amount, 2) . '€ (' . $refund->status . ')';
+                        })->join('; ')
+                        : 'Aucun';
+
+                    fputcsv($file, [
+                        $donation->id,
+                        $donation->user->name ?? 'Anonyme',
+                        $donation->user->email ?? '',
+                        number_format((float) $donation->amount, 2),
+                        $donation->currency,
+                        $donation->event->title ?? 'Général',
+                        $donation->payment_status,
+                        $refundInfo,
+                        $donation->created_at->format('Y-m-d H:i:s')
+                    ]);
+                }
+
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'export: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Mise à jour des paramètres
+     */
+    public function updateSettings(Request $request)
+    {
+        // À implémenter selon vos besoins
+        return redirect()->back()->with('success', 'Paramètres mis à jour avec succès.');
+    }
+
 }

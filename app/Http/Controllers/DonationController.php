@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Donation;
 use App\Models\Event; // Now enabled since we have events table
+use App\Models\Refund;
 use App\Http\Requests\StoreDonationRequest;
 use App\Http\Requests\RefundDonationRequest;
 use App\Http\Requests\ProcessPaymentRequest;
@@ -20,7 +21,7 @@ class DonationController extends Controller
     public function index()
     {
         $donations = Auth::user()->donations()
-            ->with('event') // Load event relationship
+            ->with(['event', 'refunds']) // Load event and refunds relationships
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -111,7 +112,7 @@ class DonationController extends Controller
         }
 
         // Load relationships
-        $donation->load('event');
+        $donation->load(['event', 'refunds']);
 
         return view('pages.donations.show', compact('donation'));
     }
@@ -155,16 +156,53 @@ class DonationController extends Controller
     /**
      * Process refund request
      */
-    public function refund(RefundDonationRequest $request, Donation $donation)
+    public function refund(Request $request, Donation $donation)
     {
-        $validated = $request->validated();
+        // Manual validation and authorization
+        $request->validate([
+            'refund_reason' => 'required|string|min:10|max:500',
+            'refund_amount' => 'nullable|numeric|min:0.01'
+        ]);
+
+        // Check authorization
+        if ($donation->user_id !== auth()->id()) {
+            abort(403, 'You can only refund your own donations.');
+        }
+
+        if (!$donation->canRefund()) {
+            return back()->with('error', 'This donation is not eligible for refund.');
+        }
+
+        Log::info('Refund request received', [
+            'donation_id' => $donation->id,
+            'user_id' => auth()->id(),
+            'request_data' => $request->all(),
+            'donation_payment_status' => $donation->payment_status,
+            'donation_can_refund' => $donation->canRefund(),
+            'donation_created_days' => $donation->created_at->diffInDays(now()),
+            'existing_refunds_count' => $donation->refunds()->whereIn('status', ['pending', 'processing'])->count()
+        ]);
 
         try {
-            // Process refund through Stripe
-            $refund = $donation->processRefund($validated['refund_amount'], $validated['refund_reason']);
+            // Create refund record in the refunds table
+            $refund = Refund::create([
+                'donation_id' => $donation->id,
+                'processed_by' => null, // User-initiated, not processed by admin yet
+                'amount' => $request->refund_amount ?? $donation->amount, // Default to full amount if not specified
+                'currency' => $donation->currency,
+                'status' => 'pending',
+                'reason' => $request->refund_reason,
+            ]);
+
+            Log::info('Refund request processed successfully', ['donation_id' => $donation->id, 'refund_id' => $refund->id]);
 
             return back()->with('success', 'Refund request submitted successfully. We will process it within 3-5 business days.');
         } catch (\Exception $e) {
+            Log::error('Refund request failed', [
+                'donation_id' => $donation->id,
+                'error' => $e->getMessage()
+            ]);
+
             return back()->with('error', 'Failed to process refund: ' . $e->getMessage());
         }
     }

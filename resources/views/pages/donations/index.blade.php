@@ -6,6 +6,25 @@
 
 @section('page-content')
 <div class="p-6 space-y-6">
+    <!-- Flash Messages -->
+    @if(session('success'))
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center">
+                <i data-lucide="check-circle" class="w-5 h-5 text-green-600 mr-3"></i>
+                <p class="text-green-800 font-medium">{{ session('success') }}</p>
+            </div>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center">
+                <i data-lucide="alert-circle" class="w-5 h-5 text-red-600 mr-3"></i>
+                <p class="text-red-800 font-medium">{{ session('error') }}</p>
+            </div>
+        </div>
+    @endif
+
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div class="bg-white rounded-2xl p-6 border border-emerald-200 shadow-sm">
@@ -124,13 +143,17 @@
                                         @else bg-red-100 text-red-800 @endif">
                                         {{ $donation->payment_status_name }}
                                     </span>
-                                    @if($donation->refund_status !== 'none')
+                                    @if($donation->refunds->count() > 0)
                                         <div class="mt-1">
                                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs
-                                                @if($donation->refund_status === 'succeeded') bg-gray-100 text-gray-800
+                                                @if($donation->refunds->where('status', 'completed')->count() > 0) bg-gray-100 text-gray-800
                                                 @else bg-orange-100 text-orange-800 @endif">
                                                 <i data-lucide="undo-2" class="w-3 h-3"></i>
-                                                {{ $donation->refund_status_name }}
+                                                @if($donation->refunds->where('status', 'completed')->count() > 0)
+                                                    Refunded
+                                                @else
+                                                    Refund Pending
+                                                @endif
                                             </span>
                                         </div>
                                     @endif
@@ -195,7 +218,7 @@
 <div id="refundModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Request Refund</h3>
-        <form id="refundForm" method="POST">
+        <form id="refundForm" method="POST" action="">
             @csrf
             <div class="mb-4">
                 <label for="refund_reason" class="block text-sm font-medium text-gray-700 mb-2">Reason for refund</label>

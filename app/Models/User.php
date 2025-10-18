@@ -37,6 +37,16 @@ class User extends Authenticatable
     ];
 
     /**
+     * The attributes that should have default values.
+     *
+     * @var array
+     */
+    protected $attributes = [
+        'is_admin' => false,
+        'is_moderator' => false,
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -54,17 +64,17 @@ class User extends Authenticatable
     // Role checking methods
     public function isAdmin(): bool
     {
-        return $this->is_admin;
+        return (bool) $this->is_admin;
     }
 
     public function isModerator(): bool
     {
-        return $this->is_moderator;
+        return (bool) $this->is_moderator;
     }
 
     public function canValidateReports(): bool
     {
-        return $this->is_admin || $this->is_moderator;
+        return $this->isAdmin() || $this->isModerator();
     }
 
 

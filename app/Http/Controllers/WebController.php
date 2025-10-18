@@ -10,9 +10,15 @@ use App\Models\Tree;
 use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+
+use Illuminate\Support\Facades\Http;
+
 use App\Models\ReportActivity;
+
 
 class WebController extends Controller
 {
