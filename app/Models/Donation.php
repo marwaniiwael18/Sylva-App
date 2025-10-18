@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Donation extends Model
 {
@@ -31,12 +32,12 @@ class Donation extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'refunded_amount' => 'decimal:2',
         'anonymous' => 'boolean',
         'paid_at' => 'datetime',
-        'refunded_at' => 'datetime',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
+        'refunded_amount' => 'decimal:2',
+        'refunded_at' => 'datetime'
     ];
 
     // Enums
@@ -56,16 +57,15 @@ class Donation extends Model
 
     const REFUND_STATUSES = [
         'none' => 'No Refund',
-        'requested' => 'Refund Requested',
-        'processing' => 'Refund Processing',
+        'pending' => 'Refund Requested',
+        'processing' => 'Processing Refund',
         'succeeded' => 'Refunded',
         'failed' => 'Refund Failed'
     ];
 
     protected $attributes = [
         'currency' => 'EUR',
-        'payment_status' => 'pending',
-        'refund_status' => 'none'
+        'payment_status' => 'pending'
     ];
 
     // Relationships
@@ -77,6 +77,11 @@ class Donation extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class, 'event_id');
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(Refund::class, 'donation_id');
     }
 
     // Accessors
@@ -93,11 +98,6 @@ class Donation extends Model
     public function getPaymentStatusNameAttribute(): string
     {
         return self::PAYMENT_STATUSES[$this->payment_status] ?? $this->payment_status;
-    }
-
-    public function getRefundStatusNameAttribute(): string
-    {
-        return self::REFUND_STATUSES[$this->refund_status] ?? $this->refund_status;
     }
 
     // Scopes
@@ -124,14 +124,20 @@ class Donation extends Model
     // Methods
     public function canRefund(): bool
     {
-        return $this->payment_status === 'succeeded' && 
-               $this->refund_status === 'none' &&
+        return $this->payment_status === 'succeeded' &&
+               $this->refunds()->whereIn('status', ['pending', 'processing'])->count() === 0 &&
                $this->created_at->diffInDays(now()) <= 30; // 30 days refund policy
     }
 
     public function getTotalRefundableAmount(): float
     {
-        return $this->amount - ($this->refund_amount ?? 0);
+        $refundedAmount = $this->refunds()->where('status', 'completed')->sum('amount');
+        return $this->amount - $refundedAmount;
+    }
+
+    public function getTotalRefundedAmount(): float
+    {
+        return $this->refunds()->where('status', 'completed')->sum('amount');
     }
 
     // Stripe payment methods
@@ -157,30 +163,24 @@ class Donation extends Model
         return $paymentIntent;
     }
 
-    public function processRefund($amount, $reason = null)
+    public function processRefund($amount, $reason = null, $processedBy = null)
     {
-        if (!$this->stripe_charge_id) {
-            throw new \Exception('No charge ID found for this donation');
+        if (!$this->canRefund()) {
+            throw new \Exception('This donation cannot be refunded');
         }
 
-        \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
+        if ($amount > $this->getTotalRefundableAmount()) {
+            throw new \Exception('Refund amount exceeds available amount');
+        }
 
-        $refund = \Stripe\Refund::create([
-            'charge' => $this->stripe_charge_id,
-            'amount' => $amount * 100, // Stripe expects amount in cents
-            'reason' => 'requested_by_customer',
-            'metadata' => [
-                'donation_id' => $this->id,
-                'refund_reason' => $reason,
-            ],
-        ]);
-
-        // Update donation refund status
-        $this->update([
-            'refund_status' => 'pending',
-            'refunded_amount' => $amount,
-            'refund_reason' => $reason,
-            'refunded_at' => now(),
+        // Create refund record
+        $refund = Refund::create([
+            'donation_id' => $this->id,
+            'processed_by' => $processedBy,
+            'amount' => $amount,
+            'currency' => $this->currency,
+            'status' => 'pending',
+            'reason' => $reason,
         ]);
 
         return $refund;

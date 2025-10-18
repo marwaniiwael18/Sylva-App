@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 
 class RefundDonationRequest extends FormRequest
 {
@@ -11,20 +12,34 @@ class RefundDonationRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Check if user is authenticated and owns the donation
         if (!auth()->check()) {
+            Log::error('Refund authorization failed: User not authenticated');
             return false;
         }
 
         $donation = $this->route('donation');
-        
+
+        if (!$donation) {
+            Log::error('Refund authorization failed: Donation not found');
+            return false;
+        }
+
         // User can only refund their own donations
-        if ($donation && $donation->user_id !== auth()->id()) {
+        if ($donation->user_id !== auth()->id()) {
+            Log::error('Refund authorization failed: User does not own donation', [
+                'donation_user_id' => $donation->user_id,
+                'auth_user_id' => auth()->id()
+            ]);
             return false;
         }
 
         // Check if donation is eligible for refund
-        if ($donation && !$donation->canRefund()) {
+        if (!$donation->canRefund()) {
+            Log::error('Refund authorization failed: Donation not eligible for refund', [
+                'payment_status' => $donation->payment_status,
+                'created_days_ago' => $donation->created_at->diffInDays(now()),
+                'existing_refunds' => $donation->refunds()->whereIn('status', ['pending', 'processing'])->count()
+            ]);
             return false;
         }
 
