@@ -4,10 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WebController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\ForumController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\TreeController;
 use App\Http\Controllers\DonationController;
+use App\Http\Controllers\BlogAIController;
 
 
 
@@ -33,19 +34,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/community-feed', [WebController::class, 'communityFeed'])->name('community.feed');
 
     
-    // Forum Routes
-    Route::get('/forum', [ForumController::class, 'index'])->name('forum.index');
-    Route::get('/forum/create', [ForumController::class, 'create'])->name('forum.create');
-    Route::post('/forum', [ForumController::class, 'store'])->name('forum.store');
-    Route::get('/forum/{forumPost}', [ForumController::class, 'show'])->name('forum.show');
-    Route::get('/forum/{forumPost}/edit', [ForumController::class, 'edit'])->name('forum.edit');
-    Route::put('/forum/{forumPost}', [ForumController::class, 'update'])->name('forum.update');
-    Route::delete('/forum/{forumPost}', [ForumController::class, 'destroy'])->name('forum.destroy');
-    Route::post('/forum/{forumPost}/comments', [ForumController::class, 'storeComment'])->name('forum.comments.store');
-    Route::put('/comments/{comment}', [ForumController::class, 'updateComment'])->name('forum.comments.update');
-    Route::delete('/comments/{comment}', [ForumController::class, 'destroyComment'])->name('forum.comments.destroy');
-    Route::get('/forum/filter/event', [ForumController::class, 'filterByEvent'])->name('forum.filter.event');
-
+    // Blog Routes
+    Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+    Route::get('/blog/create', [BlogController::class, 'create'])->name('blog.create');
+    Route::post('/blog', [BlogController::class, 'store'])->name('blog.store');
+    Route::get('/blog/{blogPost}', [BlogController::class, 'show'])->name('blog.show');
+    Route::get('/blog/{blogPost}/edit', [BlogController::class, 'edit'])->name('blog.edit');
+    Route::put('/blog/{blogPost}', [BlogController::class, 'update'])->name('blog.update');
+    Route::delete('/blog/{blogPost}', [BlogController::class, 'destroy'])->name('blog.destroy');
+    Route::post('/blog/{blogPost}/comments', [BlogController::class, 'storeComment'])->name('blog.comments.store');
+    Route::put('/comments/{comment}', [BlogController::class, 'updateComment'])->name('blog.comments.update');
+    Route::delete('/comments/{comment}', [BlogController::class, 'destroyComment'])->name('blog.comments.destroy');
+    Route::get('/blog/filter/event', [BlogController::class, 'filterByEvent'])->name('blog.filter.event');
+    
+    // AI Blog Routes
+    Route::get('/blog/ai/create', [BlogAIController::class, 'create'])->name('blog.ai.create');
+    Route::post('/blog/ai/generate', [BlogAIController::class, 'generate'])->name('blog.ai.generate');
+    Route::post('/blog/ai/store', [BlogAIController::class, 'store'])->name('blog.ai.store');
+    Route::post('/blog/ai/improve', [BlogAIController::class, 'improve'])->name('blog.ai.improve');
 
     
     // Event Routes
@@ -95,10 +101,10 @@ Route::middleware('auth')->group(function () {
         Route::patch('/events/{event}/featured', [AdminController::class, 'toggleEventFeatured'])->name('events.featured');
         Route::delete('/events/{event}', [AdminController::class, 'deleteEvent'])->name('events.delete');
         
-        // Forum Management
-        Route::get('/forum', [AdminController::class, 'forum'])->name('forum');
-        Route::delete('/forum/{forumPost}', [AdminController::class, 'deleteForumPost'])->name('forum.delete');
-        Route::patch('/forum/{forumPost}/pin', [AdminController::class, 'pinForumPost'])->name('forum.pin');
+        // Blog Management
+        Route::get('/blog', [AdminController::class, 'blog'])->name('blog');
+        Route::delete('/blog/{blogPost}', [AdminController::class, 'deleteBlogPost'])->name('blog.delete');
+        Route::patch('/blog/{blogPost}/pin', [AdminController::class, 'pinBlogPost'])->name('blog.pin');
         
         // Donations Management
         Route::get('/donations', [AdminController::class, 'donations'])->name('donations');

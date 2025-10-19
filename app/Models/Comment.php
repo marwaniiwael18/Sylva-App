@@ -11,6 +11,8 @@ class Comment extends Model
         'content',
         'author_id',
         'forum_post_id',
+        'sentiment',
+        'sentiment_score',
     ];
 
     protected $casts = [

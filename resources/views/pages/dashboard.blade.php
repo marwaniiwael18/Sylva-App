@@ -214,9 +214,14 @@
                     <span class="text-sm font-medium text-gray-900">Planter Arbre</span>
                 </a>
                 
-                <a href="{{ route('forum.create') }}" class="flex flex-col items-center p-4 rounded-lg border border-gray-200 hover:shadow-md transition-all hover:border-orange-300">
-                    <i data-lucide="message-square" class="w-8 h-8 text-orange-600 mb-2"></i>
-                    <span class="text-sm font-medium text-gray-900">Nouveau Post</span>
+                <a href="{{ route('blog.ai.create') }}" class="flex flex-col items-center p-4 rounded-lg border border-gray-200 hover:shadow-md transition-all hover:border-purple-300">
+                    <i data-lucide="sparkles" class="w-8 h-8 text-purple-600 mb-2"></i>
+                    <span class="text-sm font-medium text-gray-900">Article IA</span>
+                </a>
+                
+                <a href="{{ route('blog.create') }}" class="flex flex-col items-center p-4 rounded-lg border border-gray-200 hover:shadow-md transition-all hover:border-orange-300">
+                    <i data-lucide="message-circle" class="w-8 h-8 text-orange-500 mb-2"></i>
+                    <span class="text-sm text-gray-700">Nouveau Article</span>
                 </a>
             </div>
         </div>
