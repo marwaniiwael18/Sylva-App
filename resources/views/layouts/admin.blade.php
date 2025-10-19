@@ -70,11 +70,11 @@
                         Événements
                     </a>
                     
-                    <!-- Forum Management -->
-                    <a href="{{ route('admin.forum') }}" 
-                       class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('admin.forum*') ? 'bg-red-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} transition-colors">
-                        <i data-lucide="message-square" class="mr-3 h-5 w-5"></i>
-                        Forum
+                    <!-- Blog Management -->
+                    <a href="{{ route('admin.blog') }}" 
+                       class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('admin.blog*') ? 'bg-red-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} transition-colors">
+                        <i data-lucide="message-circle" class="mr-3 h-5 w-5"></i>
+                        Blog
                     </a>
                     
                     <!-- Donations Management -->

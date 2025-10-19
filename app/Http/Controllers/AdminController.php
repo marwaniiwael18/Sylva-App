@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Event;
 use App\Models\Donation;
-use App\Models\ForumPost;
+use App\Models\BlogPost;
 use App\Models\Tree;
 use App\Models\Report;
 use Illuminate\Http\Request;
@@ -46,8 +46,8 @@ class AdminController extends Controller
             'trees_this_month' => Tree::whereMonth('planting_date', now()->month)->count(),
             'healthy_trees' => Tree::where('status', 'healthy')->count(),
             
-            'total_forum_posts' => ForumPost::count(),
-            'posts_this_month' => ForumPost::whereMonth('created_at', now()->month)->count(),
+            'total_forum_posts' => BlogPost::count(),
+            'posts_this_month' => BlogPost::whereMonth('created_at', now()->month)->count(),
             
             'total_reports' => Report::count(),
             'pending_reports' => Report::where('status', 'pending')->count(),
@@ -128,10 +128,10 @@ class AdminController extends Controller
         }
 
         // Utilisateurs les plus actifs
-        $topUsers = User::withCount(['donations', 'organizedEvents', 'forumPosts'])
+        $topUsers = User::withCount(['donations', 'organizedEvents', 'blogPosts'])
             ->orderByDesc('donations_count')
             ->orderByDesc('organized_events_count')
-            ->orderByDesc('forum_posts_count')
+            ->orderByDesc('blog_posts_count')
             ->take(5)
             ->get();
 
@@ -157,7 +157,7 @@ class AdminController extends Controller
 
     public function users(Request $request)
     {
-        $query = User::withCount(['donations', 'organizedEvents', 'forumPosts']);
+        $query = User::withCount(['donations', 'organizedEvents', 'blogPosts']);
 
         // Recherche
         if ($request->filled('search')) {
@@ -513,11 +513,11 @@ class AdminController extends Controller
     }
 
     /**
-     * Gestion du forum - Liste
+     * Gestion du blog - Liste
      */
-    public function forum(Request $request)
+    public function blog(Request $request)
     {
-        $query = ForumPost::with('author');
+        $query = BlogPost::with('author');
 
         // Recherche
         if ($request->filled('search')) {
@@ -538,14 +538,14 @@ class AdminController extends Controller
         $posts = $query->orderBy('created_at', 'desc')->paginate(20);
 
         // Stats
-        $totalPosts = ForumPost::count();
+        $totalPosts = BlogPost::count();
         $reportedPosts = 0; // À implémenter avec une table reports si nécessaire
-        $activeUsers = ForumPost::distinct('author_id')
+        $activeUsers = BlogPost::distinct('author_id')
             ->whereMonth('created_at', now()->month)
             ->count('author_id');
-        $todayPosts = ForumPost::whereDate('created_at', today())->count();
+        $todayPosts = BlogPost::whereDate('created_at', today())->count();
 
-        return view('admin.forum', compact(
+        return view('admin.blog', compact(
             'posts',
             'totalPosts',
             'reportedPosts',
@@ -555,9 +555,9 @@ class AdminController extends Controller
     }
 
     /**
-     * Supprimer une publication forum
+     * Supprimer une publication blog
      */
-    public function deleteForumPost(ForumPost $post)
+    public function deleteBlogPost(BlogPost $post)
     {
         $post->delete();
 

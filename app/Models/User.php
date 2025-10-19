@@ -79,11 +79,20 @@ class User extends Authenticatable
 
 
     /**
-     * Get all forum posts created by this user.
+     * Get all blog posts created by this user.
+     */
+    public function blogPosts()
+    {
+        return $this->hasMany(BlogPost::class, 'author_id');
+    }
+
+    /**
+     * Get all forum posts created by this user (legacy).
+     * @deprecated Use blogPosts() instead
      */
     public function forumPosts()
     {
-        return $this->hasMany(ForumPost::class, 'author_id');
+        return $this->blogPosts();
     }
 
     /**

@@ -133,14 +133,14 @@
                 </a>
             </li>
 
-            <!-- Forum -->
+            <!-- Blog -->
             <li>
-                <a href="{{ route('forum.index') }}" 
-                   class="nav-item {{ request()->routeIs('forum.*') ? 'active' : '' }}"
+                <a href="{{ route('blog.index') }}" 
+                   class="nav-item {{ request()->routeIs('blog.*') ? 'active' : '' }}"
                    :class="sidebarCollapsed && 'justify-center'"
                 >
                     <i data-lucide="message-circle" class="w-5 h-5 flex-shrink-0"></i>
-                    <span x-show="!sidebarCollapsed" class="nav-text">Forum</span>
+                    <span x-show="!sidebarCollapsed" class="nav-text">Blog</span>
                     <span x-show="!sidebarCollapsed" class="nav-count">
                         <span class="bg-orange-400 text-orange-900 text-xs font-bold px-2 py-0.5 rounded-full">24</span>
                     </span>

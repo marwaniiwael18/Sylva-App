@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Event;
 use App\Models\Donation;
-use App\Models\ForumPost;
+use App\Models\BlogPost;
 use App\Models\Tree;
 use App\Models\Report;
 use Illuminate\Http\Request;
@@ -32,7 +32,7 @@ class WebController extends Controller
             'my_donation_amount' => $user->donations()->where('payment_status', 'succeeded')->sum('amount'),
             'my_events_organized' => $user->organizedEvents()->count(),
             'my_events_participating' => $user->participatingEvents()->count(),
-            'my_forum_posts' => $user->forumPosts()->count(),
+            'my_forum_posts' => $user->blogPosts()->count(),
             'my_trees' => Tree::where('planted_by_user', $user->id)->count(),
             'my_reports' => Report::where('user_id', $user->id)->count(),
             'impact_score' => $this->calculateImpactScore($user),
