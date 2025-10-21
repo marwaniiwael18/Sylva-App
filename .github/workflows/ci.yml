@@ -19,14 +19,14 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
     - name: Setup PHP
-      uses: shivammathur/setup-php@v2
+      uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f
       with:
         php-version: '8.2'
         extensions: pdo, pdo_mysql
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
       with:
         node-version: '20'
     - name: Install PHP dependencies
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
       with:
         fetch-depth: 0
     - name: Install jq
@@ -139,15 +139,20 @@ jobs:
     needs: sonar
     # Remove the temporary disable to allow build to run when sonar_wait passes
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@885d1462b80bc1c1c7f0b00334ad271f09369c55
     - name: Login to DockerHub (anonymous OK for local build)
       run: echo "Skipping docker login in CI"
     - name: Build and start services with docker-compose
       run: |
-        docker compose build --pull --parallel
-        docker compose up -d mysql prometheus grafana app
+        # Generate Laravel APP_KEY and write to .env.ci so docker compose can pick it up
+        APP_KEY="base64:$(openssl rand -base64 32)"
+        echo "APP_KEY=${APP_KEY}" > .env.ci
+
+        docker compose --env-file .env.ci build --pull --parallel
+        docker compose --env-file .env.ci up -d mysql prometheus grafana app
+
         echo "Waiting for app to be healthy (http://localhost:8000)..."
         for i in {1..30}; do
           if curl -sS --fail http://localhost:8000 >/dev/null; then
@@ -155,6 +160,17 @@ jobs:
             break
           fi
           echo "Waiting for app... ($i/30)"
+          sleep 2
+        done
+
+        # Run migrations inside the app container (retry until successful)
+        echo "Running database migrations inside app container..."
+        for i in {1..30}; do
+          if docker compose --env-file .env.ci exec -T app php artisan migrate --force; then
+            echo "Migrations ran successfully"
+            break
+          fi
+          echo "Waiting for migrations to succeed... ($i/30)"
           sleep 2
         done
     - name: Smoke test
