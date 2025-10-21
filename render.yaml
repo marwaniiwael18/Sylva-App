@@ -6,7 +6,7 @@ services:
     dockerContext: .
     plan: free
     autoDeploy: false  # Désactivé car on déclenche via webhook
-    healthCheckPath: /
+    healthCheckPath: /test
     envVars:
       - key: APP_NAME
         value: Sylva App

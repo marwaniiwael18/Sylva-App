@@ -1,6 +1,6 @@
 FROM php:8.2-fpm
 
-# Install system dependencies
+# Install system dependencies and PHP extensions in one layer
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -13,7 +13,9 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nginx \
     supervisor \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -30,12 +32,16 @@ RUN composer install --no-dev --optimize-autoloader
 # Configure PHP-FPM to listen on TCP
 RUN sed -i 's/listen = \/run\/php\/php8.2-fpm.sock/listen = 127.0.0.1:9000/' /usr/local/etc/php-fpm.d/www.conf
 
-# Install Node.js and build assets
+# Install Node.js, build assets, and clean up in one layer
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs \
     && npm install \
     && npm run build \
-    && rm -rf node_modules
+    && npm cache clean --force \
+    && rm -rf node_modules \
+    && apt-get remove -y nodejs npm \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy setup script
 COPY render-setup.sh /usr/local/bin/render-setup.sh

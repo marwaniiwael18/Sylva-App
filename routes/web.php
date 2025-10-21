@@ -12,6 +12,17 @@ use App\Http\Controllers\TreeController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\BlogAIController;
 
+// Test route for diagnostics
+Route::get('/test', function () {
+    return response()->json([
+        'status' => 'ok',
+        'message' => 'Laravel is working!',
+        'timestamp' => now(),
+        'php_version' => PHP_VERSION,
+        'env' => app()->environment()
+    ]);
+});
+
 // Redirect root to dashboard
 Route::get('/', function () {
     return redirect('/dashboard');
