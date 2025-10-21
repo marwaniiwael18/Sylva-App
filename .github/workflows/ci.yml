@@ -57,7 +57,6 @@ jobs:
   sonar:
     runs-on: ubuntu-latest
     needs: test
-    if: false  # Temporarily disabled - requires SonarQube server setup
     steps:
     - uses: actions/checkout@v4
       with:
@@ -95,7 +94,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/${{ github.repository }}:latest,ghcr.io/${{ github.repository }}:${{ github.sha }}
+        tags: ghcr.io/${{ github.repository_owner }}/sylva-app:latest,ghcr.io/${{ github.repository_owner }}/sylva-app:${{ github.sha }}
 
   monitoring-setup:
     runs-on: ubuntu-latest
@@ -110,11 +109,11 @@ jobs:
         context: ./monitoring
         file: ./monitoring/Dockerfile.prometheus
         push: true
-        tags: ghcr.io/${{ github.repository }}/prometheus:latest
+        tags: ghcr.io/${{ github.repository_owner }}/sylva-app/prometheus:latest
     - name: Build Grafana Docker image
       uses: docker/build-push-action@v5
       with:
         context: ./monitoring
         file: ./monitoring/Dockerfile.grafana
         push: true
-        tags: ghcr.io/${{ github.repository }}/grafana:latest
+        tags: ghcr.io/${{ github.repository_owner }}/sylva-app/grafana:latest
