@@ -76,7 +76,7 @@ jobs:
       uses: sonarsource/sonarqube-scan-action@v2
       env:
         SONAR_TOKEN: squ_551ab92e409aecb87e86e23f6c4921c71a408d33
-        SONAR_HOST_URL: http://localhost:9000
+        SONAR_HOST_URL: https://sonarcloud.io
 
   build:
     runs-on: ubuntu-latest
