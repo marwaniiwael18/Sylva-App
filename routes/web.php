@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WebController;
 use App\Http\Controllers\AdminController;
@@ -10,14 +12,14 @@ use App\Http\Controllers\TreeController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\BlogAIController;
 
-
-
 // Redirect root to dashboard
 Route::get('/', function () {
     return redirect('/dashboard');
 });
 
-// Authentication Routes
+// Metrics endpoint for Prometheus monitoring
+Route::get('/metrics', [App\Http\Controllers\MetricsController::class, 'index']);
+
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/signup', [AuthController::class, 'showSignup'])->name('signup');

@@ -8,7 +8,7 @@ use Exception;
 
 class PlantIdentificationService
 {
-    protected string $apiKey;
+    protected ?string $apiKey;
     protected string $baseUrl = 'https://api.plant.id/v2';
 
     public function __construct()
@@ -16,7 +16,7 @@ class PlantIdentificationService
         $this->apiKey = config('services.plantid.api_key');
         
         if (empty($this->apiKey)) {
-            throw new Exception('Plant.id API key is not configured. Please add PLANT_ID_API_KEY to your .env file');
+            $this->apiKey = null;
         }
     }
 
@@ -28,6 +28,14 @@ class PlantIdentificationService
      */
     public function identifyPlant(string $imagePath): array
     {
+        if (empty($this->apiKey) || str_contains($this->apiKey, 'placeholder')) {
+            return [
+                'success' => false,
+                'error' => 'api_key_missing',
+                'message' => 'Plant.id API key is not configured or is a placeholder'
+            ];
+        }
+
         try {
             // Convert image to base64
             $imageData = $this->getImageBase64($imagePath);
@@ -216,6 +224,14 @@ class PlantIdentificationService
      */
     public function assessHealth(string $imagePath): array
     {
+        if (empty($this->apiKey) || str_contains($this->apiKey, 'placeholder')) {
+            return [
+                'success' => false,
+                'error' => 'api_key_missing',
+                'message' => 'Plant.id API key is not configured or is a placeholder'
+            ];
+        }
+
         try {
             // Convert image to base64
             $imageData = $this->getImageBase64($imagePath);

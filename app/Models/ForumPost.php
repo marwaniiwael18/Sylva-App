@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ForumPost extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'title',
         'content',
@@ -29,11 +31,11 @@ class ForumPost extends Model
     }
 
     /**
-     * Get the related event.
+     * Get the related report.
      */
-    public function relatedEvent(): BelongsTo
+    public function relatedReport(): BelongsTo
     {
-        return $this->belongsTo(Event::class, 'related_event_id');
+        return $this->belongsTo(Report::class, 'related_event_id');
     }
 
     /**
