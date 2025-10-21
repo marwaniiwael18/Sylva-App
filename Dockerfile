@@ -7,11 +7,12 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libpq-dev \
     zip \
     unzip \
     nginx \
     supervisor \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    && docker-php-ext-install pdo pdo_pgsql pdo_mysql mbstring exif pcntl bcmath gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -35,9 +36,14 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && npm run build \
     && rm -rf node_modules
 
+# Copy setup script
+COPY render-setup.sh /usr/local/bin/render-setup.sh
+RUN chmod +x /usr/local/bin/render-setup.sh
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www \
-    && chmod -R 755 /var/www/storage
+    && chmod -R 755 /var/www/storage \
+    && chmod -R 755 /var/www/bootstrap/cache
 
 # Copy nginx configuration
 COPY docker/nginx.conf /etc/nginx/sites-available/default
@@ -48,5 +54,5 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Expose port
 EXPOSE 80
 
-# Start supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+# Run setup and start supervisor
+CMD ["/bin/bash", "-c", "/usr/local/bin/render-setup.sh && /usr/bin/supervisord -c /etc/supervisor/supervisord.conf"]

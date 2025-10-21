@@ -43,6 +43,18 @@ services:
         fromDatabase:
           name: sylva-db
           property: password
+      - key: CACHE_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: SESSION_DRIVER
+        value: file
+      - key: LOG_CHANNEL
+        value: single
+      - key: LOG_LEVEL
+        value: error
+      - key: MAIL_MAILER
+        value: log
 
 databases:
   - name: sylva-db
