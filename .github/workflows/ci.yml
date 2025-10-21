@@ -48,6 +48,7 @@ jobs:
   sonar:
     runs-on: ubuntu-latest
     needs: test
+    if: false  # Temporarily disabled - requires SonarQube server setup
     steps:
     - uses: actions/checkout@v4
       with:
@@ -71,7 +72,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    needs: sonar
+    needs: test  # Changed from sonar to test since sonar is disabled
     steps:
     - uses: actions/checkout@v4
     - name: Log in to GitHub Container Registry
@@ -90,6 +91,7 @@ jobs:
   monitoring-setup:
     runs-on: ubuntu-latest
     needs: build
+    if: false  # Temporarily disabled - requires proper registry access
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
