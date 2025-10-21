@@ -36,7 +36,7 @@ jobs:
     - name: Build assets
       run: npm run build
     - name: Copy environment file
-      run: cp .env.example .env || cp .env.ci .env || echo "No .env file found"
+      run: cp .env.ci .env
     - name: Generate application key
       run: php artisan key:generate
     - name: Wait for MySQL
@@ -57,22 +57,6 @@ jobs:
   sonar:
     runs-on: ubuntu-latest
     needs: test
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: yes
-          MYSQL_DATABASE: test
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-      sonarqube:
-        image: sonarqube:latest
-        ports:
-          - 9000:9000
-        env:
-          SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: true
-        options: --health-cmd="curl -f http://localhost:9000/api/system/status" --health-interval=30s --health-timeout=10s --health-retries=10
     steps:
     - uses: actions/checkout@v4
       with:
@@ -84,90 +68,21 @@ jobs:
         extensions: pdo, pdo_mysql
     - name: Install PHP dependencies
       run: composer install --no-progress --prefer-dist --optimize-autoloader --no-dev
-    - name: Copy environment file
-      run: cp .env.ci .env
-    - name: Generate application key
-      run: php artisan key:generate
-    - name: Wait for MySQL
-      run: |
-        for i in {1..30}; do
-          if mysqladmin ping -h 127.0.0.1 -u root --silent; then
-            echo "MySQL is ready"
-            break
-          fi
-          echo "Waiting for MySQL... ($i/30)"
-          sleep 2
-        done
-    - name: Run database migrations
-      run: php artisan migrate --force
     - name: Generate test results
       run: |
         mkdir -p test-results
         php artisan test --log-junit=test-results/junit.xml || true
-    - name: Wait for SonarQube
-      run: |
-        for i in {1..60}; do
-          if curl -f http://localhost:9000/api/system/status | grep -q '"status":"UP"'; then
-            echo "SonarQube is ready"
-            break
-          fi
-          echo "Waiting for SonarQube... ($i/60)"
-          sleep 10
-        done
-    - name: Create SonarQube project
-      run: |
-        # First, get an authentication token
-        TOKEN=$(curl -X POST -u admin:admin "http://localhost:9000/api/user_tokens/generate" \
-          -d "name=ci-token" | jq -r '.token')
-        
-        # Create the project
-        curl -X POST -H "Authorization: Bearer $TOKEN" "http://localhost:9000/api/projects/create" \
-          -d "name=Sylva Laravel Application" \
-          -d "project=sylva-app" || echo "Project might already exist"
-        
-        # Set the token for the scan
-        echo "SONAR_TOKEN=$TOKEN" >> $GITHUB_ENV
     - name: SonarQube Scan
       uses: sonarsource/sonarqube-scan-action@v2
       env:
-        SONAR_HOST_URL: http://localhost:9000
+        SONAR_TOKEN: squ_ab3e1539695a271f0bd8d17746ac26d3007f9310
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
   build:
     runs-on: ubuntu-latest
-    needs: test  # Changed from sonar to test since sonar is disabled
+    needs: test  # Changed from sonar to test to avoid blocking on sonar issues
+    if: false  # Temporarily disabled due to registry permissions
     steps:
     - uses: actions/checkout@v4
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: ghcr.io/${{ github.repository_owner }}/sylva-app:latest,ghcr.io/${{ github.repository_owner }}/sylva-app:${{ github.sha }}
-
-  monitoring-setup:
-    runs-on: ubuntu-latest
-    needs: build
-    if: false  # Temporarily disabled - requires proper registry access
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Build Prometheus Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./monitoring
-        file: ./monitoring/Dockerfile.prometheus
-        push: true
-        tags: ghcr.io/${{ github.repository_owner }}/sylva-app/prometheus:latest
-    - name: Build Grafana Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./monitoring
-        file: ./monitoring/Dockerfile.grafana
-        push: true
-        tags: ghcr.io/${{ github.repository_owner }}/sylva-app/grafana:latest
+    - name: Build Docker image (local only)
+      run: docker build -t sylva-app:latest .
