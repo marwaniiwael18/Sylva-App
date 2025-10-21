@@ -136,7 +136,7 @@ fi
 
 # Toujours redémarrer l'application
 CONTAINERS_TO_START="$CONTAINERS_TO_START app"
-echo "🚀 Application sera (re)démarrée"
+echo "🚀 Application sera démarrée (image Docker Hub)"
 
 # Lancer les containers nécessaires
 if [ -n "$CONTAINERS_TO_START" ]; then

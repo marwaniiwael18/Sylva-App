@@ -160,9 +160,9 @@ if (!$grafanaRunning) {
     Write-Host "Grafana deja en cours" -ForegroundColor Green
 }
 
-# Toujours redémarrer l'application
+# Toujours démarrer l'application (image pré-buildée depuis Docker Hub)
 $containersToStart += "app"
-Write-Host "Application sera (re)demarree" -ForegroundColor Cyan
+Write-Host "Application sera demarree (image Docker Hub)" -ForegroundColor Cyan
 
 # Lancer les containers nécessaires
 if ($containersToStart.Count -gt 0) {
