@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: sylva-app
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /
+    envVars:
+      - key: APP_NAME
+        value: Sylva App
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        fromService:
+          type: web
+          name: sylva-app
+          property: host
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: sylva-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: sylva-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: sylva-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: sylva-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: sylva-db
+          property: password
+
+databases:
+  - name: sylva-db
+    databaseName: sylva_app
+    user: sylva_user
+    plan: free

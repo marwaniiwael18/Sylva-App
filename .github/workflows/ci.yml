@@ -155,19 +155,11 @@ jobs:
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Notify deployment ready
+      - name: Deploy to Render
         run: |
-          echo "🎉 CI/CD Pipeline completed successfully!"
-          echo "📦 Docker images built and validated"
-          echo "🚀 Ready for local deployment"
+          echo "🚀 Triggering Render deployment..."
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          echo "✅ Render deployment triggered!"
           echo ""
-          echo "To deploy locally, run:"
-          echo "  ./deploy.ps1  (Windows)"
-          echo "  ./deploy.sh   (Linux/Mac)"
-          echo ""
-          echo "This will:"
-          echo "  - Monitor CI completion"
-          echo "  - Start MySQL + Laravel app containers"
-          echo "  - Start Prometheus + Grafana monitoring"
-          echo "  - Run database migrations"
-          echo "  - Wait for app readiness"
+          echo "🌐 Your app will be available at: ${{ secrets.RENDER_APP_URL }}"
+          echo "📊 Check deployment status on Render dashboard"
