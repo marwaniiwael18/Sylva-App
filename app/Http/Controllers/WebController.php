@@ -76,7 +76,7 @@ class WebController extends Controller
         $myDonationsByMonth = $user->donations()
             ->where('payment_status', 'succeeded')
             ->where('created_at', '>=', now()->subMonths(6))
-            ->selectRaw('MONTH(created_at) as month, YEAR(created_at) as year, SUM(amount) as total')
+            ->selectRaw('strftime(\'%m\', created_at) as month, strftime(\'%Y\', created_at) as year, SUM(amount) as total')
             ->groupBy('year', 'month')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
