@@ -13,12 +13,11 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: root
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
           MYSQL_DATABASE: test
-          MYSQL_ALLOW_EMPTY_PASSWORD: no
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping -h localhost -u root -proot" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
     - uses: actions/checkout@v4
     - name: Setup PHP
@@ -40,6 +39,16 @@ jobs:
       run: cp .env.example .env || cp .env.ci .env || echo "No .env file found"
     - name: Generate application key
       run: php artisan key:generate
+    - name: Wait for MySQL
+      run: |
+        for i in {1..30}; do
+          if mysqladmin ping -h 127.0.0.1 -u root --silent; then
+            echo "MySQL is ready"
+            break
+          fi
+          echo "Waiting for MySQL... ($i/30)"
+          sleep 2
+        done
     - name: Run database migrations
       run: php artisan migrate --force
     - name: Run tests
