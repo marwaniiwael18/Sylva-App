@@ -140,8 +140,30 @@ jobs:
     # Remove the temporary disable to allow build to run when sonar_wait passes
     steps:
     - uses: actions/checkout@v4
-    - name: Build Docker image (local only)
-      run: docker build -t sylva-app:latest .
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Login to DockerHub (anonymous OK for local build)
+      run: echo "Skipping docker login in CI"
+    - name: Build and start services with docker-compose
+      run: |
+        docker compose build --pull --parallel
+        docker compose up -d mysql prometheus grafana app
+        echo "Waiting for app to be healthy (http://localhost:8000)..."
+        for i in {1..30}; do
+          if curl -sS --fail http://localhost:8000 >/dev/null; then
+            echo "App is responding"
+            break
+          fi
+          echo "Waiting for app... ($i/30)"
+          sleep 2
+        done
+    - name: Smoke test
+      run: |
+        curl -sS --fail http://localhost:8000 || (echo "App not responding" && exit 1)
+    - name: Tear down containers
+      if: always()
+      run: |
+        docker compose down -v
 
 
   monitoring:

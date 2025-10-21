@@ -29,29 +29,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
-  sonarqube:
-    image: sonarqube:latest
-    ports:
-      - "9000:9000"
-    environment:
-      - SONAR_JDBC_URL=jdbc:postgresql://postgres:5432/sonar
-      - SONAR_JDBC_USERNAME=sonar
-      - SONAR_JDBC_PASSWORD=sonar
-    depends_on:
-      - postgres
-    volumes:
-      - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_extensions:/opt/sonarqube/extensions
-      - sonarqube_logs:/opt/sonarqube/logs
-
-  postgres:
-    image: postgres:12
-    environment:
-      - POSTGRES_USER=sonar
-      - POSTGRES_PASSWORD=sonar
-      - POSTGRES_DB=sonar
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+  # SonarQube and Postgres removed (we use SonarCloud automatic analysis)
 
   prometheus:
     image: prom/prometheus
@@ -83,8 +61,4 @@ services:
 
 volumes:
   mysql_data:
-  postgres_data:
-  sonarqube_data:
-  sonarqube_extensions:
-  sonarqube_logs:
   grafana_data:
