@@ -99,11 +99,6 @@ jobs:
       run: |
         mkdir -p test-results
         php artisan test --log-junit=test-results/junit.xml || true
-    - name: Debug SonarQube connection
-      run: |
-        echo "Testing SonarQube API access..."
-        curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" \
-             "https://sonarcloud.io/api/projects/search?organization=marwaniiwael18" | head -20
     - name: SonarQube Scan
       uses: sonarsource/sonarqube-scan-action@v2
       env:
