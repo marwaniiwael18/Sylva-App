@@ -13,7 +13,7 @@ class TreeController extends Controller
 {
     protected $plantIdService;
 
-    public function __construct(PlantIdentificationService $plantIdService)
+    public function __construct(?PlantIdentificationService $plantIdService = null)
     {
         $this->plantIdService = $plantIdService;
     }
@@ -228,6 +228,14 @@ class TreeController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120' // Max 5MB
         ]);
 
+        if (!$this->plantIdService) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Plant identification service is not available',
+                'error' => 'service_unavailable'
+            ], 503);
+        }
+
         try {
             // Store image temporarily
             $image = $request->file('image');
@@ -281,6 +289,14 @@ class TreeController extends Controller
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120'
         ]);
+
+        if (!$this->plantIdService) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Plant health assessment service is not available',
+                'error' => 'service_unavailable'
+            ], 503);
+        }
 
         try {
             // Store image temporarily

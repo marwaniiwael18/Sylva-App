@@ -5,12 +5,13 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function user_can_register_with_valid_data()
     {
         $userData = [
@@ -34,7 +35,7 @@ class AuthenticationTest extends TestCase
         $this->assertFalse($user->is_moderator);
     }
 
-    /** @test */
+    #[Test]
     public function user_cannot_register_with_invalid_data()
     {
         $userData = [
@@ -51,7 +52,7 @@ class AuthenticationTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => 'invalid-email']);
     }
 
-    /** @test */
+    #[Test]
     public function user_cannot_register_with_existing_email()
     {
         User::factory()->create(['email' => 'existing@example.com']);
@@ -70,7 +71,7 @@ class AuthenticationTest extends TestCase
         $this->assertEquals(1, User::where('email', 'existing@example.com')->count());
     }
 
-    /** @test */
+    #[Test]
     public function user_can_login_with_correct_credentials()
     {
         $user = User::factory()->create([
@@ -89,7 +90,7 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
-    /** @test */
+    #[Test]
     public function user_cannot_login_with_incorrect_credentials()
     {
         User::factory()->create([
@@ -109,7 +110,7 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    /** @test */
+    #[Test]
     public function authenticated_user_can_logout()
     {
         $user = User::factory()->create();
@@ -119,7 +120,7 @@ class AuthenticationTest extends TestCase
               ->assertRedirect('/login');        $this->assertGuest();
     }
 
-    /** @test */
+    #[Test]
     public function authenticated_user_can_access_protected_routes()
     {
         $user = User::factory()->create();
@@ -129,14 +130,14 @@ class AuthenticationTest extends TestCase
              ->assertStatus(200);
     }
 
-    /** @test */
+    #[Test]
     public function unauthenticated_user_cannot_access_protected_routes()
     {
         $this->get('/dashboard')
              ->assertRedirect('/login');
     }
 
-    /** @test */
+    #[Test]
     public function admin_user_has_admin_role_methods()
     {
         $admin = User::factory()->create(['is_admin' => true]);
@@ -145,7 +146,7 @@ class AuthenticationTest extends TestCase
         $this->assertTrue($admin->canValidateReports());
     }
 
-    /** @test */
+    #[Test]
     public function moderator_user_has_moderator_role_methods()
     {
         $moderator = User::factory()->create(['is_moderator' => true]);
@@ -154,7 +155,7 @@ class AuthenticationTest extends TestCase
         $this->assertTrue($moderator->canValidateReports());
     }
 
-    /** @test */
+    #[Test]
     public function regular_user_does_not_have_admin_privileges()
     {
         $user = User::factory()->create(['is_admin' => false, 'is_moderator' => false]);

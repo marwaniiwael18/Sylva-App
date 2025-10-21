@@ -7,12 +7,13 @@ use App\Models\Donation;
 use App\Models\Event;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class DonationTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function authenticated_user_can_view_donations_page()
     {
         $user = User::factory()->create();
@@ -23,7 +24,7 @@ class DonationTest extends TestCase
              ->assertSee('Donations');
     }
 
-    /** @test */
+    #[Test]
     public function authenticated_user_can_create_donation()
     {
         $user = User::factory()->create();
@@ -52,7 +53,7 @@ class DonationTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function donation_requires_valid_amount()
     {
         $user = User::factory()->create();
@@ -68,7 +69,7 @@ class DonationTest extends TestCase
              ->assertSessionHasErrors('amount');
     }
 
-    /** @test */
+    #[Test]
     public function donation_requires_valid_type()
     {
         $user = User::factory()->create();
@@ -84,7 +85,7 @@ class DonationTest extends TestCase
              ->assertSessionHasErrors('type');
     }
 
-    /** @test */
+    #[Test]
     public function user_can_view_own_donations()
     {
         $user = User::factory()->create();
@@ -102,7 +103,7 @@ class DonationTest extends TestCase
         $this->assertEquals(150.00, $user->fresh()->total_donations);
     }
 
-    /** @test */
+    #[Test]
     public function donation_payment_status_defaults_to_pending()
     {
         $user = User::factory()->create();
@@ -112,7 +113,7 @@ class DonationTest extends TestCase
         $this->assertEquals('pending', $donation->payment_status);
     }
 
-    /** @test */
+    #[Test]
     public function successful_donations_are_counted_in_total()
     {
         $user = User::factory()->create();
@@ -139,7 +140,7 @@ class DonationTest extends TestCase
         $this->assertEquals(150.00, $user->fresh()->total_donations);
     }
 
-    /** @test */
+    #[Test]
     public function donation_can_be_made_anonymous()
     {
         $user = User::factory()->create();
@@ -152,7 +153,7 @@ class DonationTest extends TestCase
         $this->assertTrue($donation->anonymous);
     }
 
-    /** @test */
+    #[Test]
     public function donation_has_formatted_amount_attribute()
     {
         $donation = Donation::factory()->create([
@@ -163,7 +164,7 @@ class DonationTest extends TestCase
         $this->assertEquals('123.45 EUR', $donation->formatted_amount);
     }
 
-    /** @test */
+    #[Test]
     public function donation_has_type_name_attribute()
     {
         $donation = Donation::factory()->create(['type' => 'tree_planting']);
@@ -171,7 +172,7 @@ class DonationTest extends TestCase
         $this->assertEquals('Tree Planting', $donation->type_name);
     }
 
-    /** @test */
+    #[Test]
     public function donation_has_payment_status_name_attribute()
     {
         $donation = Donation::factory()->create(['payment_status' => 'succeeded']);
@@ -179,7 +180,7 @@ class DonationTest extends TestCase
         $this->assertEquals('Succeeded', $donation->payment_status_name);
     }
 
-    /** @test */
+    #[Test]
     public function donation_scopes_work_correctly()
     {
         $user = User::factory()->create();
@@ -194,7 +195,7 @@ class DonationTest extends TestCase
         $this->assertEquals('succeeded', $successfulDonations->first()->payment_status);
     }
 
-    /** @test */
+    #[Test]
     public function donation_can_be_filtered_by_type()
     {
         $user = User::factory()->create();

@@ -10,12 +10,14 @@ use App\Models\ForumPost;
 use App\Models\Comment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class UserTest extends TestCase
 {
     use RefreshDatabase;
 
     /** @test */
+        #[Test]
     public function user_has_correct_fillable_attributes()
     {
         $user = User::factory()->create([
@@ -32,7 +34,7 @@ class UserTest extends TestCase
         $this->assertFalse($user->is_moderator);
     }
 
-    /** @test */
+    #[Test]
     public function user_has_correct_hidden_attributes()
     {
         $user = User::factory()->create();
@@ -43,7 +45,7 @@ class UserTest extends TestCase
         $this->assertArrayNotHasKey('remember_token', $userArray);
     }
 
-    /** @test */
+    #[Test]
     public function user_has_correct_default_attributes()
     {
         $user = User::factory()->create();
@@ -52,7 +54,7 @@ class UserTest extends TestCase
         $this->assertFalse($user->is_moderator);
     }
 
-    /** @test */
+    #[Test]
     public function user_password_is_hashed()
     {
         $user = User::factory()->create(['password' => 'plainpassword']);
@@ -61,7 +63,7 @@ class UserTest extends TestCase
         $this->assertTrue(password_verify('plainpassword', $user->password));
     }
 
-    /** @test */
+    #[Test]
     public function is_admin_returns_correct_value()
     {
         $regularUser = User::factory()->create(['is_admin' => false]);
@@ -71,7 +73,7 @@ class UserTest extends TestCase
         $this->assertTrue($adminUser->isAdmin());
     }
 
-    /** @test */
+    #[Test]
     public function is_moderator_returns_correct_value()
     {
         $regularUser = User::factory()->create(['is_moderator' => false]);
@@ -81,7 +83,7 @@ class UserTest extends TestCase
         $this->assertTrue($moderatorUser->isModerator());
     }
 
-    /** @test */
+    #[Test]
     public function can_validate_reports_returns_correct_value()
     {
         $regularUser = User::factory()->create(['is_admin' => false, 'is_moderator' => false]);
@@ -93,7 +95,7 @@ class UserTest extends TestCase
         $this->assertTrue($adminUser->canValidateReports());
     }
 
-    /** @test */
+    #[Test]
     public function user_has_many_forum_posts()
     {
         $user = User::factory()->create();
@@ -104,7 +106,7 @@ class UserTest extends TestCase
         $this->assertCount(2, $user->fresh()->forumPosts);
     }
 
-    /** @test */
+    #[Test]
     public function user_has_many_comments()
     {
         $user = User::factory()->create();
@@ -115,7 +117,7 @@ class UserTest extends TestCase
         $this->assertCount(2, $user->fresh()->comments);
     }
 
-    /** @test */
+    #[Test]
     public function user_has_many_organized_events()
     {
         $user = User::factory()->create();
@@ -126,7 +128,7 @@ class UserTest extends TestCase
         $this->assertCount(2, $user->fresh()->organizedEvents);
     }
 
-    /** @test */
+    #[Test]
     public function user_belongs_to_many_participating_events()
     {
         $user = User::factory()->create();
@@ -139,7 +141,7 @@ class UserTest extends TestCase
         $this->assertCount(2, $user->fresh()->participatingEvents);
     }
 
-    /** @test */
+    #[Test]
     public function user_has_many_donations()
     {
         $user = User::factory()->create();
@@ -150,7 +152,7 @@ class UserTest extends TestCase
         $this->assertCount(2, $user->fresh()->donations);
     }
 
-    /** @test */
+    #[Test]
     public function user_has_many_planted_trees()
     {
         $user = User::factory()->create();
@@ -161,7 +163,7 @@ class UserTest extends TestCase
         $this->assertCount(2, $user->fresh()->plantedTrees);
     }
 
-    /** @test */
+    #[Test]
     public function get_total_donations_attribute_calculates_correctly()
     {
         $user = User::factory()->create();

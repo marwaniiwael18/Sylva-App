@@ -7,12 +7,13 @@ use App\Models\Tree;
 use App\Models\TreeCare;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class TreeTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function authenticated_user_can_view_trees_page()
     {
         $user = User::factory()->create();
@@ -22,7 +23,7 @@ class TreeTest extends TestCase
              ->assertStatus(200);
     }
 
-    /** @test */
+    #[Test]
     public function authenticated_user_can_create_tree()
     {
         $user = User::factory()->create();
@@ -52,7 +53,7 @@ class TreeTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function tree_creation_requires_valid_coordinates()
     {
         $user = User::factory()->create();
@@ -71,7 +72,7 @@ class TreeTest extends TestCase
              ->assertSessionHasErrors('latitude');
     }
 
-    /** @test */
+    #[Test]
     public function user_can_view_own_planted_trees()
     {
         $user = User::factory()->create();
@@ -88,7 +89,7 @@ class TreeTest extends TestCase
         $this->assertCount(2, $user->fresh()->plantedTrees);
     }
 
-    /** @test */
+    #[Test]
     public function tree_has_correct_default_status()
     {
         $user = User::factory()->create();
@@ -98,7 +99,7 @@ class TreeTest extends TestCase
         $this->assertEquals('Not Yet', $tree->status);
     }
 
-    /** @test */
+    #[Test]
     public function tree_has_status_color_attribute()
     {
         $tree = Tree::factory()->create(['status' => 'Planted']);
@@ -106,7 +107,7 @@ class TreeTest extends TestCase
         $this->assertEquals('green', $tree->status_color);
     }
 
-    /** @test */
+    #[Test]
     public function tree_has_type_icon_attribute()
     {
         $tree = Tree::factory()->create(['type' => 'Fruit']);
@@ -114,7 +115,7 @@ class TreeTest extends TestCase
         $this->assertEquals('🍎', $tree->type_icon);
     }
 
-    /** @test */
+    #[Test]
     public function tree_has_formatted_planting_date_attribute()
     {
         $tree = Tree::factory()->create(['planting_date' => '2024-01-15']);
@@ -122,7 +123,7 @@ class TreeTest extends TestCase
         $this->assertEquals('Jan 15, 2024', $tree->planting_date_formatted);
     }
 
-    /** @test */
+    #[Test]
     public function tree_has_coordinates_attribute()
     {
         $tree = Tree::factory()->create([
@@ -136,7 +137,7 @@ class TreeTest extends TestCase
         $this->assertEquals(2.3522, $coordinates['longitude']);
     }
 
-    /** @test */
+    #[Test]
     public function tree_scopes_work_correctly()
     {
         // Create trees with different statuses
@@ -156,7 +157,7 @@ class TreeTest extends TestCase
         $this->assertCount(1, $deadTrees);
     }
 
-    /** @test */
+    #[Test]
     public function tree_can_be_filtered_by_species()
     {
         Tree::factory()->create(['species' => 'Oak']);
@@ -169,7 +170,7 @@ class TreeTest extends TestCase
         $this->assertEquals('Oak', $oakTrees->first()->species);
     }
 
-    /** @test */
+    #[Test]
     public function tree_can_be_filtered_by_type()
     {
         Tree::factory()->create(['type' => 'Fruit']);
@@ -182,7 +183,7 @@ class TreeTest extends TestCase
         $this->assertEquals('Fruit', $fruitTrees->first()->type);
     }
 
-    /** @test */
+    #[Test]
     public function tree_can_be_filtered_by_user()
     {
         $user1 = User::factory()->create();
@@ -198,7 +199,7 @@ class TreeTest extends TestCase
         $this->assertEquals($user1->id, $user1Trees->first()->planted_by_user);
     }
 
-    /** @test */
+    #[Test]
     public function tree_has_care_relationship()
     {
         $tree = Tree::factory()->create();
@@ -210,7 +211,7 @@ class TreeTest extends TestCase
         $this->assertEquals(2, $tree->care_count);
     }
 
-    /** @test */
+    #[Test]
     public function tree_needs_care_when_no_recent_care()
     {
         $tree = Tree::factory()->create();
@@ -218,7 +219,7 @@ class TreeTest extends TestCase
         $this->assertTrue($tree->needsCare());
     }
 
-    /** @test */
+    #[Test]
     public function tree_does_not_need_care_when_recently_cared_for()
     {
         $tree = Tree::factory()->create();
@@ -231,7 +232,7 @@ class TreeTest extends TestCase
         $this->assertFalse($tree->fresh()->needsCare());
     }
 
-    /** @test */
+    #[Test]
     public function tree_health_score_calculates_correctly()
     {
         $tree = Tree::factory()->create();
