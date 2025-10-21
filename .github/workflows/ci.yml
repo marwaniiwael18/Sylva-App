@@ -98,7 +98,16 @@ jobs:
           echo "Attempt $i/$MAX_RETRIES: querying SonarCloud for analysis status (branch=$BRANCH)..."
 
           ANALYSES_JSON=$(curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/project_analyses/search?project=$PROJECT_KEY&branch=$BRANCH")
-          ANALYSIS_ID=$(echo "$ANALYSES_JSON" | jq -r --arg rev "$GITHUB_SHA" --arg short "$SHORT_REV" '.analyses[] | select(.events[]? | .name=="completed") | select(.revision==$rev or (.revision | startswith($short))) | .key' | head -n1)
+          # Try to match by full revision or short revision prefix; don't require specific events
+          ANALYSIS_ID=$(echo "$ANALYSES_JSON" | jq -r --arg rev "$GITHUB_SHA" --arg short "$SHORT_REV" '.analyses[] | select(.revision==$rev or (.revision | startswith($short))) | .key' | head -n1)
+          if [ -z "$ANALYSIS_ID" ]; then
+            # fallback: list keys and revisions and grep for the SHA (full or short)
+            echo "Fallback lookup: scanning recent analyses for matching revision..."
+            ANALYSIS_ID=$(echo "$ANALYSES_JSON" | jq -r '.analyses[] | "\(.key) \(.revision)"' | grep -F "$GITHUB_SHA" | awk '{print $1}' | head -n1 || true)
+            if [ -z "$ANALYSIS_ID" ]; then
+              ANALYSIS_ID=$(echo "$ANALYSES_JSON" | jq -r '.analyses[] | "\(.key) \(.revision)"' | grep -F "$SHORT_REV" | awk '{print $1}' | head -n1 || true)
+            fi
+          fi
 
           if [ -n "$ANALYSIS_ID" ] && [ "$ANALYSIS_ID" != "null" ]; then
             echo "Found analysis $ANALYSIS_ID for commit $GITHUB_SHA"
