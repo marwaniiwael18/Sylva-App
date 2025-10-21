@@ -5,7 +5,7 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: free
-    autoDeploy: true
+    autoDeploy: false  # Désactivé car on déclenche via webhook
     healthCheckPath: /
     envVars:
       - key: APP_NAME
@@ -22,7 +22,7 @@ services:
           name: sylva-app
           property: host
       - key: DB_CONNECTION
-        value: pgsql
+        value: mysql
       - key: DB_HOST
         fromDatabase:
           name: sylva-db
@@ -58,6 +58,6 @@ services:
 
 databases:
   - name: sylva-db
-    databaseName: sylva_app
-    user: sylva_user
+    databaseName: laravel
+    user: laravel_user
     plan: free
