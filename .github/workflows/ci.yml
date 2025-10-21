@@ -155,11 +155,10 @@ jobs:
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Deploy to Render
+      - name: Trigger Render deployment
         run: |
           echo "🚀 Triggering Render deployment..."
-          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-          echo "✅ Render deployment triggered!"
-          echo ""
-          echo "🌐 Your app will be available at: ${{ secrets.RENDER_APP_URL }}"
-          echo "📊 Check deployment status on Render dashboard"
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            --silent --show-error
+          echo "✅ Render deployment triggered successfully!"
