@@ -96,9 +96,12 @@ if [ $(($(date +%s) - START_TIME)) -ge $TIMEOUT ]; then
     exit 1
 fi
 
-# Nettoyer les anciens containers
-echo "🧹 Nettoyage des anciens containers..."
-docker compose down -v 2>/dev/null
+# Vérifier l'état des containers existants
+echo "🔍 Vérification de l'état des containers..."
+MYSQL_RUNNING=$(docker ps --filter "name=sylva-app-mysql" --filter "status=running" -q)
+PROMETHEUS_RUNNING=$(docker ps --filter "name=sylva-app-prometheus" --filter "status=running" -q)
+GRAFANA_RUNNING=$(docker ps --filter "name=sylva-app-grafana" --filter "status=running" -q)
+APP_RUNNING=$(docker ps --filter "name=sylva-app-app" --filter "status=running" -q)
 
 # Générer APP_KEY si nécessaire
 if [ ! -f ".env.ci" ]; then
@@ -107,13 +110,45 @@ if [ ! -f ".env.ci" ]; then
     echo "APP_KEY=$APP_KEY" > .env.ci
 fi
 
-# Lancer les containers
-echo "🐳 Lancement des containers Docker..."
-if docker compose --env-file .env.ci up -d mysql app prometheus grafana; then
-    echo "✅ Containers démarrés !"
+# Déterminer quels containers démarrer
+CONTAINERS_TO_START=""
+
+if [ -z "$MYSQL_RUNNING" ]; then
+    CONTAINERS_TO_START="$CONTAINERS_TO_START mysql"
+    echo "🐬 MySQL sera démarré"
 else
-    echo "❌ Erreur lors du lancement des containers"
-    exit 1
+    echo "✅ MySQL déjà en cours"
+fi
+
+if [ -z "$PROMETHEUS_RUNNING" ]; then
+    CONTAINERS_TO_START="$CONTAINERS_TO_START prometheus"
+    echo "📊 Prometheus sera démarré"
+else
+    echo "✅ Prometheus déjà en cours"
+fi
+
+if [ -z "$GRAFANA_RUNNING" ]; then
+    CONTAINERS_TO_START="$CONTAINERS_TO_START grafana"
+    echo "📈 Grafana sera démarré"
+else
+    echo "✅ Grafana déjà en cours"
+fi
+
+# Toujours redémarrer l'application
+CONTAINERS_TO_START="$CONTAINERS_TO_START app"
+echo "🚀 Application sera (re)démarrée"
+
+# Lancer les containers nécessaires
+if [ -n "$CONTAINERS_TO_START" ]; then
+    echo "🐳 Lancement des containers:$CONTAINERS_TO_START"
+    if docker compose --env-file .env.ci up -d $CONTAINERS_TO_START; then
+        echo "✅ Containers démarrés !"
+    else
+        echo "❌ Erreur lors du lancement des containers"
+        exit 1
+    fi
+else
+    echo "✅ Tous les containers sont déjà en cours"
 fi
 
 # Attendre que l'app soit prête
@@ -124,6 +159,15 @@ RETRY_COUNT=0
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     if curl -s --max-time 5 http://localhost:8000 > /dev/null 2>&1; then
         echo "🎉 Application prête ! http://localhost:8000"
+
+        # Exécuter les migrations
+        echo "🗃️ Exécution des migrations de base de données..."
+        if docker compose --env-file .env.ci exec -T app php artisan migrate --force; then
+            echo "✅ Migrations exécutées avec succès !"
+        else
+            echo "⚠️ Erreur lors des migrations (peuvent déjà être faites)"
+        fi
+
         echo "📊 Monitoring disponible:"
         echo "  - Prometheus: http://localhost:9090"
         echo "  - Grafana: http://localhost:3000"

@@ -122,9 +122,12 @@ if (((Get-Date) - $startTime).TotalSeconds -ge $timeout) {
     exit 1
 }
 
-# Nettoyer les anciens containers
-Write-Host "Nettoyage anciens containers..." -ForegroundColor Yellow
-docker compose down -v 2>$null
+# Vérifier l'état des containers existants
+Write-Host "Verification etat containers..." -ForegroundColor Yellow
+$mysqlRunning = docker ps --filter "name=sylva-app-mysql" --filter "status=running" -q
+$prometheusRunning = docker ps --filter "name=sylva-app-prometheus" --filter "status=running" -q
+$grafanaRunning = docker ps --filter "name=sylva-app-grafana" --filter "status=running" -q
+$appRunning = docker ps --filter "name=sylva-app-app" --filter "status=running" -q
 
 # Generer APP_KEY si necessaire
 if (!(Test-Path .env.ci)) {
@@ -133,14 +136,47 @@ if (!(Test-Path .env.ci)) {
     "APP_KEY=$appKey" | Out-File -FilePath .env.ci -Encoding UTF8
 }
 
-# Lancer les containers
-Write-Host "Lancement containers Docker..." -ForegroundColor Yellow
-try {
-    docker compose --env-file .env.ci up -d mysql app prometheus grafana
-    Write-Host "Containers demarres !" -ForegroundColor Green
-} catch {
-    Write-Host "Erreur lancement containers: $_" -ForegroundColor Red
-    exit 1
+# Démarrer seulement les containers manquants
+$containersToStart = @()
+
+if (!$mysqlRunning) {
+    $containersToStart += "mysql"
+    Write-Host "MySQL sera demarre" -ForegroundColor Cyan
+} else {
+    Write-Host "MySQL deja en cours" -ForegroundColor Green
+}
+
+if (!$prometheusRunning) {
+    $containersToStart += "prometheus"
+    Write-Host "Prometheus sera demarre" -ForegroundColor Cyan
+} else {
+    Write-Host "Prometheus deja en cours" -ForegroundColor Green
+}
+
+if (!$grafanaRunning) {
+    $containersToStart += "grafana"
+    Write-Host "Grafana sera demarre" -ForegroundColor Cyan
+} else {
+    Write-Host "Grafana deja en cours" -ForegroundColor Green
+}
+
+# Toujours redémarrer l'application
+$containersToStart += "app"
+Write-Host "Application sera (re)demarree" -ForegroundColor Cyan
+
+# Lancer les containers nécessaires
+if ($containersToStart.Count -gt 0) {
+    Write-Host "Lancement containers: $($containersToStart -join ', ')" -ForegroundColor Yellow
+    try {
+        $startCommand = "docker compose --env-file .env.ci up -d $($containersToStart -join ' ')"
+        Invoke-Expression $startCommand
+        Write-Host "Containers demarres !" -ForegroundColor Green
+    } catch {
+        Write-Host "Erreur lancement containers: $_" -ForegroundColor Red
+        exit 1
+    }
+} else {
+    Write-Host "Tous les containers sont deja en cours" -ForegroundColor Green
 }
 
 # Attendre que l'app soit prete
@@ -153,6 +189,17 @@ while ($retryCount -lt $maxRetries) {
         $response = Invoke-WebRequest -Uri "http://localhost:8000" -TimeoutSec 5 -ErrorAction Stop
         if ($response.StatusCode -eq 200) {
             Write-Host "Application prete ! http://localhost:8000" -ForegroundColor Green
+
+            # Exécuter les migrations une fois que l'app est prête
+            Write-Host "Execution migrations base de donnees..." -ForegroundColor Yellow
+            try {
+                docker compose --env-file .env.ci exec -T app php artisan migrate --force
+                Write-Host "Migrations executees avec succes !" -ForegroundColor Green
+            } catch {
+                Write-Host "Erreur lors des migrations: $_" -ForegroundColor Red
+                # Ne pas quitter, les migrations peuvent déjà être faites
+            }
+
             Write-Host "Monitoring:" -ForegroundColor Cyan
             Write-Host "  - Prometheus: http://localhost:9090" -ForegroundColor White
             Write-Host "  - Grafana: http://localhost:3000 (admin/admin)" -ForegroundColor White
