@@ -82,7 +82,7 @@ $workflowName = "ci"
 $startTime = Get-Date
 $timeout = $TimeoutMinutes * 60
 
-while ((Get-Date) - $startTime).TotalSeconds -lt $timeout) {
+while (((Get-Date) - $startTime).TotalSeconds -lt $timeout) {
     try {
         $workflowRuns = gh run list --workflow=$workflowName --json status,conclusion,createdAt --limit 1 | ConvertFrom-Json
 
