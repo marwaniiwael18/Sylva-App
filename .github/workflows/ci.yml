@@ -76,7 +76,7 @@ jobs:
         php-version: '8.2'
         extensions: pdo, pdo_mysql
     - name: Install PHP dependencies
-      run: composer install --no-progress --prefer-dist --optimize-autoloader --no-dev
+      run: composer install --no-progress --prefer-dist --optimize-autoloader
     - name: Copy environment file
       run: cp .env.ci .env
     - name: Generate application key
