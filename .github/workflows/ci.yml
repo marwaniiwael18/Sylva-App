@@ -91,11 +91,14 @@ jobs:
           exit 1
         fi
 
-        for i in $(seq 1 $MAX_RETRIES); do
-          echo "Attempt $i/$MAX_RETRIES: querying SonarCloud for analysis status..."
+        BRANCH=${GITHUB_REF#refs/heads/}
+        SHORT_REV=${GITHUB_SHA:0:7}
 
-          ANALYSES_JSON=$(curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/project_analyses/search?project=$PROJECT_KEY")
-          ANALYSIS_ID=$(echo "$ANALYSES_JSON" | jq -r --arg rev "$GITHUB_SHA" '.analyses[] | select(.events[]? | .name=="completed") | select(.revision==$rev) | .key' | head -n1)
+        for i in $(seq 1 $MAX_RETRIES); do
+          echo "Attempt $i/$MAX_RETRIES: querying SonarCloud for analysis status (branch=$BRANCH)..."
+
+          ANALYSES_JSON=$(curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/project_analyses/search?project=$PROJECT_KEY&branch=$BRANCH")
+          ANALYSIS_ID=$(echo "$ANALYSES_JSON" | jq -r --arg rev "$GITHUB_SHA" --arg short "$SHORT_REV" '.analyses[] | select(.events[]? | .name=="completed") | select(.revision==$rev or (.revision | startswith($short))) | .key' | head -n1)
 
           if [ -n "$ANALYSIS_ID" ] && [ "$ANALYSIS_ID" != "null" ]; then
             echo "Found analysis $ANALYSIS_ID for commit $GITHUB_SHA"
@@ -111,7 +114,9 @@ jobs:
               echo "Quality Gate pending: $QG_STATUS"
             fi
           else
-            echo "No matching analysis found yet for commit. Waiting $POLL_INTERVAL seconds..."
+            echo "No matching analysis found yet for commit. Showing recent analyses for branch $BRANCH (helpful for debugging):"
+            echo "$ANALYSES_JSON" | jq -r '.analyses[0:5] | .[] | "- key: \(.key)  revision: \(.revision)  date: \(.date)"'
+            echo "Waiting $POLL_INTERVAL seconds..."
           fi
 
           sleep $POLL_INTERVAL
