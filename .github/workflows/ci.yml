@@ -80,7 +80,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    needs: test  # Changed from sonar to test to avoid blocking on sonar issues
+    needs: sonar  # Changed from sonar to test to avoid blocking on sonar issues
     if: false  # Temporarily disabled due to registry permissions
     steps:
     - uses: actions/checkout@v4
