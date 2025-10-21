@@ -155,10 +155,10 @@ jobs:
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
       - name: Trigger Render deployment
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          echo "🚀 Triggering Render deployment..."
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            --silent --show-error
-          echo "✅ Render deployment triggered successfully!"
+          chmod +x deploy-render.sh
+          ./deploy-render.sh
