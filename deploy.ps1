@@ -78,7 +78,7 @@ Start-Sleep -Seconds 10
 
 # Surveiller le workflow
 Write-Host "Surveillance workflow CI..." -ForegroundColor Yellow
-$workflowName = "ci"
+$workflowName = "CI/CD Pipeline"
 $startTime = Get-Date
 $timeout = $TimeoutMinutes * 60
 
