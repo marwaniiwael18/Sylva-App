@@ -67,16 +67,16 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y jq
-    - name: Generate test results (for Sonar upload)
-      run: |
-        mkdir -p test-results
-        php artisan test --log-junit=test-results/junit.xml || true
+    # Note: tests already run in the `test` job. We rely on SonarCloud Automatic Analysis
+    # to run analysis and simply poll the Quality Gate here. Removing php artisan invocation
+    # avoids requiring composer/vendor & DB in this job.
     - name: Wait for SonarCloud Quality Gate
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         SONAR_HOST_URL: https://sonarcloud.io
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_SHA: ${{ github.sha }}
+        PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
       run: |
         set -e
 
@@ -86,7 +86,6 @@ jobs:
 
         echo "Looking up SonarCloud task for commit ${GITHUB_SHA}..."
 
-        PROJECT_KEY="${{ secrets.SONAR_PROJECT_KEY }}"
         if [ -z "$PROJECT_KEY" ]; then
           echo "SONAR_PROJECT_KEY secret is not set. Please set it to \"<org>_<project>\"." >&2
           exit 1
@@ -130,10 +129,7 @@ jobs:
     - name: Build Docker image (local only)
       run: docker build -t sylva-app:latest .
 
-  # This job polls SonarCloud Quality Gate for the latest analysis of this commit.
-  # It supports keeping SonarCloud Automatic Analysis enabled. The job will wait
-  # up to ~10 minutes (configurable) for a Quality Gate result. If the gate is
-  # OK the pipeline continues to `build`, otherwise it fails.
+
   monitoring:
     runs-on: ubuntu-latest
     needs: build
