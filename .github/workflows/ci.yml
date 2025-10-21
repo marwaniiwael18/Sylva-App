@@ -71,7 +71,7 @@ jobs:
     - name: Generate test results
       run: |
         mkdir -p test-results
-        php artisan test --log-junit=test-results/junit.xml || true
+        ./vendor/bin/phpunit --log-junit=test-results/junit.xml || true
     - name: SonarQube Scan
       uses: sonarsource/sonarqube-scan-action@v2
       env:
