@@ -28,6 +28,14 @@ class PlantIdentificationService
      */
     public function identifyPlant(string $imagePath): array
     {
+        if (empty($this->apiKey) || str_contains($this->apiKey, 'placeholder')) {
+            return [
+                'success' => false,
+                'error' => 'api_key_missing',
+                'message' => 'Plant.id API key is not configured or is a placeholder'
+            ];
+        }
+
         try {
             // Convert image to base64
             $imageData = $this->getImageBase64($imagePath);
@@ -216,6 +224,14 @@ class PlantIdentificationService
      */
     public function assessHealth(string $imagePath): array
     {
+        if (empty($this->apiKey) || str_contains($this->apiKey, 'placeholder')) {
+            return [
+                'success' => false,
+                'error' => 'api_key_missing',
+                'message' => 'Plant.id API key is not configured or is a placeholder'
+            ];
+        }
+
         try {
             // Convert image to base64
             $imageData = $this->getImageBase64($imagePath);
