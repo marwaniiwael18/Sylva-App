@@ -22,9 +22,9 @@ php artisan view:clear
 echo "🔗 Creating storage link..."
 php artisan storage:link || true
 
-# Generate optimized autoloader
+# Generate optimized autoloader (without route caching for now)
 echo "⚡ Optimizing autoloader..."
-php artisan optimize
+composer dump-autoload --optimize
 
 # Set proper permissions
 echo "🔐 Setting permissions..."

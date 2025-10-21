@@ -130,7 +130,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/refunds/{refund}/reject', [AdminController::class, 'rejectRefund'])->name('refunds.reject');
         
         // Trees Management
-        Route::get('/trees', [AdminController::class, 'trees'])->name('trees');
+        Route::get('/trees', [AdminController::class, 'trees'])->name('trees.index');
         Route::patch('/trees/{tree}/verify', [AdminController::class, 'verifyTree'])->name('trees.verify');
         Route::delete('/trees/{tree}', [AdminController::class, 'deleteTree'])->name('trees.delete');
         
