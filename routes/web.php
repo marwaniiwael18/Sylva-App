@@ -14,12 +14,25 @@ use App\Http\Controllers\BlogAIController;
 
 // Test route for diagnostics
 Route::get('/test', function () {
+    try {
+        // Test database connection
+        DB::connection()->getPdo();
+        $dbStatus = 'Connected';
+    } catch (\Exception $e) {
+        $dbStatus = 'Failed: ' . $e->getMessage();
+    }
+
     return response()->json([
         'status' => 'ok',
         'message' => 'Laravel is working!',
         'timestamp' => now(),
         'php_version' => PHP_VERSION,
-        'env' => app()->environment()
+        'env' => app()->environment(),
+        'database' => $dbStatus,
+        'user_count' => \App\Models\User::count(),
+        'app_key_set' => !empty(config('app.key')),
+        'debug_mode' => config('app.debug'),
+        'routes_cached' => app()->routesAreCached()
     ]);
 });
 

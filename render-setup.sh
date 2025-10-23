@@ -11,12 +11,14 @@ sleep 10
 echo "📦 Running database migrations..."
 php artisan migrate --force
 
-# Clear and cache config
-echo "⚙️ Clearing and caching config..."
+# Clear all Laravel caches
+echo "🧹 Clearing all caches..."
 php artisan config:clear
-php artisan config:cache
-php artisan route:clear
+php artisan cache:clear
 php artisan view:clear
+php artisan route:clear
+# Don't cache routes for now to avoid conflicts
+# php artisan route:cache
 
 # Create storage link if needed
 echo "🔗 Creating storage link..."
