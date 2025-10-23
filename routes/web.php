@@ -145,6 +145,7 @@ Route::middleware('auth')->group(function () {
         
         // Trees Management
         Route::get('/trees', [AdminController::class, 'trees'])->name('trees.index');
+        Route::get('/trees/{tree}', [AdminController::class, 'viewTree'])->name('trees.view');
         Route::patch('/trees/{tree}/verify', [AdminController::class, 'verifyTree'])->name('trees.verify');
         Route::delete('/trees/{tree}', [AdminController::class, 'deleteTree'])->name('trees.delete');
         
