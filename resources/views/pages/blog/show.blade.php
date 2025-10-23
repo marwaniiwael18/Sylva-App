@@ -118,25 +118,33 @@
                 <!-- Add Comment Form -->
                 @auth
                 <div class="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
-                    <form method="POST" action="{{ route('blog.comments.store', $blogPost) }}">
+                    <form method="POST" action="{{ route('blog.comments.store', $blogPost) }}" id="comment-form">
                         @csrf
                         <div class="mb-4">
                             <label for="content" class="block text-sm font-medium text-gray-700 mb-2">
-                                Ajouter un commentaire
+                                Ajouter un commentaire <span class="text-xs text-gray-500">(min. 3 caractères)</span>
                             </label>
                             <textarea id="content" 
                                       name="content" 
                                       rows="4"
+                                      minlength="3"
+                                      maxlength="2000"
                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent @error('content') border-red-500 @enderror"
                                       placeholder="Partagez votre avis, votre expérience ou posez une question..."
                                       required>{{ old('content') }}</textarea>
-                            @error('content')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+                            <div class="mt-1 flex justify-between items-center">
+                                <span id="comment-counter" class="text-xs text-gray-500">0 / 2,000 caractères</span>
+                                @error('content')
+                                    <p class="text-sm text-red-600">{{ $message }}</p>
+                                @else
+                                    <span class="text-xs text-gray-500">Min. 3 caractères requis</span>
+                                @enderror
+                            </div>
                         </div>
                         <div class="flex justify-end">
                             <button type="submit" 
-                                    class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-medium transition-colors">
+                                    id="submit-comment-btn"
+                                    class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                 <i data-lucide="send" class="w-4 h-4"></i>
                                 Publier le commentaire
                             </button>
@@ -278,6 +286,37 @@
 </div>
 
 <script>
+// Comment character counter
+const commentTextarea = document.getElementById('content');
+const commentCounter = document.getElementById('comment-counter');
+const submitBtn = document.getElementById('submit-comment-btn');
+
+if (commentTextarea && commentCounter) {
+    commentTextarea.addEventListener('input', function() {
+        const length = this.value.length;
+        commentCounter.textContent = `${length} / 2,000 caractères`;
+        
+        if (length < 3) {
+            commentCounter.classList.add('text-red-500');
+            commentCounter.classList.remove('text-gray-500', 'text-green-500');
+            if (submitBtn) submitBtn.disabled = true;
+        } else if (length >= 3 && length <= 2000) {
+            commentCounter.classList.add('text-green-500');
+            commentCounter.classList.remove('text-gray-500', 'text-red-500');
+            if (submitBtn) submitBtn.disabled = false;
+        } else {
+            commentCounter.classList.add('text-red-500');
+            commentCounter.classList.remove('text-gray-500', 'text-green-500');
+            if (submitBtn) submitBtn.disabled = true;
+        }
+    });
+    
+    // Initialize counter on page load
+    if (commentTextarea.value) {
+        commentTextarea.dispatchEvent(new Event('input'));
+    }
+}
+
 function editComment(commentId) {
     document.getElementById('comment-content-' + commentId).classList.add('hidden');
     document.getElementById('edit-form-' + commentId).classList.remove('hidden');

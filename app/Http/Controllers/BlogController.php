@@ -45,14 +45,53 @@ class BlogController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
+            'title' => [
+                'required',
+                'string',
+                'min:10',
+                'max:255',
+                'regex:/^[a-zA-Z0-9\s\-\'\"\?\!\,\.àâäéèêëïîôùûüÿçÀÂÄÉÈÊËÏÎÔÙÛÜŸÇ]+$/'
+            ],
+            'content' => [
+                'required',
+                'string',
+                'min:50',
+                'max:10000',
+            ],
             'related_event_id' => 'nullable|exists:events,id',
+        ], [
+            'title.required' => 'Le titre est obligatoire.',
+            'title.min' => 'Le titre doit contenir au moins 10 caractères.',
+            'title.max' => 'Le titre ne peut pas dépasser 255 caractères.',
+            'title.regex' => 'Le titre contient des caractères non autorisés.',
+            'content.required' => 'Le contenu est obligatoire.',
+            'content.min' => 'Le contenu doit contenir au moins 50 caractères pour être significatif.',
+            'content.max' => 'Le contenu ne peut pas dépasser 10,000 caractères.',
+            'related_event_id.exists' => 'L\'événement sélectionné n\'existe pas.',
         ]);
 
+        // Additional validation: Check for spam patterns
+        $content = $request->content;
+        $title = $request->title;
+        
+        // Block excessive capitalization (spam detection)
+        if (preg_match('/[A-Z]{10,}/', $title . $content)) {
+            return back()->withErrors(['content' => 'Veuillez éviter d\'écrire tout en majuscules.'])->withInput();
+        }
+        
+        // Block repeated characters (spam detection)
+        if (preg_match('/(.)\1{9,}/', $content)) {
+            return back()->withErrors(['content' => 'Le contenu contient trop de caractères répétés.'])->withInput();
+        }
+        
+        // Block URLs in excessive amounts (spam detection)
+        if (substr_count(strtolower($content), 'http') > 3) {
+            return back()->withErrors(['content' => 'Le contenu contient trop de liens. Maximum 3 liens autorisés.'])->withInput();
+        }
+
         BlogPost::create([
-            'title' => $request->title,
-            'content' => $request->content,
+            'title' => trim($request->title),
+            'content' => trim($request->content),
             'author_id' => Auth::id(),
             'related_event_id' => $request->related_event_id,
         ]);
@@ -76,15 +115,47 @@ class BlogController extends Controller
     public function storeComment(Request $request, BlogPost $blogPost, HuggingFaceService $huggingFace)
     {
         $request->validate([
-            'content' => 'required|string',
+            'content' => [
+                'required',
+                'string',
+                'min:3',
+                'max:2000',
+            ],
+        ], [
+            'content.required' => 'Le commentaire ne peut pas être vide.',
+            'content.min' => 'Le commentaire doit contenir au moins 3 caractères.',
+            'content.max' => 'Le commentaire ne peut pas dépasser 2,000 caractères.',
         ]);
+
+        $content = $request->content;
+        
+        // Anti-spam validations
+        // Block excessive capitalization
+        if (preg_match('/[A-Z]{15,}/', $content)) {
+            return back()->withErrors(['content' => 'Veuillez éviter d\'écrire tout en majuscules.'])->withInput();
+        }
+        
+        // Block repeated characters (spam detection)
+        if (preg_match('/(.)\1{9,}/', $content)) {
+            return back()->withErrors(['content' => 'Le commentaire contient trop de caractères répétés.'])->withInput();
+        }
+        
+        // Block excessive URLs
+        if (substr_count(strtolower($content), 'http') > 2) {
+            return back()->withErrors(['content' => 'Le commentaire contient trop de liens. Maximum 2 liens autorisés.'])->withInput();
+        }
+        
+        // Block very short repeated words (spam)
+        if (preg_match('/\b(\w+)\s+\1\s+\1\s+\1\b/i', $content)) {
+            return back()->withErrors(['content' => 'Le commentaire contient trop de répétitions.'])->withInput();
+        }
 
         // Analyze sentiment
         $sentiment = null;
         $sentimentScore = null;
         
         try {
-            $analysis = $huggingFace->analyzeSentiment($request->content);
+            $analysis = $huggingFace->analyzeSentiment($content);
             $sentiment = $analysis['label'];
             $sentimentScore = $analysis['score'];
         } catch (\Exception $e) {
@@ -93,7 +164,7 @@ class BlogController extends Controller
         }
 
         Comment::create([
-            'content' => $request->content,
+            'content' => trim($content),
             'author_id' => Auth::id(),
             'forum_post_id' => $blogPost->id,
             'sentiment' => $sentiment,
