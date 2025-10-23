@@ -928,6 +928,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Check if title is only numbers
+        if (/^[\d\s\.\-\+]+$/.test(reportData.title.trim())) {
+            alert('The title cannot contain only numbers. Please add some text.');
+            return;
+        }
+        
         if (isNaN(reportData.latitude) || isNaN(reportData.longitude)) {
             alert('Please select a location on the map');
             return;
@@ -1360,6 +1366,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Validation
             if (!formData.get('title') || !formData.get('description') || !formData.get('type') || !formData.get('urgency')) {
                 alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Check if title is only numbers
+            if (/^[\d\s\.\-\+]+$/.test(formData.get('title').trim())) {
+                alert('The title cannot contain only numbers. Please add some text.');
                 return;
             }
             

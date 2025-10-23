@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use App\Rules\NotNumericOnly;
 
 class ReportController extends Controller
 {
@@ -71,7 +72,7 @@ class ReportController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => ['required', 'string', 'max:255', new NotNumericOnly()],
             'description' => 'required|string|max:1000',
             'type' => ['required', Rule::in(['tree_planting', 'maintenance', 'pollution', 'green_space_suggestion'])],
             'urgency' => ['required', Rule::in(['low', 'medium', 'high'])],
@@ -137,7 +138,7 @@ class ReportController extends Controller
         }
 
         $validated = $request->validate([
-            'title' => 'sometimes|string|max:255',
+            'title' => ['sometimes', 'string', 'max:255', new NotNumericOnly()],
             'description' => 'sometimes|string|max:1000',
             'type' => ['sometimes', Rule::in(['tree_planting', 'maintenance', 'pollution', 'green_space_suggestion'])],
             'urgency' => ['sometimes', Rule::in(['low', 'medium', 'high'])],
