@@ -136,6 +136,11 @@ if (!(Test-Path .env.ci)) {
 # Lancer les containers
 Write-Host "Lancement containers Docker..." -ForegroundColor Yellow
 try {
+    # Pull latest images from Docker Hub
+    Write-Host "Pulling latest images from Docker Hub..." -ForegroundColor Cyan
+    docker compose --env-file .env.ci pull
+    
+    # Start containers
     docker compose --env-file .env.ci up -d mysql app prometheus grafana
     Write-Host "Containers demarres !" -ForegroundColor Green
 } catch {

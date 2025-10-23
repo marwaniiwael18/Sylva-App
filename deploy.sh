@@ -109,7 +109,8 @@ fi
 
 # Lancer les containers
 echo "🐳 Lancement des containers Docker..."
-if docker compose --env-file .env.ci up -d mysql app prometheus grafana; then
+echo "📥 Pulling latest images from Docker Hub..."
+if docker compose --env-file .env.ci pull && docker compose --env-file .env.ci up -d mysql app prometheus grafana; then
     echo "✅ Containers démarrés !"
 else
     echo "❌ Erreur lors du lancement des containers"
