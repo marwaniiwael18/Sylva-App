@@ -57,17 +57,9 @@
         </div>
     </div>
 
-    <!-- Filtres and Add Button -->
+    <!-- Filtres -->
     <div class="bg-gray-800 border border-gray-700 rounded-xl p-4">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-white font-semibold">Filtres</h3>
-            <a href="/reports#add" target="_blank"
-               class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                <span>Ajouter Rapport</span>
-            </a>
-        </div>
-        <form method="GET" class="flex items-center gap-4 flex-wrap">
+        <form method="GET" class="flex items-center gap-4">
             <div class="flex-1">
                 <input type="text" 
                        name="search" 
@@ -78,7 +70,7 @@
             <select name="status" class="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500">
                 <option value="">Tous les statuts</option>
                 <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>En attente</option>
-                <option value="validated" {{ request('status') === 'validated' ? 'selected' : '' }}>Validés</option>
+                <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approuvés</option>
                 <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejetés</option>
             </select>
             <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
@@ -94,37 +86,32 @@
 
     <!-- Liste des rapports -->
     <div class="space-y-4">
-        @forelse($reports as $report)
+        @foreach($reports as $report)
         <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
             <div class="p-6">
-                <div class="flex items-start justify-between mb-4 flex-wrap gap-4">
-                    <div class="flex-1 min-w-[300px]">
-                        <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
                             <h3 class="text-lg font-semibold text-white">{{ $report->title }}</h3>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                 @if($report->status === 'pending') bg-yellow-900 text-yellow-200
-                                @elseif($report->status === 'validated') bg-green-900 text-green-200
+                                @elseif($report->status === 'approved') bg-green-900 text-green-200
                                 @else bg-red-900 text-red-200
                                 @endif">
                                 @if($report->status === 'pending')
                                     <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
                                     En attente
-                                @elseif($report->status === 'validated')
+                                @elseif($report->status === 'approved')
                                     <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i>
-                                    Validé
+                                    Approuvé
                                 @else
                                     <i data-lucide="x-circle" class="w-3 h-3 mr-1"></i>
                                     Rejeté
                                 @endif
                             </span>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                {{ $report->urgency === 'high' ? 'bg-red-900 text-red-200' : 
-                                   ($report->urgency === 'medium' ? 'bg-yellow-900 text-yellow-200' : 'bg-blue-900 text-blue-200') }}">
-                                {{ ucfirst($report->urgency) }} Priority
-                            </span>
                         </div>
                         
-                        <div class="flex items-center gap-4 text-sm text-gray-400 mb-3 flex-wrap">
+                        <div class="flex items-center gap-4 text-sm text-gray-400 mb-3">
                             <div class="flex items-center gap-1">
                                 <i data-lucide="user" class="w-4 h-4"></i>
                                 {{ $report->user->name }}
@@ -133,18 +120,16 @@
                                 <i data-lucide="calendar" class="w-4 h-4"></i>
                                 {{ $report->created_at->format('d/m/Y à H:i') }}
                             </div>
-                            @if($report->address)
                             <div class="flex items-center gap-1">
                                 <i data-lucide="map-pin" class="w-4 h-4"></i>
-                                {{ Str::limit($report->address, 40) }}
+                                {{ $report->location }}
                             </div>
-                            @endif
                         </div>
                         
-                        <p class="text-gray-300 mb-4">{{ $report->description }}</p>
+                        <p class="text-gray-300 mb-4">{{ Str::limit($report->description, 200) }}</p>
                         
                         @if($report->status === 'pending')
-                        <div class="flex items-center gap-3 flex-wrap">
+                        <div class="flex items-center gap-3">
                             <button onclick="approveReport({{ $report->id }})" 
                                     class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                                 <i data-lucide="check" class="w-4 h-4"></i>
@@ -155,69 +140,21 @@
                                 <i data-lucide="x" class="w-4 h-4"></i>
                                 Rejeter
                             </button>
-                            <a href="/reports#edit-{{ $report->id }}" target="_blank"
-                               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                Modifier
-                            </a>
-                            <button onclick="deleteReportConfirm({{ $report->id }})" 
-                                    class="inline-flex items-center gap-2 px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                Supprimer
-                            </button>
-                        </div>
-                        @else
-                        <div class="flex items-center gap-3 flex-wrap">
-                            <a href="/reports#edit-{{ $report->id }}" target="_blank"
-                               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                Modifier
-                            </a>
-                            <button onclick="deleteReportConfirm({{ $report->id }})" 
-                                    class="inline-flex items-center gap-2 px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                Supprimer
-                            </button>
                         </div>
                         @endif
                     </div>
                     
-                    @if($report->images && count($report->images) > 0)
-                    <div class="flex-shrink-0">
-                        <img src="{{ $report->image_urls[0] }}" 
+                    @if($report->image)
+                    <div class="ml-6">
+                        <img src="{{ asset('storage/' . $report->image) }}" 
                              alt="Image du rapport" 
                              class="w-32 h-32 object-cover rounded-lg border border-gray-600">
-                        @if(count($report->images) > 1)
-                        <div class="mt-2 text-xs text-gray-400 text-center">
-                            +{{ count($report->images) - 1 }} more
-                        </div>
-                        @endif
                     </div>
                     @endif
                 </div>
-
-                <!-- Report Feed Component -->
-                <div class="mt-6 pt-6 border-t border-gray-700">
-                    <div class="bg-gray-900 rounded-lg p-4">
-                        <h4 class="text-white font-semibold mb-4 flex items-center gap-2">
-                            <i data-lucide="message-square" class="w-4 h-4"></i>
-                            Activité et Commentaires
-                        </h4>
-                        @include('components.report-feed', ['reportId' => $report->id])
-                    </div>
-                </div>
             </div>
         </div>
-        @empty
-        <div class="bg-gray-800 border border-gray-700 rounded-xl p-12 text-center">
-            <i data-lucide="inbox" class="w-16 h-16 text-gray-600 mx-auto mb-4"></i>
-            <h3 class="text-lg font-semibold text-white mb-2">Aucun rapport trouvé</h3>
-            <p class="text-gray-400 mb-4">Essayez de modifier vos filtres ou ajoutez un nouveau rapport</p>
-            <a href="/reports#add" target="_blank" class="inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors">
-                <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i> Ajouter un Rapport
-            </a>
-        </div>
-        @endforelse
+        @endforeach
     </div>
 
     @if($reports->hasPages())
@@ -236,7 +173,7 @@ function approveReport(reportId) {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
-            body: JSON.stringify({ action: 'validate', status: 'validated' })
+            body: JSON.stringify({ status: 'approved' })
         })
         .then(response => response.json())
         .then(data => {
@@ -245,10 +182,6 @@ function approveReport(reportId) {
             } else {
                 alert('Erreur lors de l\'approbation');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Erreur lors de l\'approbation');
         });
     }
 }
@@ -274,49 +207,8 @@ function rejectReport(reportId) {
             } else {
                 alert('Erreur lors du rejet');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Erreur lors du rejet');
         });
     }
 }
-
-function deleteReportConfirm(reportId) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce rapport ? Cette action est irréversible.')) {
-        deleteReport(reportId);
-    }
-}
-
-async function deleteReport(reportId) {
-    try {
-        const response = await fetch(`/admin/reports/${reportId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json',
-            }
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            alert('Rapport supprimé avec succès!');
-            location.reload();
-        } else {
-            throw new Error(result.message || 'Failed to delete report');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error deleting report: ' + error.message);
-    }
-}
-
-// Reinitialize Lucide icons after page load
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
-});
 </script>
 @endsection

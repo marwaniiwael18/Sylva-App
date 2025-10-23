@@ -4,6 +4,55 @@
 @section('page-title', 'Gestion des Rapports')
 @section('page-subtitle', 'Validation et modération des rapports environnementaux')
 
+@push('styles')
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+.leaflet-container {
+    z-index: 1;
+}
+.modal-content {
+    z-index: 1000;
+}
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.image-preview-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.image-preview-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.image-preview-remove:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+</style>
+@endpush
+
 @section('content')
 <div class="p-6 space-y-6">
     <!-- Stats rapides -->
@@ -61,13 +110,13 @@
     <div class="bg-gray-800 border border-gray-700 rounded-xl p-4">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-white font-semibold">Filtres</h3>
-            <a href="/reports#add" target="_blank"
-               class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200">
+            <button onclick="openAddReportModal()" 
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 <span>Ajouter Rapport</span>
-            </a>
+            </button>
         </div>
-        <form method="GET" class="flex items-center gap-4 flex-wrap">
+        <form method="GET" class="flex items-center gap-4">
             <div class="flex-1">
                 <input type="text" 
                        name="search" 
@@ -92,14 +141,14 @@
         </form>
     </div>
 
-    <!-- Liste des rapports -->
+    <!-- Liste des rapports avec feed -->
     <div class="space-y-4">
         @forelse($reports as $report)
         <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
             <div class="p-6">
-                <div class="flex items-start justify-between mb-4 flex-wrap gap-4">
-                    <div class="flex-1 min-w-[300px]">
-                        <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
                             <h3 class="text-lg font-semibold text-white">{{ $report->title }}</h3>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                 @if($report->status === 'pending') bg-yellow-900 text-yellow-200
@@ -124,7 +173,7 @@
                             </span>
                         </div>
                         
-                        <div class="flex items-center gap-4 text-sm text-gray-400 mb-3 flex-wrap">
+                        <div class="flex items-center gap-4 text-sm text-gray-400 mb-3">
                             <div class="flex items-center gap-1">
                                 <i data-lucide="user" class="w-4 h-4"></i>
                                 {{ $report->user->name }}
@@ -143,8 +192,8 @@
                         
                         <p class="text-gray-300 mb-4">{{ $report->description }}</p>
                         
-                        @if($report->status === 'pending')
                         <div class="flex items-center gap-3 flex-wrap">
+                            @if($report->status === 'pending')
                             <button onclick="approveReport({{ $report->id }})" 
                                     class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                                 <i data-lucide="check" class="w-4 h-4"></i>
@@ -155,35 +204,22 @@
                                 <i data-lucide="x" class="w-4 h-4"></i>
                                 Rejeter
                             </button>
-                            <a href="/reports#edit-{{ $report->id }}" target="_blank"
-                               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            @endif
+                            <button onclick="editReportModal({{ $report->id }})" 
+                                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                                 <i data-lucide="edit-2" class="w-4 h-4"></i>
                                 Modifier
-                            </a>
+                            </button>
                             <button onclick="deleteReportConfirm({{ $report->id }})" 
                                     class="inline-flex items-center gap-2 px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                 Supprimer
                             </button>
                         </div>
-                        @else
-                        <div class="flex items-center gap-3 flex-wrap">
-                            <a href="/reports#edit-{{ $report->id }}" target="_blank"
-                               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                Modifier
-                            </a>
-                            <button onclick="deleteReportConfirm({{ $report->id }})" 
-                                    class="inline-flex items-center gap-2 px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                Supprimer
-                            </button>
-                        </div>
-                        @endif
                     </div>
                     
                     @if($report->images && count($report->images) > 0)
-                    <div class="flex-shrink-0">
+                    <div class="ml-6">
                         <img src="{{ $report->image_urls[0] }}" 
                              alt="Image du rapport" 
                              class="w-32 h-32 object-cover rounded-lg border border-gray-600">
@@ -196,14 +232,10 @@
                     @endif
                 </div>
 
-                <!-- Report Feed Component -->
+                <!-- Report Feed Component (Comments, Votes, Reactions) -->
                 <div class="mt-6 pt-6 border-t border-gray-700">
-                    <div class="bg-gray-900 rounded-lg p-4">
-                        <h4 class="text-white font-semibold mb-4 flex items-center gap-2">
-                            <i data-lucide="message-square" class="w-4 h-4"></i>
-                            Activité et Commentaires
-                        </h4>
-                        @include('components.report-feed', ['reportId' => $report->id])
+                    <div class="bg-gray-750 rounded-lg p-4">
+                        @include('components.report-feed-admin', ['reportId' => $report->id])
                     </div>
                 </div>
             </div>
@@ -213,9 +245,10 @@
             <i data-lucide="inbox" class="w-16 h-16 text-gray-600 mx-auto mb-4"></i>
             <h3 class="text-lg font-semibold text-white mb-2">Aucun rapport trouvé</h3>
             <p class="text-gray-400 mb-4">Essayez de modifier vos filtres ou ajoutez un nouveau rapport</p>
-            <a href="/reports#add" target="_blank" class="inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors">
-                <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i> Ajouter un Rapport
-            </a>
+            <button onclick="openAddReportModal()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors">
+                <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>
+                Ajouter un Rapport
+            </button>
         </div>
         @endforelse
     </div>
@@ -227,6 +260,12 @@
     @endif
 </div>
 
+<!-- Include the same modals from reports.blade.php -->
+@include('partials.report-modals')
+
+@push('scripts')
+<!-- Leaflet JavaScript -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 function approveReport(reportId) {
     if (confirm('Approuver ce rapport ?')) {
@@ -236,7 +275,7 @@ function approveReport(reportId) {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
-            body: JSON.stringify({ action: 'validate', status: 'validated' })
+            body: JSON.stringify({ status: 'validated' })
         })
         .then(response => response.json())
         .then(data => {
@@ -245,10 +284,6 @@ function approveReport(reportId) {
             } else {
                 alert('Erreur lors de l\'approbation');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Erreur lors de l\'approbation');
         });
     }
 }
@@ -274,49 +309,24 @@ function rejectReport(reportId) {
             } else {
                 alert('Erreur lors du rejet');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Erreur lors du rejet');
         });
     }
 }
 
-function deleteReportConfirm(reportId) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce rapport ? Cette action est irréversible.')) {
-        deleteReport(reportId);
-    }
-}
+// Include all the modal functions from reports.blade.php
+let currentEditingReportId = null;
+let reports = @json($reports->items());
+let addReportMap = null;
+let editReportMap = null;
+let currentMarker = null;
+let editCurrentMarker = null;
+let selectedImages = [];
+let selectedEditImages = [];
+let existingImages = [];
+let imagesToDelete = [];
 
-async function deleteReport(reportId) {
-    try {
-        const response = await fetch(`/admin/reports/${reportId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json',
-            }
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            alert('Rapport supprimé avec succès!');
-            location.reload();
-        } else {
-            throw new Error(result.message || 'Failed to delete report');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error deleting report: ' + error.message);
-    }
-}
-
-// Reinitialize Lucide icons after page load
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
-});
+// Copy the functions from reports.blade.php
+// ... (will include in partials/report-modals partial)
 </script>
+@endpush
 @endsection

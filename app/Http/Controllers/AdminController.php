@@ -223,7 +223,7 @@ class AdminController extends Controller
 
         // Statistiques
         $pendingReports = Report::where('status', 'pending')->count();
-        $approvedReports = Report::where('status', 'approved')->count();
+        $approvedReports = Report::where('status', 'validated')->count();
         $rejectedReports = Report::where('status', 'rejected')->count();
         $totalReports = Report::count();
 
@@ -315,6 +315,28 @@ class AdminController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Rapport rejeté avec succès.'
+        ]);
+    }
+
+    /**
+     * Supprimer un rapport
+     */
+    public function deleteReport(Report $report)
+    {
+        // Delete associated images if any
+        if ($report->images && is_array($report->images)) {
+            foreach ($report->images as $image) {
+                if (file_exists(storage_path('app/public/' . $image))) {
+                    unlink(storage_path('app/public/' . $image));
+                }
+            }
+        }
+
+        $report->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Rapport supprimé avec succès.'
         ]);
     }
 
