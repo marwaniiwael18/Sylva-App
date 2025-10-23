@@ -277,12 +277,7 @@
                     <i data-lucide="calendar" class="w-8 h-8 text-green-400 mb-2 group-hover:scale-110 transition-transform"></i>
                     <span class="text-sm font-medium text-white">Événements</span>
                 </a>
-                
-                <a href="{{ route('admin.forum') }}" class="flex flex-col items-center p-4 rounded-lg bg-gray-750 border border-gray-700 hover:border-purple-600 hover:bg-gray-700 transition-all group">
-                    <i data-lucide="message-square" class="w-8 h-8 text-purple-400 mb-2 group-hover:scale-110 transition-transform"></i>
-                    <span class="text-sm font-medium text-white">Forum</span>
-
-                </a>
+            </div>
             </div>
         </div>
     </div>
