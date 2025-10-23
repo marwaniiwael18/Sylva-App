@@ -5,16 +5,17 @@ services:
     image: ${DOCKER_USERNAME:-aymenjallouli}/sylva-app:latest
     ports:
       - "8000:80"
+    env_file:
+      - .env
+      - .env.ci
     environment:
       - APP_ENV=production
-      - APP_KEY=${APP_KEY}
       - DB_CONNECTION=mysql
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_DATABASE=laravel
       - DB_USERNAME=root
       - DB_PASSWORD=root
-      - DOCKER_USERNAME=${DOCKER_USERNAME:-aymenjallouli}
     depends_on:
       - mysql
     volumes:

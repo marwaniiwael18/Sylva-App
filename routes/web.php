@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\WebController;
 use App\Http\Controllers\AdminController;
@@ -36,9 +37,9 @@ Route::get('/test', function () {
     ]);
 });
 
-// Redirect root to dashboard
+// Redirect root to dashboard or login based on authentication
 Route::get('/', function () {
-    return redirect('/dashboard');
+    return Auth::check() ? redirect('/dashboard') : redirect('/login');
 });
 
 // Metrics endpoint for Prometheus monitoring
