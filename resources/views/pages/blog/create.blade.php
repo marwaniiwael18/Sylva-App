@@ -122,18 +122,25 @@
                 <!-- Title -->
                 <div class="mb-6">
                     <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
-                        Titre de l'article *
+                        Titre de l'article * <span class="text-xs text-gray-500">(min. 10 caractères)</span>
                     </label>
                     <input type="text" 
                            id="title" 
                            name="title" 
                            value="{{ old('title') }}"
+                           minlength="10"
+                           maxlength="255"
                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent @error('title') border-red-500 @enderror"
                            placeholder="Ex: Comment entretenir les oliviers plantés la semaine dernière ?"
                            required>
-                    @error('title')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <div class="mt-1 flex justify-between items-center">
+                        <span id="title-counter" class="text-xs text-gray-500">0 / 255 caractères</span>
+                        @error('title')
+                            <p class="text-sm text-red-600">{{ $message }}</p>
+                        @else
+                            <span class="text-xs text-gray-500">Min. 10 caractères requis</span>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- Related Event -->
@@ -159,17 +166,24 @@
                 <!-- Content -->
                 <div class="mb-8">
                     <label for="content" class="block text-sm font-medium text-gray-700 mb-2">
-                        Contenu *
+                        Contenu * <span class="text-xs text-gray-500">(min. 50 caractères)</span>
                     </label>
                     <textarea id="content" 
                               name="content" 
                               rows="12"
+                              minlength="50"
+                              maxlength="10000"
                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent @error('content') border-red-500 @enderror"
                               placeholder="Décrivez votre question, partagez votre expérience ou lancez une discussion..."
                               required>{{ old('content') }}</textarea>
-                    @error('content')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <div class="mt-1 flex justify-between items-center">
+                        <span id="content-counter" class="text-xs text-gray-500">0 / 10,000 caractères</span>
+                        @error('content')
+                            <p class="text-sm text-red-600">{{ $message }}</p>
+                        @else
+                            <span class="text-xs text-gray-500">Min. 50 caractères requis</span>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- Actions -->
@@ -195,6 +209,48 @@
 @push('scripts')
 <script>
 let aiEnabled = false;
+
+// Character counters
+const titleInput = document.getElementById('title');
+const contentInput = document.getElementById('content');
+const titleCounter = document.getElementById('title-counter');
+const contentCounter = document.getElementById('content-counter');
+
+// Update title counter
+titleInput.addEventListener('input', function() {
+    const length = this.value.length;
+    titleCounter.textContent = `${length} / 255 caractères`;
+    
+    if (length < 10) {
+        titleCounter.classList.add('text-red-500');
+        titleCounter.classList.remove('text-gray-500', 'text-green-500');
+    } else if (length >= 10 && length <= 255) {
+        titleCounter.classList.add('text-green-500');
+        titleCounter.classList.remove('text-gray-500', 'text-red-500');
+    }
+});
+
+// Update content counter
+contentInput.addEventListener('input', function() {
+    const length = this.value.length;
+    contentCounter.textContent = `${length} / 10,000 caractères`;
+    
+    if (length < 50) {
+        contentCounter.classList.add('text-red-500');
+        contentCounter.classList.remove('text-gray-500', 'text-green-500');
+    } else if (length >= 50 && length <= 10000) {
+        contentCounter.classList.add('text-green-500');
+        contentCounter.classList.remove('text-gray-500', 'text-red-500');
+    }
+});
+
+// Initialize counters on page load
+if (titleInput.value) {
+    titleInput.dispatchEvent(new Event('input'));
+}
+if (contentInput.value) {
+    contentInput.dispatchEvent(new Event('input'));
+}
 
 // Toggle AI Section
 document.getElementById('toggle-ai').addEventListener('click', function() {

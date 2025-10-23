@@ -7,51 +7,51 @@
 @section('content')
 <div class="p-6 space-y-6">
     <!-- Stats rapides -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl p-4">
             <div class="flex items-center justify-between">
-                <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
-                    <i data-lucide="message-square" class="w-6 h-6 text-white"></i>
+                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <i data-lucide="message-square" class="w-5 h-5 text-white"></i>
                 </div>
                 <div class="text-right">
-                    <div class="text-2xl font-bold text-white">{{ number_format($totalPosts ?? 0) }}</div>
-                    <div class="text-sm text-gray-400">Total Publications</div>
+                    <div class="text-xl font-bold text-white">{{ number_format($totalPosts ?? 0) }}</div>
+                    <div class="text-xs text-gray-400">Total Publications</div>
                 </div>
             </div>
         </div>
         
-        <div class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl p-4">
             <div class="flex items-center justify-between">
-                <div class="w-12 h-12 bg-yellow-600 rounded-xl flex items-center justify-center">
-                    <i data-lucide="alert-circle" class="w-6 h-6 text-white"></i>
+                <div class="w-10 h-10 bg-yellow-600 rounded-lg flex items-center justify-center">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-white"></i>
                 </div>
                 <div class="text-right">
-                    <div class="text-2xl font-bold text-white">{{ number_format($reportedPosts ?? 0) }}</div>
-                    <div class="text-sm text-gray-400">Signalés</div>
+                    <div class="text-xl font-bold text-white">{{ number_format($reportedPosts ?? 0) }}</div>
+                    <div class="text-xs text-gray-400">Signalés</div>
                 </div>
             </div>
         </div>
         
-        <div class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl p-4">
             <div class="flex items-center justify-between">
-                <div class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
-                    <i data-lucide="users" class="w-6 h-6 text-white"></i>
+                <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                    <i data-lucide="users" class="w-5 h-5 text-white"></i>
                 </div>
                 <div class="text-right">
-                    <div class="text-2xl font-bold text-white">{{ number_format($activeUsers ?? 0) }}</div>
-                    <div class="text-sm text-gray-400">Utilisateurs Actifs</div>
+                    <div class="text-xl font-bold text-white">{{ number_format($activeUsers ?? 0) }}</div>
+                    <div class="text-xs text-gray-400">Utilisateurs Actifs</div>
                 </div>
             </div>
         </div>
         
-        <div class="bg-gray-800 border border-gray-700 rounded-xl p-6">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl p-4">
             <div class="flex items-center justify-between">
-                <div class="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
-                    <i data-lucide="calendar" class="w-6 h-6 text-white"></i>
+                <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                    <i data-lucide="calendar" class="w-5 h-5 text-white"></i>
                 </div>
                 <div class="text-right">
-                    <div class="text-2xl font-bold text-white">{{ number_format($todayPosts ?? 0) }}</div>
-                    <div class="text-sm text-gray-400">Aujourd'hui</div>
+                    <div class="text-xl font-bold text-white">{{ number_format($todayPosts ?? 0) }}</div>
+                    <div class="text-xs text-gray-400">Aujourd'hui</div>
                 </div>
             </div>
         </div>
@@ -106,23 +106,25 @@
                     @forelse($posts ?? [] as $post)
                     <tr class="hover:bg-gray-750">
                         <td class="px-6 py-4">
-                            <div class="flex items-start">
+                            <div class="flex items-start max-w-md">
                                 @if($post->image)
                                 <img src="{{ asset('storage/' . $post->image) }}" 
                                      alt="Post" 
-                                     class="w-12 h-12 rounded-lg object-cover mr-3">
+                                     class="w-10 h-10 rounded-lg object-cover mr-3 flex-shrink-0">
                                 @else
-                                <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-                                    <i data-lucide="message-square" class="w-6 h-6 text-white"></i>
+                                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                    <i data-lucide="message-square" class="w-5 h-5 text-white"></i>
                                 </div>
                                 @endif
                                 <div class="flex-1 min-w-0">
-                                    <div class="text-sm font-medium text-white truncate">{{ $post->title }}</div>
-                                    <div class="text-sm text-gray-400 line-clamp-2">{{ Str::limit($post->content, 100) }}</div>
+                                    <div class="text-sm font-medium text-white truncate max-w-xs" title="{{ $post->title }}">
+                                        {{ Str::limit($post->title, 50) }}
+                                    </div>
+                                    <div class="text-xs text-gray-400 truncate">{{ Str::limit($post->content, 60) }}</div>
                                     <div class="mt-1 flex items-center text-xs text-gray-500">
                                         <i data-lucide="eye" class="w-3 h-3 mr-1"></i>
                                         {{ $post->views_count ?? 0 }}
-                                        <span class="mx-2">•</span>
+                                        <span class="mx-1">•</span>
                                         <i data-lucide="message-circle" class="w-3 h-3 mr-1"></i>
                                         {{ $post->comments_count ?? 0 }}
                                     </div>
@@ -130,8 +132,8 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-white">{{ $post->author->name ?? 'N/A' }}</div>
-                            <div class="text-sm text-gray-400">{{ $post->author->email ?? '' }}</div>
+                            <div class="text-sm font-medium text-white truncate max-w-[150px]">{{ $post->author->name ?? 'N/A' }}</div>
+                            <div class="text-xs text-gray-400 truncate max-w-[150px]">{{ $post->author->email ?? '' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200">
@@ -144,18 +146,23 @@
                                 Actif
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                            {{ $post->created_at->format('d/m/Y H:i') }}
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-400">
+                            <div>{{ $post->created_at->format('d/m/Y') }}</div>
+                            <div class="text-gray-500">{{ $post->created_at->format('H:i') }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button onclick="viewPost({{ $post->id }})" 
-                                    class="text-blue-400 hover:text-blue-300 mr-3">
-                                <i data-lucide="eye" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="deletePost({{ $post->id }})" 
-                                    class="text-red-400 hover:text-red-300">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button onclick="viewPost({{ $post->id }})" 
+                                        class="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 rounded-lg transition-colors"
+                                        title="Voir">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deletePost({{ $post->id }})" 
+                                        class="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded-lg transition-colors"
+                                        title="Supprimer">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -185,26 +192,68 @@ function viewPost(postId) {
 }
 
 function deletePost(postId) {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette publication ?')) return;
+    console.log('Attempting to delete post:', postId);
     
-    fetch(`/admin/blog/${postId}`, {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette publication ? Cette action est irréversible.')) {
+        console.log('Deletion cancelled by user');
+        return;
+    }
+    
+    const button = event.target.closest('button');
+    if (button) {
+        button.disabled = true;
+        button.classList.add('opacity-50');
+    }
+    
+    const url = `/admin/blog/${postId}`;
+    console.log('Sending DELETE request to:', url);
+    
+    fetch(url, {
         method: 'DELETE',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
-            window.location.reload();
+            // Animation de suppression
+            const row = button ? button.closest('tr') : null;
+            if (row) {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(-20px)';
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 300);
+            } else {
+                window.location.reload();
+            }
         } else {
             alert(data.message || 'Erreur lors de la suppression');
+            if (button) {
+                button.disabled = false;
+                button.classList.remove('opacity-50');
+            }
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Erreur lors de la suppression');
+        console.error('Delete error:', error);
+        alert('Erreur lors de la suppression de la publication: ' + error.message);
+        if (button) {
+            button.disabled = false;
+            button.classList.remove('opacity-50');
+        }
     });
 }
 </script>

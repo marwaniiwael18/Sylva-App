@@ -579,14 +579,25 @@ class AdminController extends Controller
     /**
      * Supprimer une publication blog
      */
-    public function deleteBlogPost(BlogPost $post)
+    public function deleteBlogPost(BlogPost $blogPost)
     {
-        $post->delete();
+        try {
+            // Delete associated comments first
+            $blogPost->comments()->delete();
+            
+            // Delete the post
+            $blogPost->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Publication supprimée avec succès.'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Publication supprimée avec succès.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
