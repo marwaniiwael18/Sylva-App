@@ -157,7 +157,7 @@ jobs:
     steps:
       - name: Notify deployment ready
         run: |
-          echo "🎉 CI/CD Pipeline completed successfully!"
+          echo "🎉 CI/CD Pipeline completed successfully!!!!!!!!!!!!"
           echo "📦 Docker images built and validated"
           echo "🚀 Ready for local deployment"
           echo ""
