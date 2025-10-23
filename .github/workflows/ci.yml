@@ -19,7 +19,7 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
-      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
+      - uses: actions/checkout@v4
       - name: Setup PHP
         uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f
         with:
@@ -61,7 +61,7 @@ jobs:
     needs: test
     continue-on-error: true
     steps:
-      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906855
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Install jq
@@ -137,7 +137,7 @@ jobs:
     needs: [test, sonar]
     if: always()
     steps:
-      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
+      - uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@885d1462b80bc1c1c7f0b00334ad271f09369c55
       - name: Login to Docker Hub
