@@ -124,9 +124,15 @@ Route::middleware('auth')->group(function () {
         Route::delete('/reports/{report}', [AdminController::class, 'deleteReport'])->name('reports.delete');
         
         // Events Management
-        Route::get('/events', [AdminController::class, 'events'])->name('events');
-        Route::patch('/events/{event}/featured', [AdminController::class, 'toggleEventFeatured'])->name('events.featured');
-        Route::delete('/events/{event}', [AdminController::class, 'deleteEvent'])->name('events.delete');
+    // Events Management
+    Route::get('/events', [AdminController::class, 'events'])->name('events');
+    Route::get('/events/create', [AdminController::class, 'createEvent'])->name('events.create');
+    Route::post('/events', [AdminController::class, 'storeEvent'])->name('events.store');
+    Route::get('/events/{event}', [AdminController::class, 'showEvent'])->name('events.show');
+    Route::get('/events/{event}/edit', [AdminController::class, 'editEvent'])->name('events.edit');
+    Route::put('/events/{event}', [AdminController::class, 'updateEvent'])->name('events.update');
+    Route::patch('/events/{event}/featured', [AdminController::class, 'toggleEventFeatured'])->name('events.featured');
+    Route::delete('/events/{event}', [AdminController::class, 'deleteEvent'])->name('events.delete');
         
         // Blog Management
         Route::get('/blog', [AdminController::class, 'blog'])->name('blog');
