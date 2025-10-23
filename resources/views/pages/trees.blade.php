@@ -418,7 +418,7 @@
                     </div>
 
                     <!-- AI Identification Result -->
-                    <div x-show="plantIdentification && plantIdentification.success" class="mt-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl">
+                    <div x-show="plantIdentification && plantIdentification.success && plantIdentification.data" class="mt-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl">
                         <div class="flex items-start">
                             <div class="p-2 bg-emerald-100 rounded-lg mr-3">
                                 <i data-lucide="sparkles" class="w-5 h-5 text-emerald-600"></i>
@@ -426,23 +426,23 @@
                             <div class="flex-1">
                                 <h4 class="text-sm font-bold text-emerald-900 mb-1">✨ Plant Identified!</h4>
                                 <p class="text-sm text-emerald-800 mb-2">
-                                    <strong x-text="plantIdentification.data.name"></strong>
-                                    <span class="text-emerald-600 italic ml-1" x-show="plantIdentification.data.scientific_name">
-                                        (<span x-text="plantIdentification.data.scientific_name"></span>)
+                                    <strong x-text="plantIdentification.data?.name || 'Unknown'"></strong>
+                                    <span class="text-emerald-600 italic ml-1" x-show="plantIdentification.data?.scientific_name">
+                                        (<span x-text="plantIdentification.data?.scientific_name"></span>)
                                     </span>
                                 </p>
                                 
                                 <!-- Suggested Type -->
-                                <div x-show="plantIdentification.data.suggested_type" class="mb-2 text-xs text-emerald-700">
+                                <div x-show="plantIdentification.data?.suggested_type" class="mb-2 text-xs text-emerald-700">
                                     <span class="font-medium">Suggested Type:</span>
-                                    <span class="ml-1 px-2 py-0.5 bg-emerald-100 rounded-full" x-text="plantIdentification.data.suggested_type"></span>
+                                    <span class="ml-1 px-2 py-0.5 bg-emerald-100 rounded-full" x-text="plantIdentification.data?.suggested_type"></span>
                                 </div>
                                 
                                 <div class="flex items-center text-xs text-emerald-700 mb-3">
                                     <span class="font-medium">Confidence:</span>
-                                    <span class="ml-1" x-text="plantIdentification.data.confidence + '%'"></span>
+                                    <span class="ml-1" x-text="(plantIdentification.data?.confidence || 0) + '%'"></span>
                                     <div class="ml-2 flex-1 max-w-32 h-2 bg-emerald-200 rounded-full overflow-hidden">
-                                        <div class="h-full bg-emerald-500 rounded-full transition-all" :style="'width: ' + plantIdentification.data.confidence + '%'"></div>
+                                        <div class="h-full bg-emerald-500 rounded-full transition-all" :style="'width: ' + (plantIdentification.data?.confidence || 0) + '%'"></div>
                                     </div>
                                 </div>
                                 
@@ -456,21 +456,21 @@
                                     Auto-fill Species, Type & Description
                                 </button>
                                 
-                                <div x-show="plantIdentification.data.common_names && plantIdentification.data.common_names.length > 1" class="mt-2 text-xs text-emerald-600">
+                                <div x-show="plantIdentification.data?.common_names && plantIdentification.data.common_names.length > 1" class="mt-2 text-xs text-emerald-600">
                                     <span class="font-medium">Other names:</span>
-                                    <span x-text="plantIdentification.data.common_names.slice(1).join(', ')"></span>
+                                    <span x-text="plantIdentification.data?.common_names?.slice(1).join(', ')"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- AI Identification Error -->
-                    <div x-show="plantIdentification && !plantIdentification.success" class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                    <div x-show="plantIdentification && !plantIdentification.success && plantIdentification.message" class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
                         <div class="flex items-start">
                             <i data-lucide="alert-circle" class="w-5 h-5 text-yellow-600 mr-2"></i>
                             <div>
                                 <p class="text-sm text-yellow-800 font-medium">Could not identify plant</p>
-                                <p class="text-xs text-yellow-700 mt-1" x-text="plantIdentification.message"></p>
+                                <p class="text-xs text-yellow-700 mt-1" x-text="plantIdentification.message || 'Plant identification service is not available'"></p>
                                 <p class="text-xs text-yellow-600 mt-1">You can still enter the species name manually.</p>
                             </div>
                         </div>
@@ -537,7 +537,11 @@ function treeManagement() {
         currentImages: [],
         imagesToDelete: [],
         identifyingPlant: false,
-        plantIdentification: null,
+        plantIdentification: {
+            success: false,
+            data: null,
+            message: ''
+        },
         form: {
             species: '',
             type: '',
@@ -723,7 +727,11 @@ function treeManagement() {
 
         async identifyPlantFromImage(imageFile) {
             this.identifyingPlant = true;
-            this.plantIdentification = null;
+            this.plantIdentification = {
+                success: false,
+                data: null,
+                message: 'Identifying plant...'
+            };
 
             try {
                 const formData = new FormData();
@@ -767,12 +775,20 @@ function treeManagement() {
                     }
                     
                     this.showNotification('Species, type, and description auto-filled!', 'success');
+                } else {
+                    // Set error state with proper structure
+                    this.plantIdentification = {
+                        success: false,
+                        data: null,
+                        message: result.message || 'Could not identify the plant. Please try again or enter details manually.'
+                    };
                 }
             } catch (error) {
                 console.error('Error identifying plant:', error);
                 this.plantIdentification = {
                     success: false,
-                    message: 'An error occurred while identifying the plant. You can still enter the species manually.'
+                    data: null,
+                    message: 'Plant identification service is currently unavailable. You can still enter the species manually.'
                 };
             } finally {
                 this.identifyingPlant = false;
@@ -780,7 +796,8 @@ function treeManagement() {
         },
 
         autoFillFromAI() {
-            if (!this.plantIdentification || !this.plantIdentification.success) {
+            if (!this.plantIdentification || !this.plantIdentification.success || !this.plantIdentification.data) {
+                alert('No plant identification data available.');
                 return;
             }
 
@@ -853,6 +870,12 @@ function treeManagement() {
             };
             this.currentImages = [];
             this.imagesToDelete = [];
+            this.plantIdentification = {
+                success: false,
+                data: null,
+                message: ''
+            };
+            this.identifyingPlant = false;
         },
 
         applyFilters() {
