@@ -474,12 +474,16 @@ class AdminController extends Controller
     {
         $query = Tree::with('plantedBy');
 
-        // Recherche
+        // Recherche par espèce ou nom de planteur
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('species', 'like', "%{$request->search}%")
-                  ->orWhereHas('plantedBy', function($q) use ($request) {
-                      $q->where('name', 'like', "%{$request->search}%");
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('species', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('plantedBy', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
                   });
             });
         }
@@ -487,6 +491,20 @@ class AdminController extends Controller
         // Filtre par statut
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        // Filtre par type
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // Filtre par date de plantation
+        if ($request->filled('date_from')) {
+            $query->whereDate('planting_date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('planting_date', '<=', $request->date_to);
         }
 
         $trees = $query->orderBy('planting_date', 'desc')->paginate(20);
@@ -497,13 +515,40 @@ class AdminController extends Controller
         $pendingTrees = Tree::where('status', 'Not Yet')->count();
         $monthlyTrees = Tree::whereMonth('planting_date', now()->month)->count();
 
+        // Stats par type
+        $treesByType = [
+            'Fruit' => Tree::where('type', 'Fruit')->count(),
+            'Ornamental' => Tree::where('type', 'Ornamental')->count(),
+            'Forest' => Tree::where('type', 'Forest')->count(),
+            'Medicinal' => Tree::where('type', 'Medicinal')->count(),
+        ];
+
         return view('admin.trees', compact(
             'trees',
             'totalTrees',
             'verifiedTrees',
             'pendingTrees',
-            'monthlyTrees'
+            'monthlyTrees',
+            'treesByType'
         ));
+    }
+
+    /**
+     * Voir les détails d'un arbre (Admin)
+     */
+    public function viewTree(Tree $tree)
+    {
+        $tree->load(['plantedBy', 'careRecords.maintainer', 'latestCare']);
+        
+        // Stats pour cet arbre
+        $stats = [
+            'care_count' => $tree->careRecords()->count(),
+            'last_care_date' => $tree->last_care_date,
+            'days_since_planting' => $tree->planting_date ? now()->diffInDays($tree->planting_date) : 0,
+            'health_score' => $tree->health_score,
+        ];
+
+        return view('admin.tree-detail', compact('tree', 'stats'));
     }
 
     /**
