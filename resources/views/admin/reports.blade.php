@@ -19,6 +19,25 @@
 .image-preview-remove:hover { background: rgba(0, 0, 0, 0.8); }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Modal text colors - ensure text is visible */
+#addReportModal input,
+#addReportModal textarea,
+#addReportModal select {
+    color: #1f2937 !important;
+    background-color: white !important;
+}
+#addReportModal label {
+    color: #374151 !important;
+}
+#addReportModal .text-gray-500,
+#addReportModal .text-gray-600,
+#addReportModal .text-gray-700 {
+    color: #4b5563 !important;
+}
+#addReportModal h3 {
+    color: #111827 !important;
+}
 </style>
 @endpush
 
@@ -480,7 +499,17 @@ async function deleteReport(reportId) {
 
 // Add Report Modal Functions
 function openAddReportModal() {
-    document.getElementById('addReportModal').classList.remove('hidden');
+    console.log('Opening add report modal...');
+    const modal = document.getElementById('addReportModal');
+    if (!modal) {
+        console.error('Modal element not found!');
+        alert('Error: Modal not found. Please refresh the page.');
+        return;
+    }
+    modal.classList.remove('hidden');
+    console.log('Modal should be visible now');
+    
+    // Initialize map after modal is shown
     setTimeout(() => {
         initializeAddReportMap();
     }, 100);
@@ -694,77 +723,88 @@ function removeImage(index) {
 }
 
 // Handle add form submission
-document.getElementById('addReportForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    
-    const reportData = {
-        title: formData.get('title'),
-        description: formData.get('description'),
-        type: formData.get('type'),
-        urgency: formData.get('urgency'),
-        latitude: parseFloat(formData.get('latitude')),
-        longitude: parseFloat(formData.get('longitude')),
-        address: formData.get('address') || null
-    };
-
-    if (!reportData.title || !reportData.description || !reportData.type || !reportData.urgency) {
-        alert('Please fill in all required fields');
+document.addEventListener('DOMContentLoaded', function() {
+    const addForm = document.getElementById('addReportForm');
+    if (!addForm) {
+        console.error('Add report form not found!');
         return;
     }
     
-    if (isNaN(reportData.latitude) || isNaN(reportData.longitude)) {
-        alert('Please select a location on the map');
-        return;
-    }
-    
-    try {
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalHtml = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Adding...';
-        submitBtn.disabled = true;
-
-        const submitFormData = new FormData();
-        Object.keys(reportData).forEach(key => {
-            if (reportData[key] !== null) {
-                submitFormData.append(key, reportData[key]);
-            }
-        });
+    addForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        console.log('Form submitted');
         
-        selectedImages.forEach((file, index) => {
-            submitFormData.append('images[]', file);
-        });
+        const formData = new FormData(this);
+        
+        const reportData = {
+            title: formData.get('title'),
+            description: formData.get('description'),
+            type: formData.get('type'),
+            urgency: formData.get('urgency'),
+            latitude: parseFloat(formData.get('latitude')),
+            longitude: parseFloat(formData.get('longitude')),
+            address: formData.get('address') || null
+        };
 
-        const response = await fetch('/api/reports-public', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json',
-            },
-            body: submitFormData
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            alert('Report added successfully!');
-            closeAddModal();
-            location.reload();
-        } else {
-            throw new Error(result.message || 'Failed to add report');
+        if (!reportData.title || !reportData.description || !reportData.type || !reportData.urgency) {
+            alert('Please fill in all required fields');
+            return;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error adding report: ' + error.message);
-    } finally {
-        const submitBtn = this.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.innerHTML = '<i data-lucide="plus" class="w-4 h-4 mr-2"></i>Add Report';
-            submitBtn.disabled = false;
-            lucide.createIcons();
+        
+        if (isNaN(reportData.latitude) || isNaN(reportData.longitude)) {
+            alert('Please select a location on the map');
+            return;
         }
-    }
+        
+        try {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Adding...';
+            submitBtn.disabled = true;
+
+            const submitFormData = new FormData();
+            Object.keys(reportData).forEach(key => {
+                if (reportData[key] !== null) {
+                    submitFormData.append(key, reportData[key]);
+                }
+            });
+            
+            selectedImages.forEach((file, index) => {
+                submitFormData.append('images[]', file);
+            });
+
+            const response = await fetch('/api/reports-public', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: submitFormData
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                alert('Report added successfully!');
+                closeAddModal();
+                location.reload();
+            } else {
+                throw new Error(result.message || 'Failed to add report');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error adding report: ' + error.message);
+        } finally {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i data-lucide="plus" class="w-4 h-4 mr-2"></i>Add Report';
+                submitBtn.disabled = false;
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+        }
+    });
 });
 
 function editReportModal(reportId) {
@@ -775,8 +815,12 @@ function editReportModal(reportId) {
 
 // Reinitialize Lucide icons after page load
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, initializing Lucide icons...');
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
+        console.log('Lucide icons initialized');
+    } else {
+        console.error('Lucide library not loaded!');
     }
 });
 </script>
