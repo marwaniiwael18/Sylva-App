@@ -201,10 +201,14 @@
     </div>
 
     <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+            integrity="sha384-l8f0VcPi/M1iHPv8egOnY/15TDwqgbOR1anMIJWvU6nLRgZVLTLSaNqi/TOoT5Fh"
+            crossorigin="anonymous"></script>
+
     <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"
+            integrity="sha384-vgG6hzyZ4aCmaSSujliUQznTpufqyQ+jjeaIyU/QSz6SWMoP1zQXW2xpvv26b3Vp"
+            crossorigin="anonymous"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof lucide !== 'undefined') {

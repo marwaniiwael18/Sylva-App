@@ -179,7 +179,9 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/sylva-app:latest
+          docker push ${{ env.DOCKER_USERNAME }}/sylva-app:latest
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
   deploy:
     runs-on: ubuntu-latest
