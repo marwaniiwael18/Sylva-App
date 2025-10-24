@@ -30,7 +30,7 @@ try {
     docker compose --env-file .env.ci pull app
 
     # Start containers
-    docker compose --env-file .env.ci up -d  app 
+    docker compose --env-file .env.ci up -d  app mysql prometheus grafana
     Write-Host "Containers demarres !" -ForegroundColor Green
 } catch {
     Write-Host "Erreur lancement containers: $_" -ForegroundColor Red
