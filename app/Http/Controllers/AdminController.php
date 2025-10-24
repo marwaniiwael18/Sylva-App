@@ -516,9 +516,9 @@ class AdminController extends Controller
         $donations = $query->orderBy('created_at', 'desc')->paginate(20);
 
         // AI Insights - generate more frequently for better UX
-        // Using mt_rand() for UI display logic (not security-sensitive)
+        // Using random_int() for UI display logic (not security-sensitive, but cryptographically secure)
         $aiInsights = null;
-        if ($request->has('show_ai') || mt_rand(1, 3) === 1) { // Show AI insights more frequently (1/3 chance)
+        if ($request->has('show_ai') || random_int(1, 3) === 1) { // Show AI insights more frequently (1/3 chance)
             $aiCacheKey = 'admin_donations_ai_insights_' . now()->format('Y-m-d-H');
             $aiInsights = Cache::remember($aiCacheKey, 3600, function () use ($stats) {
                 $aiData = [
