@@ -15,6 +15,76 @@ use Illuminate\Support\Facades\DB;
 class AdminController extends Controller
 {
     /**
+     * Afficher le formulaire de création d'un événement
+     */
+    public function createEvent()
+    {
+        return view('admin.event-create');
+    }
+
+    /**
+     * Enregistrer un nouvel événement
+     */
+    public function storeEvent(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'date' => 'required|date',
+            'location' => 'nullable|string|max:255',
+            'status' => 'required|string',
+            'image' => 'nullable|image|max:2048',
+        ]);
+
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('events', 'public');
+        }
+
+    $validated['organized_by_user_id'] = Auth::id();
+    $event = Event::create($validated);
+
+    return redirect('/admin/events')->with('success', 'Événement créé avec succès.');
+    }
+
+    /**
+     * Afficher les détails d'un événement
+     */
+    public function showEvent(Event $event)
+    {
+        return view('admin.event-show', compact('event'));
+    }
+
+    /**
+     * Afficher le formulaire d'édition d'un événement
+     */
+    public function editEvent(Event $event)
+    {
+        return view('admin.event-edit', compact('event'));
+    }
+
+    /**
+     * Mettre à jour un événement
+     */
+    public function updateEvent(Request $request, Event $event)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'date' => 'required|date',
+            'location' => 'nullable|string|max:255',
+            'status' => 'required|string',
+            'image' => 'nullable|image|max:2048',
+        ]);
+
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('events', 'public');
+        }
+
+        $event->update($validated);
+
+    return redirect('/admin/events')->with('success', 'Événement mis à jour avec succès.');
+    }
+    /**
      * Le middleware admin est appliqué via les routes
      */
 

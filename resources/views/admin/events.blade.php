@@ -79,84 +79,61 @@
                 </button>
             </form>
         </div>
-        <button onclick="createEvent()" class="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors flex items-center gap-2">
+            <button onclick="createEventAdmin()" class="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors flex items-center gap-2">
             <i data-lucide="plus" class="w-5 h-5"></i>
             Créer Event
         </button>
     </div>
 
     <!-- Liste des événements -->
-    <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-700">
-            <h3 class="text-lg font-semibold text-white">Tous les Événements</h3>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-            @forelse($events ?? [] as $event)
-            <div class="bg-gray-750 border border-gray-700 rounded-xl overflow-hidden hover:border-gray-600 transition-all">
-                @if($event->image)
-                <img src="{{ asset('storage/' . $event->image) }}" 
-                     alt="{{ $event->title }}" 
-                     class="w-full h-48 object-cover">
-                @else
-                <div class="w-full h-48 bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center">
-                    <i data-lucide="calendar" class="w-16 h-16 text-white"></i>
-                </div>
-                @endif
-                
-                <div class="p-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+    <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-x-auto mt-6">
+        <table class="min-w-full divide-y divide-gray-700 text-white">
+            <thead class="bg-gray-900">
+                <tr>
+                    <th class="px-4 py-3 text-left">Titre</th>
+                    <th class="px-4 py-3 text-left">Description</th>
+                    <th class="px-4 py-3 text-left">Date</th>
+                    <th class="px-4 py-3 text-left">Lieu</th>
+                    <th class="px-4 py-3 text-left">Statut</th>
+                    <th class="px-4 py-3 text-left">Participants</th>
+                    <th class="px-4 py-3 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-700">
+                @forelse($events ?? [] as $event)
+                <tr>
+                    <td class="px-4 py-3 font-semibold">{{ $event->title }}</td>
+                    <td class="px-4 py-3 max-w-xs truncate">{{ $event->description }}</td>
+                    <td class="px-4 py-3">{{ \Carbon\Carbon::parse($event->date)->format('d/m/Y H:i') }}</td>
+                    <td class="px-4 py-3">{{ $event->location ?? 'À définir' }}</td>
+                    <td class="px-4 py-3">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                             @if($event->status === 'active') bg-green-900 text-green-200
                             @elseif($event->status === 'upcoming') bg-yellow-900 text-yellow-200
                             @else bg-gray-900 text-gray-400
                             @endif">
                             {{ ucfirst($event->status ?? 'upcoming') }}
                         </span>
-                        <span class="text-xs text-gray-400">
-                            <i data-lucide="users" class="w-3 h-3 inline"></i>
-                            {{ $event->participants_count ?? 0 }}
-                        </span>
-                    </div>
-                    
-                    <h4 class="text-lg font-semibold text-white mb-2">{{ $event->title }}</h4>
-                    <p class="text-sm text-gray-400 mb-3 line-clamp-2">{{ $event->description }}</p>
-                    
-                    <div class="space-y-2 mb-4">
-                        <div class="flex items-center text-sm text-gray-400">
-                            <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
-                            {{ \Carbon\Carbon::parse($event->date)->format('d/m/Y H:i') }}
-                        </div>
-                        <div class="flex items-center text-sm text-gray-400">
-                            <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i>
-                            {{ $event->location ?? 'À définir' }}
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center gap-2">
-                        <button onclick="editEvent({{ $event->id }})" 
-                                class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                            <i data-lucide="edit" class="w-4 h-4 inline mr-1"></i>
-                            Éditer
+                    </td>
+                    <td class="px-4 py-3">{{ $event->participants_count ?? 0 }}</td>
+                    <td class="px-4 py-3 flex gap-2">
+                        <button onclick="showEvent({{ $event->id }})" class="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600" title="Voir"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                        <button onclick="editEvent({{ $event->id }})" class="px-2 py-1 bg-blue-600 rounded hover:bg-blue-700" title="Éditer"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                        <button onclick="deleteEvent({{ $event->id }})" class="px-2 py-1 bg-red-600 rounded hover:bg-red-700" title="Supprimer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="7" class="text-center py-8 text-gray-400">
+                        Aucun événement trouvé.<br>
+                            <button onclick="createEventAdmin()" class="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            Créer votre premier événement
                         </button>
-                        <button onclick="deleteEvent({{ $event->id }})" 
-                                class="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            @empty
-            <div class="col-span-full py-12 text-center text-gray-400">
-                <i data-lucide="calendar" class="w-16 h-16 mx-auto mb-4 text-gray-600"></i>
-                <p class="text-lg">Aucun événement trouvé</p>
-                <button onclick="createEvent()" class="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                    Créer votre premier événement
-                </button>
-            </div>
-            @endforelse
-        </div>
-        
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
         @if(isset($events) && $events->hasPages())
         <div class="px-6 py-4 border-t border-gray-700">
             {{ $events->links() }}
@@ -166,17 +143,17 @@
 </div>
 
 <script>
-function createEvent() {
+function createEventAdmin() {
     window.location.href = '/admin/events/create';
 }
-
 function editEvent(eventId) {
     window.location.href = `/admin/events/${eventId}/edit`;
 }
-
+function showEvent(eventId) {
+    window.location.href = `/admin/events/${eventId}`;
+}
 function deleteEvent(eventId) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) return;
-    
     fetch(`/admin/events/${eventId}`, {
         method: 'DELETE',
         headers: {
