@@ -228,7 +228,7 @@
 
         <div class="space-y-4">
             @foreach($pendingRefundRecords ?? [] as $refund)
-            <div class="bg-gray-700 rounded-lg p-4 border border-gray-600">
+            <div class="bg-gray-700 rounded-lg p-4 border border-gray-600" data-refund-id="{{ $refund->id }}">
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
                         <div class="flex items-center space-x-4">
@@ -623,6 +623,34 @@
     </div>
 </div>
 
+<!-- Notification Modal -->
+<div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-gray-800 rounded-xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="notificationTitle" class="text-lg font-semibold text-white flex items-center">
+                    <i data-lucide="info" class="w-5 h-5 mr-2 text-blue-400"></i>
+                    Notification
+                </h3>
+                <button onclick="closeNotificationModal()" class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div id="notificationContent" class="text-gray-300 leading-relaxed">
+                <!-- Content will be loaded here -->
+            </div>
+            
+            <div class="flex justify-end mt-6">
+                <button onclick="closeNotificationModal()" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 let currentDonationId = null;
 
@@ -994,6 +1022,36 @@ async function generateCampaignRecommendations() {
     }
 }
 
+// Helper functions for updating refund UI
+function removeRefundFromUI(refundId) {
+    // Find and remove the refund item from the pending refunds section
+    const refundElement = document.querySelector(`[data-refund-id="${refundId}"]`);
+    if (refundElement) {
+        refundElement.remove();
+    }
+}
+
+function updatePendingRefundsCount() {
+    // Update the pending refunds count in the UI
+    const pendingRefundsSection = document.querySelector('.bg-gray-800.border.border-gray-700.rounded-xl.p-6.mb-8');
+    if (pendingRefundsSection) {
+        const refundItems = pendingRefundsSection.querySelectorAll('.bg-gray-700.rounded-lg.p-4.border.border-gray-600');
+        const currentCount = refundItems.length;
+        
+        // Update the header count
+        const headerElement = pendingRefundsSection.querySelector('h3');
+        if (headerElement) {
+            const countText = headerElement.textContent.replace(/\(\d+\)/, `(${currentCount})`);
+            headerElement.innerHTML = countText;
+        }
+        
+        // If no more pending refunds, hide the entire section
+        if (currentCount === 0) {
+            pendingRefundsSection.style.display = 'none';
+        }
+    }
+}
+
 // Approve refund
 async function approveRefund(refundId) {
     if (!confirm('Êtes-vous sûr de vouloir approuver ce remboursement ?')) {
@@ -1012,7 +1070,10 @@ async function approveRefund(refundId) {
         
         if (result.success) {
             showNotification('Remboursement approuvé avec succès!', 'Succès', 'success');
-            location.reload();
+            // Remove the refund item from the UI
+            removeRefundFromUI(refundId);
+            // Update the pending refunds count
+            updatePendingRefundsCount();
         } else {
             showNotification('Erreur: ' + result.message, 'Erreur', 'error');
         }
@@ -1040,7 +1101,10 @@ async function rejectRefund(refundId) {
         
         if (result.success) {
             showNotification('Remboursement rejeté.', 'Succès', 'success');
-            location.reload();
+            // Remove the refund item from the UI
+            removeRefundFromUI(refundId);
+            // Update the pending refunds count
+            updatePendingRefundsCount();
         } else {
             showNotification('Erreur: ' + result.message, 'Erreur', 'error');
         }

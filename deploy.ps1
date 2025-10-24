@@ -13,9 +13,7 @@ if (!(Get-Command docker -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# Nettoyer les anciens containers
-Write-Host "Nettoyage anciens containers..." -ForegroundColor Yellow
-docker compose down -v 2>$null
+
 
 # Generer APP_KEY si necessaire
 if (!(Test-Path .env.ci)) {
@@ -29,10 +27,10 @@ Write-Host "Lancement containers Docker..." -ForegroundColor Yellow
 try {
     # Pull latest images from Docker Hub
     Write-Host "Pulling latest images from Docker Hub..." -ForegroundColor Cyan
-    docker compose --env-file .env.ci pull
+    docker compose --env-file .env.ci pull app
 
     # Start containers
-    docker compose --env-file .env.ci up -d mysql app prometheus grafana
+    docker compose --env-file .env.ci up -d  app 
     Write-Host "Containers demarres !" -ForegroundColor Green
 } catch {
     Write-Host "Erreur lancement containers: $_" -ForegroundColor Red
