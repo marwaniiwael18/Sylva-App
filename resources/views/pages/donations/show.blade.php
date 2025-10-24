@@ -7,6 +7,55 @@
 @section('page-content')
 <div class="p-6 max-w-4xl mx-auto space-y-6">
     
+    <!-- Display validation errors -->
+    @if ($errors->any())
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i data-lucide="alert-circle" class="h-5 w-5 text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">There were some errors with your request:</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <ul role="list" class="list-disc pl-5 space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Display success messages -->
+    @if (session('success'))
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i data-lucide="check-circle" class="h-5 w-5 text-green-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Display error messages -->
+    @if (session('error'))
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i data-lucide="alert-circle" class="h-5 w-5 text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+    
     <!-- Back Button -->
     <div class="flex items-center gap-4">
         <a href="{{ route('donations.index') }}" 
@@ -301,10 +350,13 @@
         <form id="refundForm" method="POST" action="{{ route('donations.refund', $donation) }}">
             @csrf
             <div class="mb-4">
-                <label for="refund_reason" class="block text-sm font-medium text-gray-700 mb-2">Reason for refund</label>
+                <label for="refund_reason" class="block text-sm font-medium text-gray-700 mb-2">Reason for refund <span class="text-red-500">*</span></label>
                 <textarea id="refund_reason" name="refund_reason" rows="4" 
-                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                          placeholder="Please explain why you want to refund this donation..." required></textarea>
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 @error('refund_reason') border-red-500 @enderror"
+                          placeholder="Please explain why you want to refund this donation (minimum 10 characters)..." required>{{ old('refund_reason') }}</textarea>
+                @error('refund_reason')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
             </div>
             <div class="flex gap-3">
                 <button type="button" onclick="closeRefundModal()" 
@@ -343,6 +395,14 @@
 </div>
 
 @push('scripts')
+@if($errors->has('refund_reason'))
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    openRefundModal();
+});
+</script>
+@endif
+
 <script>
 function openRefundModal() {
     document.getElementById('refundModal').classList.remove('hidden');

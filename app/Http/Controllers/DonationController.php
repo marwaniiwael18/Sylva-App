@@ -156,42 +156,31 @@ class DonationController extends Controller
     /**
      * Process refund request
      */
-    public function refund(Request $request, Donation $donation)
+    public function refund(RefundDonationRequest $request, Donation $donation)
     {
-        // Manual validation and authorization
-        $request->validate([
-            'refund_reason' => 'required|string|min:10|max:500',
-            'refund_amount' => 'nullable|numeric|min:0.01'
-        ]);
-
-        // Check authorization
-        if ($donation->user_id !== auth()->id()) {
-            abort(403, 'You can only refund your own donations.');
-        }
-
-        if (!$donation->canRefund()) {
-            return back()->with('error', 'This donation is not eligible for refund.');
-        }
-
-        Log::info('Refund request received', [
+        // Debug logging
+        Log::info('Refund method called', [
             'donation_id' => $donation->id,
             'user_id' => auth()->id(),
+            'request_method' => $request->method(),
             'request_data' => $request->all(),
-            'donation_payment_status' => $donation->payment_status,
-            'donation_can_refund' => $donation->canRefund(),
-            'donation_created_days' => $donation->created_at->diffInDays(now()),
-            'existing_refunds_count' => $donation->refunds()->whereIn('status', ['pending', 'processing'])->count()
+            'headers' => $request->headers->all(),
         ]);
+
+        // Validation and authorization are handled by RefundDonationRequest
+        $validated = $request->validated();
+
+        Log::info('Validation passed', ['validated_data' => $validated]);
 
         try {
             // Create refund record in the refunds table
             $refund = Refund::create([
                 'donation_id' => $donation->id,
                 'processed_by' => null, // User-initiated, not processed by admin yet
-                'amount' => $request->refund_amount ?? $donation->amount, // Default to full amount if not specified
+                'amount' => $validated['refund_amount'] ?? $donation->amount, // Default to full amount if not specified
                 'currency' => $donation->currency,
                 'status' => 'pending',
-                'reason' => $request->refund_reason,
+                'reason' => $validated['refund_reason'],
             ]);
 
             Log::info('Refund request processed successfully', ['donation_id' => $donation->id, 'refund_id' => $refund->id]);
@@ -200,7 +189,8 @@ class DonationController extends Controller
         } catch (\Exception $e) {
             Log::error('Refund request failed', [
                 'donation_id' => $donation->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return back()->with('error', 'Failed to process refund: ' . $e->getMessage());

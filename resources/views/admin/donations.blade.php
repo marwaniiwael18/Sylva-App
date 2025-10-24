@@ -139,7 +139,6 @@
             </div>
 
             <!-- AI Insights Preview -->
-            @if(isset($aiInsights) && !empty($aiInsights))
             <div class="bg-gray-800 rounded-2xl p-6 border border-gray-700">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-white flex items-center">
@@ -149,18 +148,20 @@
                     <span class="bg-purple-600 text-xs px-2 py-1 rounded-full text-white">ACTIF</span>
                 </div>
                 <div class="space-y-2">
-                    @if(isset($aiInsights['insights']) && count($aiInsights['insights']) > 0)
+                    @if(isset($aiInsights) && !empty($aiInsights) && isset($aiInsights['insights']) && count($aiInsights['insights']) > 0)
                         <p class="text-gray-400 text-sm">{{ $aiInsights['insights'][0] }}</p>
+                    @else
+                        <p class="text-gray-400 text-sm">Cliquez ci-dessous pour analyser vos données de donations avec l'IA.</p>
                     @endif
                     <div class="pt-2">
                         <button onclick="openAIInsightsModal()" class="text-purple-400 hover:text-purple-300 text-sm flex items-center">
-                            Voir tous les insights
+                            <i data-lucide="eye" class="w-3 h-3 mr-1"></i>
+                            Voir les insights IA
                             <i data-lucide="arrow-right" class="w-3 h-3 ml-1"></i>
                         </button>
                     </div>
                 </div>
             </div>
-            @endif
         </div>
 
         <!-- Filters and Search -->
@@ -226,14 +227,7 @@
         </div>
 
         <div class="space-y-4">
-            @php
-                $pendingRefundRecords = \App\Models\Refund::with(['donation.user', 'processor'])
-                    ->where('status', 'pending')
-                    ->orderBy('created_at', 'desc')
-                    ->get();
-            @endphp
-
-            @foreach($pendingRefundRecords as $refund)
+            @foreach($pendingRefundRecords ?? [] as $refund)
             <div class="bg-gray-700 rounded-lg p-4 border border-gray-600">
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
@@ -545,13 +539,69 @@
     </div>
 </div>
 
+<!-- Thank You Message Modal -->
+<div id="thankYouModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-gray-800 rounded-xl max-w-lg w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-white flex items-center">
+                    <i data-lucide="message-circle" class="w-5 h-5 mr-2 text-green-400"></i>
+                    Message de Remerciement
+                </h3>
+                <button onclick="closeThankYouModal()" class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div id="thankYouContent" class="text-gray-300 leading-relaxed">
+                <!-- Content will be loaded here -->
+            </div>
+            
+            <div class="flex justify-end mt-6">
+                <button onclick="closeThankYouModal()" 
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Analysis Modal -->
+<div id="riskAnalysisModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-gray-800 rounded-xl max-w-2xl w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-white flex items-center">
+                    <i data-lucide="shield" class="w-5 h-5 mr-2 text-orange-400"></i>
+                    Analyse du Risque de Remboursement
+                </h3>
+                <button onclick="closeRiskAnalysisModal()" class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div id="riskAnalysisContent" class="space-y-4">
+                <!-- Content will be loaded here -->
+            </div>
+            
+            <div class="flex justify-end mt-6">
+                <button onclick="closeRiskAnalysisModal()" 
+                        class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- AI Insights Modal -->
-<div id="aiInsightsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeAIInsightsModal()">
-    <div class="flex items-center justify-center min-h-screen p-4" onclick="event.stopPropagation()">
+<div id="aiInsightsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-gray-800 rounded-xl max-w-4xl w-full p-6 max-h-[90vh] overflow-hidden flex flex-col">
             <div class="flex items-center justify-between mb-4 flex-shrink-0">
-                <h3 class="text-xl font-semibold text-white flex items-center">
-                    <i data-lucide="brain" class="w-6 h-6 mr-3 text-purple-400"></i>
+                <h3 class="text-lg font-semibold text-white flex items-center">
+                    <i data-lucide="brain" class="w-5 h-5 mr-2 text-purple-400"></i>
                     Insights IA Détaillés
                 </h3>
                 <button onclick="closeAIInsightsModal()" class="text-gray-400 hover:text-white flex-shrink-0">
@@ -559,82 +609,13 @@
                 </button>
             </div>
 
-            <div class="flex-1 overflow-y-auto">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Insights -->
-                    <div class="space-y-4">
-                        <h4 class="text-lg font-medium text-white">Analyse des Données</h4>
-                        @if(isset($aiInsights['insights']) && is_array($aiInsights['insights']))
-                            @foreach($aiInsights['insights'] as $insight)
-                            <div class="bg-gray-700 rounded-lg p-4">
-                                <p class="text-gray-300">{{ $insight }}</p>
-                            </div>
-                            @endforeach
-                        @else
-                            <div class="bg-gray-700 rounded-lg p-4">
-                                <p class="text-gray-300">Aucune analyse détaillée disponible pour le moment.</p>
-                            </div>
-                        @endif
-                    </div>
-
-                    <!-- Recommendations -->
-                    <div class="space-y-4">
-                        <h4 class="text-lg font-medium text-white">Recommandations</h4>
-                        @if(isset($aiInsights['recommendations']) && is_array($aiInsights['recommendations']))
-                            @foreach($aiInsights['recommendations'] as $recommendation)
-                            <div class="bg-gray-700 rounded-lg p-4">
-                                <p class="text-gray-300">{{ $recommendation }}</p>
-                            </div>
-                            @endforeach
-                        @else
-                            <div class="bg-gray-700 rounded-lg p-4">
-                                <p class="text-gray-300">Aucune recommandation disponible.</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                <!-- Additional AI Data -->
-                @if(isset($aiInsights['campaigns']) || isset($aiInsights['risks']))
-                <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    @if(isset($aiInsights['campaigns']) && is_array($aiInsights['campaigns']))
-                    <div class="space-y-4">
-                        <h4 class="text-lg font-medium text-white">Campagnes Suggérées</h4>
-                        @foreach($aiInsights['campaigns'] as $campaign)
-                        <div class="bg-gray-700 rounded-lg p-4">
-                            @if(is_array($campaign))
-                                <h5 class="text-white font-medium">{{ $campaign['name'] ?? 'Campagne' }}</h5>
-                                <p class="text-gray-300 text-sm">{{ $campaign['message'] ?? '' }}</p>
-                                <div class="mt-2 text-xs text-gray-400">
-                                    <span>Audience: {{ $campaign['audience'] ?? 'N/A' }}</span><br>
-                                    <span>Impact: {{ $campaign['impact'] ?? 'N/A' }}</span><br>
-                                    <span>Timeline: {{ $campaign['timeline'] ?? 'N/A' }}</span>
-                                </div>
-                            @else
-                                <p class="text-gray-300">{{ $campaign }}</p>
-                            @endif
-                        </div>
-                        @endforeach
-                    </div>
-                    @endif
-
-                    @if(isset($aiInsights['risks']) && is_array($aiInsights['risks']))
-                    <div class="space-y-4">
-                        <h4 class="text-lg font-medium text-white">Risques Identifiés</h4>
-                        @foreach($aiInsights['risks'] as $risk)
-                        <div class="bg-gray-700 rounded-lg p-4">
-                            <p class="text-gray-300">{{ $risk }}</p>
-                        </div>
-                        @endforeach
-                    </div>
-                    @endif
-                </div>
-                @endif
+            <div id="aiInsightsContent" class="space-y-6 flex-1 overflow-y-auto">
+                <!-- Content will be loaded here -->
             </div>
 
             <div class="flex justify-end mt-6 pt-4 border-t border-gray-700 flex-shrink-0">
                 <button onclick="closeAIInsightsModal()"
-                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                        class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
                     Fermer
                 </button>
             </div>
@@ -697,6 +678,7 @@ function openAIInsightsModal() {
     const modal = document.getElementById('aiInsightsModal');
     if (modal) {
         modal.classList.remove('hidden');
+        loadAIInsights();
         // Focus the close button for accessibility
         const closeButton = modal.querySelector('button[onclick="closeAIInsightsModal()"]');
         if (closeButton) {
@@ -719,12 +701,50 @@ function closeAIInsightsModal() {
     }
 }
 
+async function loadAIInsights() {
+    const content = document.getElementById('aiInsightsContent');
+    if (!content) return;
+
+    content.innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div><p class="text-gray-400 mt-2">Chargement des insights IA...</p></div>';
+
+    try {
+        const response = await fetch('/admin/donations?show_ai=1', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (response.ok) {
+            const html = await response.text();
+            // Extract the AI insights section from the HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const aiSection = doc.getElementById('ai-section');
+
+            if (aiSection) {
+                content.innerHTML = aiSection.innerHTML;
+            } else {
+                content.innerHTML = '<div class="text-center py-8 text-red-400">Aucun insight IA disponible pour le moment.</div>';
+            }
+        } else {
+            content.innerHTML = '<div class="text-center py-8 text-red-400">Erreur lors du chargement des insights IA.</div>';
+        }
+    } catch (error) {
+        console.error('Error loading AI insights:', error);
+        content.innerHTML = '<div class="text-center py-8 text-red-400">Erreur lors du chargement des insights IA.</div>';
+    }
+}
+
 // Add keyboard support for closing modals
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeCampaignModal();
         closeRefundModal();
         closeAIInsightsModal();
+        closeThankYouModal();
+        closeRiskAnalysisModal();
+        closeNotificationModal();
     }
 });
 
@@ -736,7 +756,7 @@ document.getElementById('refundForm').addEventListener('submit', async function(
     const reason = document.getElementById('refundReason').value;
     
     if (!amount || !reason.trim()) {
-        alert('Veuillez remplir tous les champs.');
+        showNotification('Veuillez remplir tous les champs.', 'Erreur de validation', 'error');
         return;
     }
     
@@ -753,14 +773,14 @@ document.getElementById('refundForm').addEventListener('submit', async function(
         const result = await response.json();
         
         if (result.success) {
-            alert('Demande de remboursement créée avec succès!');
+            showNotification('Demande de remboursement créée avec succès!', 'Succès', 'success');
             closeRefundModal();
             location.reload();
         } else {
-            alert('Erreur: ' + result.message);
+            showNotification('Erreur: ' + result.message, 'Erreur', 'error');
         }
     } catch (error) {
-        alert('Erreur lors de la création du remboursement.');
+        showNotification('Erreur lors de la création du remboursement.', 'Erreur', 'error');
         console.error(error);
     }
 });
@@ -778,14 +798,23 @@ async function generateThankYou(donationId) {
         const result = await response.json();
         
         if (result.success) {
-            alert('Message de remerciement:\n\n' + result.message);
+            document.getElementById('thankYouContent').innerHTML = result.message.replace(/\n/g, '<br>');
+            document.getElementById('thankYouModal').classList.remove('hidden');
         } else {
-            alert('Erreur: ' + result.message);
+            // Show error in modal instead of alert
+            document.getElementById('thankYouContent').innerHTML = `<div class="text-red-400"><strong>Erreur:</strong> ${result.message}</div>`;
+            document.getElementById('thankYouModal').classList.remove('hidden');
         }
     } catch (error) {
-        alert('Erreur lors de la génération du message.');
+        // Show error in modal instead of alert
+        document.getElementById('thankYouContent').innerHTML = '<div class="text-red-400"><strong>Erreur:</strong> Impossible de générer le message de remerciement.</div>';
+        document.getElementById('thankYouModal').classList.remove('hidden');
         console.error(error);
     }
+}
+
+function closeThankYouModal() {
+    document.getElementById('thankYouModal').classList.add('hidden');
 }
 
 // Analyze refund risk
@@ -802,14 +831,82 @@ async function analyzeRefundRisk(donationId) {
         
         if (result.success) {
             const analysis = result.analysis;
-            alert(`Analyse du risque de remboursement:\n\nNiveau: ${analysis.risk_level.toUpperCase()}\nRaison: ${analysis.reasoning}\nRecommandations: ${analysis.recommendations.join(', ')}`);
+            const content = document.getElementById('riskAnalysisContent');
+            content.innerHTML = `
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <div class="flex items-center mb-3">
+                        <span class="text-lg font-semibold text-white mr-2">Niveau de Risque:</span>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium 
+                            ${analysis.risk_level === 'low' ? 'bg-green-900 text-green-200' : 
+                              analysis.risk_level === 'medium' ? 'bg-yellow-900 text-yellow-200' : 
+                              'bg-red-900 text-red-200'}">
+                            ${analysis.risk_level.toUpperCase()}
+                        </span>
+                    </div>
+                    <div class="mb-4">
+                        <h4 class="text-white font-medium mb-2">Raison:</h4>
+                        <p class="text-gray-300">${analysis.reasoning}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-white font-medium mb-2">Recommandations:</h4>
+                        <ul class="text-gray-300 space-y-1">
+                            ${analysis.recommendations.map(rec => `<li>• ${rec}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+            document.getElementById('riskAnalysisModal').classList.remove('hidden');
         } else {
-            alert('Erreur: ' + result.message);
+            // Show error in modal instead of alert
+            const content = document.getElementById('riskAnalysisContent');
+            content.innerHTML = `
+                <div class="bg-red-900 border border-red-700 rounded-lg p-4">
+                    <div class="text-red-200">
+                        <strong>Erreur lors de l'analyse:</strong> ${result.message}
+                    </div>
+                </div>
+            `;
+            document.getElementById('riskAnalysisModal').classList.remove('hidden');
         }
     } catch (error) {
-        alert('Erreur lors de l\'analyse.');
+        // Show error in modal instead of alert
+        const content = document.getElementById('riskAnalysisContent');
+        content.innerHTML = `
+            <div class="bg-red-900 border border-red-700 rounded-lg p-4">
+                <div class="text-red-200">
+                    <strong>Erreur:</strong> Impossible d'analyser le risque de remboursement.
+                </div>
+            </div>
+        `;
+        document.getElementById('riskAnalysisModal').classList.remove('hidden');
         console.error(error);
     }
+}
+
+function closeRiskAnalysisModal() {
+    document.getElementById('riskAnalysisModal').classList.add('hidden');
+}
+
+// Notification modal functions
+function showNotification(message, title = 'Notification', type = 'info') {
+    const titleElement = document.getElementById('notificationTitle');
+    const contentElement = document.getElementById('notificationContent');
+    
+    titleElement.textContent = title;
+    contentElement.innerHTML = message;
+    
+    // Set icon based on type
+    const iconClass = type === 'success' ? 'text-green-400' : 
+                     type === 'error' ? 'text-red-400' : 
+                     type === 'warning' ? 'text-yellow-400' : 'text-blue-400';
+    
+    titleElement.innerHTML = `<i data-lucide="info" class="w-5 h-5 mr-2 ${iconClass}"></i>${title}`;
+    
+    document.getElementById('notificationModal').classList.remove('hidden');
+}
+
+function closeNotificationModal() {
+    document.getElementById('notificationModal').classList.add('hidden');
 }
 
 // Generate campaign recommendations
@@ -914,13 +1011,13 @@ async function approveRefund(refundId) {
         const result = await response.json();
         
         if (result.success) {
-            alert('Remboursement approuvé avec succès!');
+            showNotification('Remboursement approuvé avec succès!', 'Succès', 'success');
             location.reload();
         } else {
-            alert('Erreur: ' + result.message);
+            showNotification('Erreur: ' + result.message, 'Erreur', 'error');
         }
     } catch (error) {
-        alert('Erreur lors de l\'approbation du remboursement.');
+        showNotification('Erreur lors de l\'approbation du remboursement.', 'Erreur', 'error');
         console.error(error);
     }
 }
@@ -942,13 +1039,13 @@ async function rejectRefund(refundId) {
         const result = await response.json();
         
         if (result.success) {
-            alert('Remboursement rejeté.');
+            showNotification('Remboursement rejeté.', 'Succès', 'success');
             location.reload();
         } else {
-            alert('Erreur: ' + result.message);
+            showNotification('Erreur: ' + result.message, 'Erreur', 'error');
         }
     } catch (error) {
-        alert('Erreur lors du rejet du remboursement.');
+        showNotification('Erreur lors du rejet du remboursement.', 'Erreur', 'error');
         console.error(error);
     }
 }
@@ -975,10 +1072,10 @@ async function exportDonations() {
             document.body.removeChild(a);
         } else {
             const result = await response.json();
-            alert('Erreur lors de l\'export: ' + (result.message || 'Erreur inconnue'));
+            showNotification('Erreur lors de l\'export: ' + (result.message || 'Erreur inconnue'), 'Erreur d\'export', 'error');
         }
     } catch (error) {
-        alert('Erreur lors de l\'export des données.');
+        showNotification('Erreur lors de l\'export des données.', 'Erreur d\'export', 'error');
         console.error(error);
     }
 }

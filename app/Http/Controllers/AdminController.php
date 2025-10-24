@@ -11,6 +11,8 @@ use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -468,12 +470,36 @@ class AdminController extends Controller
      */
     public function donations(Request $request)
     {
-        $query = Donation::with(['user', 'refunds']);
+        // Cache key for stats (cache for 5 minutes)
+        $cacheKey = 'admin_donations_stats_' . now()->format('Y-m-d-H-i');
+        $stats = Cache::remember($cacheKey, 300, function () {
+            return [
+                'totalAmount' => Donation::where('payment_status', 'succeeded')->sum('amount'),
+                'totalDonations' => Donation::where('payment_status', 'succeeded')->count(),
+                'pendingDonations' => Donation::where('payment_status', 'pending')->count(),
+                'monthlyAmount' => Donation::where('payment_status', 'succeeded')
+                    ->whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year)
+                    ->sum('amount'),
+                'totalRefunds' => \App\Models\Refund::count(),
+                'pendingRefunds' => \App\Models\Refund::where('status', 'pending')->count(),
+                'completedRefunds' => \App\Models\Refund::where('status', 'completed')->count(),
+            ];
+        });
 
-        // Recherche
+        // Optimized query with eager loading
+        $query = Donation::with(['user:id,name,email', 'event:id,title', 'refunds:id,donation_id,status,amount']);
+
+        // Recherche optimisée
         if ($request->filled('search')) {
-            $query->whereHas('user', function($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%");
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', function($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%")
+                             ->orWhere('email', 'like', "%{$search}%");
+                })->orWhereHas('event', function($eventQuery) use ($search) {
+                    $eventQuery->where('title', 'like', "%{$search}%");
+                });
             });
         }
 
@@ -482,59 +508,68 @@ class AdminController extends Controller
             $query->where('payment_status', $request->status);
         }
 
+        // Filtre par type
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
         $donations = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        // Stats de base
-        $totalAmount = Donation::where('payment_status', 'succeeded')->sum('amount');
-        $totalDonations = Donation::count();
-        $pendingDonations = Donation::where('payment_status', 'pending')->count();
-        $monthlyAmount = Donation::where('payment_status', 'succeeded')
-            ->whereMonth('created_at', now()->month)
-            ->sum('amount');
+        // AI Insights - generate more frequently for better UX
+        $aiInsights = null;
+        if ($request->has('show_ai') || rand(1, 3) === 1) { // Show AI insights more frequently (1/3 chance)
+            $aiCacheKey = 'admin_donations_ai_insights_' . now()->format('Y-m-d-H');
+            $aiInsights = Cache::remember($aiCacheKey, 3600, function () use ($stats) {
+                $aiData = [
+                    'total_donations' => $stats['totalDonations'],
+                    'total_amount' => $stats['totalAmount'],
+                    'avg_donation' => $stats['totalDonations'] > 0 ? $stats['totalAmount'] / $stats['totalDonations'] : 0,
+                    'monthly_trend' => $this->getMonthlyTrendData(),
+                ];
 
-        // Stats des remboursements
-        $totalRefunds = \App\Models\Refund::count();
-        $pendingRefunds = \App\Models\Refund::where('status', 'pending')->count();
-        $completedRefunds = \App\Models\Refund::where('status', 'completed')->count();
-        $totalRefundedAmount = \App\Models\Refund::where('status', 'completed')->sum('amount');
+                try {
+                    $aiService = new \App\Services\DonationAIService();
+                    return $aiService->generateInsights($aiData);
+                } catch (\Exception $e) {
+                    Log::error('AI Insights generation failed: ' . $e->getMessage());
+                    return null;
+                }
+            });
+        }
 
-        // Données pour l'IA
-        $aiData = [
-            'total_donations' => $totalDonations,
-            'total_amount' => $totalAmount,
-            'avg_donation' => $totalDonations > 0 ? $totalAmount / $totalDonations : 0,
-            'top_types' => Donation::selectRaw('type, COUNT(*) as count')
-                ->where('payment_status', 'succeeded')
-                ->groupBy('type')
-                ->orderByDesc('count')
-                ->limit(3)
-                ->pluck('type')
-                ->toArray(),
-            'monthly_trend' => Donation::selectRaw('MONTH(created_at) as month, SUM(amount) as total')
+        // Only load pending refunds if there are any (lazy loading)
+        $pendingRefundRecords = collect();
+        if ($stats['pendingRefunds'] > 0) {
+            $pendingRefundRecords = Cache::remember('admin_pending_refunds_' . now()->format('Y-m-d-H-i'), 60, function () {
+                return \App\Models\Refund::with(['donation.user:id,name,email', 'processor:id,name'])
+                    ->where('status', 'pending')
+                    ->orderBy('created_at', 'desc')
+                    ->take(10)
+                    ->get();
+            });
+        }
+
+        return view('admin.donations', array_merge($stats, [
+            'donations' => $donations,
+            'aiInsights' => $aiInsights,
+            'pendingRefundRecords' => $pendingRefundRecords,
+        ]));
+    }
+
+    /**
+     * Get monthly trend data for AI insights
+     */
+    private function getMonthlyTrendData()
+    {
+        return Cache::remember('monthly_donation_trend_' . now()->format('Y-m'), 3600, function () {
+            return Donation::selectRaw('MONTH(created_at) as month, SUM(amount) as total')
                 ->where('payment_status', 'succeeded')
                 ->whereYear('created_at', now()->year)
                 ->groupBy('month')
                 ->orderBy('month')
                 ->pluck('total')
-                ->toArray()
-        ];
-
-        // Générer les insights IA
-        $aiService = new \App\Services\DonationAIService();
-        $aiInsights = $aiService->generateInsights($aiData);
-
-        return view('admin.donations', compact(
-            'donations',
-            'totalAmount',
-            'totalDonations',
-            'pendingDonations',
-            'monthlyAmount',
-            'totalRefunds',
-            'pendingRefunds',
-            'completedRefunds',
-            'totalRefundedAmount',
-            'aiInsights'
-        ));
+                ->toArray();
+        });
     }
 
     /**
@@ -737,7 +772,7 @@ class AdminController extends Controller
             $refund = $donation->processRefund(
                 $request->amount,
                 $request->reason,
-                auth()->id()
+                Auth::id()
             );
 
             return response()->json([
