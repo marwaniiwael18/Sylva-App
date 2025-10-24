@@ -331,7 +331,9 @@
                         <img src="{{ $imageUrl }}" 
                              alt="Tree image" 
                              class="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80"
-                             onclick="window.open('{{ $imageUrl }}', '_blank')">
+                             onclick="window.open('{{ $imageUrl }}', '_blank')"
+                             onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.open('{{ $imageUrl }}', '_blank'); }"
+                             tabindex="0">
                         @endforeach
                     </div>
                 </div>
